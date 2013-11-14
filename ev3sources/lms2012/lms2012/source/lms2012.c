@@ -58,6 +58,8 @@
  *\n\n
  */
 
+#include  "EV3Entry.h"
+
 #include  "lms2012.h"
 #include  "c_math.h"
 #include  "c_move.h"
@@ -2816,6 +2818,10 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opMAILBOX_TEST]        =   &cComTestMailBox,
   [opMAILBOX_READY]       =   &cComReadyMailBox,
   [opMAILBOX_CLOSE]       =   &cComCloseMailBox,
+  [opVIREO_INIT]          =   &VireoInit,
+  [opVIREO_STEP]          =   &VireoStep,
+  [opVIREO_PEEK]          =   &VireoPeek,
+  [opVIREO_POKE]          =   &VireoPoke,
 
   [opTST]                 =   &Tst
 };
@@ -3308,6 +3314,11 @@ void      Sleep(void)
  *    - \return (DATA32)    DATA   - Program speed [instr/S]\n
  *
  *\n
+ *  - CMD = GET_PRGNAME
+ *    - \param  (DATA16)    PRGID  - Program slot number  (see \ref prgid)
+ *    - \return (DATA8)     DATA   - Program name\n
+ *
+ *\n
  */
 /*! \brief    opPROGRAM_INFO byte code
  *
@@ -3378,6 +3389,17 @@ void      ProgramInfo(void)
     {
       Instr  =  *(DATA16*)PrimParPointer();
       SetInstructions((ULONG)Instr);
+    }
+    break;
+
+    case GET_PRGNAME :
+    {
+      if (VMInstance.Program[PrgId].Status != STOPPED)
+      {
+        snprintf((char *) PrimParPointer(), vmFILENAMESIZE, "%s%s" vmEXT_BYTECODE, MemoryInstance.PathList[PrgId], VMInstance.Program[PrgId].Name);
+      }
+      else
+        memset((char *) PrimParPointer(), 0, vmFILENAMESIZE);
     }
     break;
 

@@ -366,6 +366,11 @@ static OPCODE OpCodes[256] =
   OC(   opMAILBOX_TEST,         PAR8,PAR8,                                      0,0,0,0,0,0           ),
   OC(   opMAILBOX_READY,        PAR8,                                           0,0,0,0,0,0,0         ),
   OC(   opMAILBOX_CLOSE,        PAR8,                                           0,0,0,0,0,0,0         ),
+  //    Spare
+  OC(   opVIREO_INIT,           PAR8,                                           0,0,0,0,0,0,0         ),
+  OC(   opVIREO_STEP,           PAR8,                                           0,0,0,0,0,0,0         ),
+  OC(   opVIREO_PEEK,           PAR8, PAR8, PAR16, PAR8,                        0,0,0,0               ),
+  OC(   opVIREO_POKE,           PAR8, PAR8, PAR16, PAR8,                        0,0,0,0               ),
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),
 
@@ -384,6 +389,7 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   PROGRAM_SUBP,           GET_SPEED,              PAR16,PAR32,                                    0,0,0,0,0,0           ),
   SC(   PROGRAM_SUBP,           GET_PRGRESULT,          PAR16,PAR8,                                     0,0,0,0,0,0           ),
   SC(   PROGRAM_SUBP,           SET_INSTR,              PAR16,                                          0,0,0,0,0,0,0         ),
+  SC(   PROGRAM_SUBP,           GET_PRGNAME,            PAR16,PAR8,                                     0,0,0,0,0,0           ),
   //    Memory
   SC(   FILE_SUBP,              OPEN_APPEND,            PAR8,PAR16,                                     0,0,0,0,0,0           ),
   SC(   FILE_SUBP,              OPEN_READ,              PAR8,PAR16,PAR32,                               0,0,0,0,0             ),

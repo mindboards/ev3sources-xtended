@@ -27,7 +27,8 @@ INCLUDES = -I$(BASE)/lms2012/source \
 	   -I$(BASE)/c_memory/source \
 	   -I$(BASE)/c_output/source \
 	   -I$(BASE)/c_sound/source \
-	   -I$(BASE)/c_ui/source
+	   -I$(BASE)/c_ui/source \
+           -I$(BASE)/ev3prims/EV3Primitives
 
 ifeq ($(ARCH),X86)
 DBUS_CFLAGS := $(shell pkg-config dbus-1 --cflags)
@@ -57,7 +58,7 @@ all: install
 %.o: ../source/%.c
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c -MMD -MP -o $@ $<
 
-$(TARGET): $(OBJS) $(filter -lc_%,$(LIBS))
+$(TARGET): $(OBJS) $(filter -lev3prims -lc_%,$(LIBS))
 	$(CROSS_COMPILE)gcc $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 install: $(INSTALL_TARGET)

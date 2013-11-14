@@ -15,7 +15,7 @@ include rules.mk
 # lms2012 program.
 #
 
-LIBS = c_com c_input c_memory c_output c_sound c_ui
+LIBS = c_com c_input c_memory c_output c_sound c_ui ev3prims
 
 lms2012:
 	$(MAKE) -C $(BASE)/lms2012/Linux_$(ARCH)

@@ -449,6 +449,10 @@ typedef   enum
   opMAILBOX_CLOSE             = 0xDD, //       101
 
 //        SPARE                           111.....
+  opVIREO_INIT                = 0xE0, //     00000
+  opVIREO_STEP                = 0xE1, //     00001
+  opVIREO_PEEK                = 0xE2, //     00010
+  opVIREO_POKE                = 0xE3, //     00011
 
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111
@@ -713,6 +717,7 @@ typedef   enum
   GET_SPEED     = 23,   // VM
   GET_PRGRESULT = 24,   // VM
   SET_INSTR     = 25,   // VM
+  GET_PRGNAME   = 26,   // VM
 
   PROGRAM_INFO_SUBCODES,
 }
