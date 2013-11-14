@@ -32,6 +32,7 @@ RESULT    cOutputExit(void);
 
 void      cOutputSetTypes(char *pTypes);
 void      cOutputSetType(void);
+UBYTE     cOutputPackParam(DATA32 Val, DATA8 *pStr);
 UBYTE     cMotorGetBusyFlags(void);
 void      cMotorSetBusyFlags(UBYTE Flags);
 void	    ResetDelayCounter(UBYTE Pattern);

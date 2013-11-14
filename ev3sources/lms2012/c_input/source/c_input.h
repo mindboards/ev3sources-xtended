@@ -78,6 +78,12 @@ void      cInputWrite(void);
 
 void      cInputSample(void);
 
+void      cInputSetType(DATA8 Device,DATA8 Type,DATA8 Mode,int Line);
+DATA8     cInputReadDevicePct(DATA8 Device,DATA8 Index,DATA16 Time,DATA16 *pInit);
+DATAF     cInputReadDeviceSi(DATA8 Device,DATA8 Index,DATA16 Time,DATA16 *pInit);
+DATAF     cInputReadDeviceRaw(DATA8 Device,DATA8 Index,DATA16 Time,DATA16 *pInit);
+void      cInputWriteDeviceRaw(DATA8 Device,DATA8 Connection,DATA8 Type,DATAF DataF);
+RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DATA8 *pWrData,DATA8 RdLng,DATA8 *pRdData);
 
 typedef   struct
 {

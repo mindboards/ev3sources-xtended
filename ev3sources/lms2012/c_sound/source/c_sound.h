@@ -97,6 +97,7 @@ void      cSoundReady(void);
 
 void      cSoundTest(void);
 
+void      cSoundInitAdPcm(void);
 
 #define FILEFORMAT_RAW_SOUND      0x0100
 #define FILEFORMAT_ADPCM_SOUND    0x0101
