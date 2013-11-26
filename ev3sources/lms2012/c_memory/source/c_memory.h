@@ -24,6 +24,21 @@
 
 #include  "lms2012.h"
 
+RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,char *pDefaultExt);
+DSPSTAT   cMemoryOpenFile(PRGID PrgId,DATA8 Access,char *pFileName,HANDLER *pHandle,DATA32 *pSize);
+DSPSTAT   cMemoryReadFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pDestination);
+DSPSTAT   cMemoryWriteFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pSource);
+RESULT    cMemoryAlloc(PRGID PrgId,DATA8 Type,GBINDEX Size,void **pMemory,HANDLER *pHandle);
+void      cMemoryDeleteSubFolders(char *pFolderName);
+DSPSTAT   cMemoryGetFileHandle(PRGID PrgId,char *pFileName,HANDLER *pHandle,DATA8 *pOpenForWrite);
+enum
+{
+  OPEN_FOR_WRITE    = 1,
+  OPEN_FOR_APPEND   = 2,
+  OPEN_FOR_READ     = 3,
+  OPEN_FOR_LOG      = 4
+};
+
 RESULT    cMemoryInit(void);
 
 RESULT    cMemoryOpen(PRGID PrgId,GBINDEX Size,void **pMemory);

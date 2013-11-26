@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2013 National Instruments Corp.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This file is part of the Vireo runtime module for the EV3.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The Vireo runtime module for the EV3 is free software; you can
+ * redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * The Vireo runtime module for the EV3 is distributed in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -21,7 +23,6 @@
 
 extern "C" {
 #include "lms2012.h"
-// #include "bytecodes.h"
 #include "c_output.h"
 #include "c_daisy.h"
 }
@@ -40,11 +41,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputStop, UInt8, UInt8, UInt8)
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
     UInt8 brake = _Param(2);
-
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_STOP, LC0(layer), LC0(nos), LC0(brake), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
 
     DATA8 OutputData[3];
     UBYTE len = 0;
@@ -95,11 +91,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputSpeed, UInt8, UInt8, Int8)
     UInt8 nos   = _Param(1);
     Int8  speed = _Param(2);
 
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_SPEED, LC0(layer), LC0(nos), LC1(speed), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
-
     DATA8 OutputData[3];
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
@@ -149,11 +140,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
     UInt8 nos   = _Param(1);
     Int8  power = _Param(2);
 
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_POWER, LC0(layer), LC0(nos), LC1(power), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
-
     DATA8 OutputData[3];
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
@@ -202,11 +188,6 @@ VIVM_FUNCTION_SIGNATURE2(OutputStart, UInt8, UInt8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
-
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_START, LC0(layer), LC0(nos), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
 
     DATA8 OutputData[2];
     UBYTE len = 0;
@@ -263,11 +244,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
     UInt8 nos   = _Param(1);
     Int8  pol   = _Param(2);
 
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_POLARITY, LC0(layer), LC0(nos), LC1(pol), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
-
     DATA8 OutputData[3];
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
@@ -321,11 +297,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UI
     UInt32 step2 = _Param(4);
     UInt32 step3 = _Param(5);
     UInt8  brake = _Param(6);
-
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_STEP_POWER, LC0(layer), LC0(nos), LC1(power), LC4(step1), LC4(step2), LC4(step3), LC0(brake), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
 
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
@@ -396,11 +367,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UI
     UInt32 step3 = _Param(5);
     UInt8  brake = _Param(6);
 
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_STEP_SPEED, LC0(layer), LC0(nos), LC1(speed), LC4(step1), LC4(step2), LC4(step3), LC0(brake), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
-
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
     DSPSTAT DspStat = NOBREAK;
@@ -468,11 +434,6 @@ VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt
     Int16  turn  = _Param(3);
     UInt32 step  = _Param(4);
     UInt8  brake = _Param(5);
-
-    /*
-    IMGDATA ByteCode[] = { opOUTPUT_STEP_SYNC, LC0(layer), LC0(nos), LC1(speed), LC2(turn), LC4(step), LC0(brake), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
 
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();

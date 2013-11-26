@@ -1,6 +1,6 @@
 SOURCES = $(EV3PRIMITIVES)
 
-EV3PRIMITIVES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3Entry.cpp
+EV3PRIMITIVES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3Entry.cpp EV3_File.cpp
 
 TARGET = libev3prims.so
 

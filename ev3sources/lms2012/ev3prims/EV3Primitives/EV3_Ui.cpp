@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2013 National Instruments Corp.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This file is part of the Vireo runtime module for the EV3.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The Vireo runtime module for the EV3 is free software; you can
+ * redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * The Vireo runtime module for the EV3 is distributed in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -21,7 +23,6 @@
 
 extern "C" {
 #include "lms2012.h"
-// #include "bytecodes.h"
 #include "c_ui.h"
 #include "d_lcd.h"
 #include "c_memory.h"
@@ -204,9 +205,6 @@ VIVM_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
 
 #include "TypeDefiner.h"
 VIREO_DEFINE_BEGIN(EV3_IO)
-    // Types
-    //VIREO_DEFINE_TYPE(FileHandle, ".DataPointer")
-    // Values
     VIREO_DEFINE_FUNCTION(UiSetLED,"p(i(.Int8))");
     VIREO_DEFINE_FUNCTION(UiClear,"p()");
     VIREO_DEFINE_FUNCTION(UiUpdate,"p()");

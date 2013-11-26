@@ -68,6 +68,9 @@ static void TOKENPASTE2(DefineTypes, _section_, __LINE__) (TypeManager& tm) {
 #define VIREO_DEFINE_FUNCTION(_name_, _typeTypeString_) \
 (TypeDefiner::DefineCustomPointerTypeWithValue(tm, #_name_, (void*)_name_, _typeTypeString_, kPTInstructionFunction));
 
+#define VIREO_DEFINE_FUNCTION_NAME(_symbol_, _name_, _typeTypeString_) \
+(TypeDefiner::DefineCustomPointerTypeWithValue(tm, #_name_, (void*)_symbol_, _typeTypeString_, kPTInstructionFunction));
+
 #define VIREO_DEFINE_VALUE(_name_, value, _typeTypeString_) \
 (TypeDefiner::DefineCustomValue(tm, #_name_, value, _typeTypeString_));
 

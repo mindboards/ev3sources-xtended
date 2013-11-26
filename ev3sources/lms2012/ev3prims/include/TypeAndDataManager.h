@@ -66,9 +66,8 @@ class TypedArray1D;
 typedef  TypedArray1D<TypeRef> *TypeRefArray1DRef;
 
 
-// Bit Encoding
-// This is the base set of encodings used to annotated the underlying semantics
-// of low level bit block, and as a key for serialization to and from binary, ASCII
+// EncodingEnum defines the base set of encodings used to annotate the underlying semantics
+// of a low level bit block. It is the key for serialization to and from binary, ASCII
 // or other formats.
 enum EncodingEnum {
     kEncoding_None = 0,
@@ -94,16 +93,18 @@ enum EncodingEnum {
     kEncodingBitFieldSize = 5,   //Room for up to 32 primitive encoding types
 };
 
+// UsageTypeEnum defines how parameters in a native function of VIs ParamBlock will be used.
 enum UsageTypeEnum {
-    kUsageTypeSimple = 0,
-    kUsageTypeInput = 1,
-    kUsageTypeOutput = 2,
-    kUsageTypeInputOutput =3,
-    kUsageTypeStatic = 4,
-    kUsageTypeTemp =  5,
-    kUsageTypeImmediate =  6,
+    kUsageTypeSimple = 0,       // Default for clusters, code assumed to read and write at will, not allowed in ParamBlock
+    kUsageTypeInput = 1,        // Caller copies in value, VI will not change it.
+    kUsageTypeOutput = 2,       // Caller provides storage(if array) VI sets value, ingores incomming value
+    kUsageTypeInputOutput =3,   // Like output, but VI uses initial value.
+    kUsageTypeStatic = 4,       // Allocated value persists from call to call
+    kUsageTypeTemp =  5,        // Storage typically carried from call to call but can be freed up.
+    kUsageTypeImmediate =  6,   // For native function value in instruction block is imediate value not a pointer
 };
 
+// PointerTypeEnum defines the type of internal pointer stored in DefaultPointer type.
 enum PointerTypeEnum {
     kPTNotAPointer = 0,
     kPTInt,
@@ -111,45 +112,16 @@ enum PointerTypeEnum {
     kPTGenericFucntionPropType,
     kPTGenericFuncitonCodeGen,
 };
-#if 0
-//------------------------------------------------------------
-typedef void (*TypeDefinerCallback)(TypeManager* pTypeManager);
 
-class TypeDefiner
-{
-private:
-    TypeDefiner*            _pNext;
-    TypeDefinerCallback     _pCallback;
-    const char*             _pNameSpace;
-public :
-    static void DefineTypes(TypeManager *pTypeManager);
-    TypeDefiner(TypeDefinerCallback pCallback, const char* pNameSapce);
+// PointerTypeEnum defines how a pointer to data will be used.
+enum PointerAccessEnum {
+    kPAInit = 0,
+    kPARead = 1,
+    kPAWrite = 2,
+    kPAReadWrite = 3,
+    kPAClear = 4,
 };
 
-#define TOKENPASTE(x, y)    x ## y
-#define TOKENPASTE2(x, y)   TOKENPASTE(x, y)
-
-#define VIREO_DEFINE_BEGIN(_section) \
-    static void TOKENPASTE2(DefineTypes, __LINE__) (TypeManager *tm);          \
-    static TypeDefiner TOKENPASTE2(TheTypeDefiner, __LINE__) (TOKENPASTE2(DefineTypes, __LINE__), #_section); \
-    static void TOKENPASTE2(DefineTypes, __LINE__) (TypeManager *tm)           \
-    {
-
-#define VIREO_DEFINE_END() \
-    }
-    
-#define VIREO_DEFINE_TYPE(_name_, _type_) \
-    (tm->Define(#_name_, _type_));
-    
-#define VIREO_DEFINE_FUNCTION(_name_, _typeTypeString_) \
-    (tm->DefineCustomPointerTypeWithValue(#_name_, (void*)_name_, _typeTypeString_, kPTInstructionFunction));
-    
-#define VIREO_DEFINE_VALUE(_name_, value, _typeTypeString_) \
-    (tm->DefineCustomPointerTypeWithValue(#_name_, value, _typeTypeString_, kPTInt));
-    
-#define VIREO_DEFINE_GENERIC(_name_, _typeTypeString_, _genericEmitProc_) \
-    (tm->DefineCustomPointerTypeWithValue(#_name_, (void*)_genericEmitProc_, _typeTypeString_, kPTGenericFuncitonCodeGen));
-#endif
 //------------------------------------------------------------
 // When an instruction has a StaticTypeAndData parameter there will be two
 // pointers. Instructions that take a VarArg set of StaticTypeAndData arguments
@@ -221,7 +193,7 @@ public:
     TypeManager *RootTypeManager() { return _rootTypeManager; }
     TypeRef Define(SubString* name, TypeRef type);
     TypeRef FindType(SubString* name);
-    void*   FindNamedTypedBlock(SubString* name);
+    void*   FindNamedTypedBlock(SubString* name, PointerAccessEnum mode);
     TypeRef BadType();
 
     Int32   AQAlignment(Int32 size);
@@ -331,22 +303,22 @@ class TypeCommon
 // TypeManager layers
     friend class TypeManager;
 private:
-    TypeCommon* _next;      // Linked list of all Type Nodes in a TypeManager
-    TypeManager* _typeManager;  // TypeManger that owns this type
+    TypeCommon*     _next;              // Linked list of all Types in a TypeManager
+    TypeManager*    _typeManager;       // TypeManger that owns this type
 public:
     TypeCommon(TypeManager* typeManager);
-    TypeManager* TheTypeManager()               { return _typeManager; }
+    TypeManager* TheTypeManager()       { return _typeManager; }
 public:
     // Internal to the TypeManager, but this is hard to secifiy in C++
     virtual ~TypeCommon() {};
 
 // Core properties are calculated and stored in each node of a TypeTree.
-// this allows for inline ocde an avoids messaging several layers down to calculate
+// This allows inlineD code anD avoids messaging several layers down to calculate
 // values that never change once a TypeTree is created.
-// the values are stored in these members. For bit fields to pack as tight as possible
-// they need to have the same field type (Int16). If they are mixed (int for some and bool for others)
-// compilers will typicially pad till the next byte.
-// The goal is to encode all inforamtion 64 bits,
+// For bit fields to pack as tight as possible they need to have the same field type (Int16).
+// If field types are mixed (int for some and bool for others, etc)
+// compilers will typicially pad till the next byte for each change.
+// The goal is to encode all inforamtion in 64 bits,
 // smaller targets might be half that.
 protected:
     Int32   _topAQSize;
@@ -358,7 +330,7 @@ protected:
     UInt16  _isValid:1;         // ( 1) contains no invalid types
     UInt16  _isBitLevel:1;      // ( 2) is a bitblock or bitcluster
 
-    UInt16  _hasCustomDefault:1;  // ( 3) a non 0 non null value
+    UInt16  _hasCustomDefault:1;// ( 3) a non 0 non null value
     UInt16  _wasModified:1;     // ( 4) Internal, true when a type resolves a missing piece
     UInt16  _isFullyResolved:1; // ( 5) a non 0 non null value. TODO for forward references
     UInt16  _isFixedSize:1;     // ( 6) Total number of elements is fixed (false for variable arrays)
@@ -377,7 +349,7 @@ public:
     EncodingEnum BitEncoding()      { return (EncodingEnum) _encoding; }
     Int32   Alignment()             { return _alignment; }
     Int32   TopAQSize()             { return _topAQSize; }
-    Boolean HasCustomDefault()        { return _hasCustomDefault != 0; }
+    Boolean HasCustomDefault()      { return _hasCustomDefault != 0; }
     Int32   Rank()                  { return _rank; }
     Boolean IsArray()               { return _rank > 0; }
     Boolean IsObject()              { return IsArray(); }   // Arrays are the only type of object that exists so far
@@ -392,6 +364,7 @@ public:
     Boolean IsOutputParam()         { return (_elementUsageType == kUsageTypeOutput) || (_elementUsageType == kUsageTypeInputOutput); }
     Boolean IsStaticParam()         { return _elementUsageType == kUsageTypeStatic; }
     Boolean IsTempParam()           { return _elementUsageType == kUsageTypeTemp; }
+    Boolean IsOptionalParam()       { return true; }//TODO {return _elementUsageType == kUsageTypeOptionalInput ;}
     UsageTypeEnum ElementUsageType(){ return (UsageTypeEnum)_elementUsageType; }
 
     // Properties for CustomValuePointers
@@ -412,7 +385,7 @@ public:
     virtual IntIndex ElementOffset()                    { return 0; }
 
     // Methods for working with individual elements
-    virtual void*   Begin()                             { return null; }
+    virtual void*   Begin(PointerAccessEnum mode)       { return null; }
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
@@ -449,7 +422,7 @@ public:
     virtual TypeRef GetBaseType()                       { return _wrapped; }
     virtual IntIndex* GetDimensionLengths()             { return _wrapped->GetDimensionLengths(); }
     // Data operations
-    virtual void*   Begin()                             { return _wrapped->Begin(); }
+    virtual void*   Begin(PointerAccessEnum mode)       { return _wrapped->Begin(mode); }
     virtual NIError InitData(void* pData)               { return _wrapped->InitData(pData); }
     virtual NIError CopyData(const void* pData, void* pDataCopy)  { return _wrapped->CopyData(pData, pDataCopy); }
     virtual NIError ClearData(void* pData)              { return _wrapped->ClearData(pData); }
@@ -476,11 +449,11 @@ public:
 class NamedType : public WrappedType
 {
 private:
-//    TypeRef     _type;
-    InlineArray<char> _name;
+    InlineArray<char>   _name;
     NamedType(TypeManager* typeManager, SubString* name, TypeRef type);
 public:
-    static IntIndex StructSize(SubString* name) { return sizeof(NamedType) + InlineArray<char>::ExtraStructSize(name->Length()); }
+    static IntIndex StructSize(SubString* name)
+        { return sizeof(NamedType) + InlineArray<char>::ExtraStructSize(name->Length()); }
     static NamedType* New(TypeManager* typeManager, SubString* name, TypeRef type);
     
     virtual void    GetName(SubString* name)        { name->AliasAssign(_name.Begin(), _name.End()); }
@@ -526,14 +499,28 @@ class AggrigateType : public TypeCommon
 {
 protected:
     Int32 _bitSize;  // only used by BitCluster
+    
+protected:
+    // The default value for the type, may be used
+    // At this point only used by the ClusterType class but it needs to come
+    // before the inlined array, so it is in this class.
+    enum   { kSharedNullsBufferLength = 128 };
+    static UInt8 _sharedNullsBuffer[kSharedNullsBufferLength];
+    void*   _pDefault;
+
+protected:
     InlineArray<ElementType*>   _elements;
 
     AggrigateType(TypeManager* typeManager, TypeRef elements[], Int32 count)
     : TypeCommon(typeManager), _elements(count)
     {
+        _pDefault = null;
         _elements.Assign((ElementType**)elements, count);
     }
-    static IntIndex StructSize(Int32 count) { return sizeof(AggrigateType) + InlineArray<ElementType*>::ExtraStructSize(count); }
+    static IntIndex StructSize(Int32 count)
+    {
+        return sizeof(AggrigateType) + InlineArray<ElementType*>::ExtraStructSize(count);
+    }
 
 public:
     virtual ~AggrigateType() {};
@@ -568,6 +555,7 @@ private:
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static EquivalenceType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
@@ -581,9 +569,11 @@ class ClusterType : public AggrigateType
 {
 private:
     ClusterType(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual ~ClusterType();
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static ClusterType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
@@ -613,7 +603,6 @@ public:
         }
     virtual NIError ClearData(void* pData)
         {
-         //b   VIVM_CORE_ASSERT(false); //TODO
             return kNIError_kInsufficientResources;
         }
 };
@@ -670,7 +659,7 @@ public:
         AQBlock1        _aqBlock1;
     } u;
 public:
-    virtual void*   Begin();
+    virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
 };
 //------------------------------------------------------------
@@ -705,7 +694,7 @@ public:
         *(void**)pData = _defaultPointerValue;
         return kNIError_Success;
     }
-    virtual void*   Begin()                             { return &_defaultPointerValue; }
+    virtual void*   Begin(PointerAccessEnum mode)   { return &_defaultPointerValue; }
 };
 //------------------------------------------------------------
 // TypedArray1DCore -
@@ -721,15 +710,22 @@ protected:
     AQBlock1*               _pRawBufferEnd;
     TypeRef                 _typeRef;
     TypeRef                 _eltTypeRef;
-    AQBlock1*               _pCapactiy;
+//  AQBlock1*               _pCapactiy; TODO
 #endif
+
     // _dimensionAndSlabLengths works as follows
-    // For an array of Rank 2, there will be 2 DimensionLenghts followed by
+    // For example, in an array of Rank 2, there will be 2 DimensionLengths followed by
     // 2 slabLengths. slabLengths are precalculated in AQSize used for indexing.
+    // For the inner most dimension the slab length is the length of the element.
     // Final offset is the dot product of the index vector and the slabLength vector.
+private:
     IntIndex                _dimensionAndSlabLengths[2];
-    static IntIndex StructSize(Int32 rank) { return sizeof(TypedArray1DCore) + ((rank-1) * sizeof(IntIndex) * 2); }
+public:
+    IntIndex* GetDimensionLengths() { return _dimensionAndSlabLengths; }
+    IntIndex* GetSlabLengths()      { return &_dimensionAndSlabLengths[0] + _typeRef->Rank(); }
     
+protected:
+    static IntIndex StructSize(Int32 rank) { return sizeof(TypedArray1DCore) + ((rank-1) * sizeof(IntIndex) * 2); }
     TypedArray1DCore(Int32 rank)
     {
         memset(this, 0, TypedArray1DCore::StructSize(rank));
@@ -770,7 +766,7 @@ public:
     {
         VIVM_CORE_ASSERT((i >= 0) && (i < Type()->Rank())); // TODO remove, initially I want to catch any of these.
         if ((i >= 0) && (i < Type()->Rank())) {
-            return _dimensionAndSlabLengths[i];
+            return GetDimensionLengths()[i];
         } else {
             return 0;
         }
@@ -785,8 +781,8 @@ public:
         // alwasy be the cumulative length, and for 1d arrays that will be the only entry
         // for 2d there will be cumulateive and individual, with strides for each dim as well
         // It will only calculated when resized then adn this will work better as an inlined function 
-        IntIndex *pDimLength = _dimensionAndSlabLengths;
-        IntIndex *pEndDimLength = _dimensionAndSlabLengths + _typeRef->Rank();
+        IntIndex *pDimLength = GetDimensionLengths();
+        IntIndex *pEndDimLength = pDimLength + _typeRef->Rank();
         IntIndex length = 1;
         while (pDimLength < pEndDimLength) {
             length *= *pDimLength++;
@@ -796,7 +792,7 @@ public:
     
     // Cpacity is product of all potential dimension lengths ( differs from actual size
     // in bounded arrays. Could be extended to work with optimistic allocations.
-    IntIndex Capactiy()
+    IntIndex Capacity()
     {
         return ((IntIndex)(_pRawBufferEnd - _pRawBufferBegin)) / _eltTypeRef->TopAQSize();
     }
@@ -838,17 +834,18 @@ public:
     // TODO these provide no bounds checking
     // Each of these is designed to only be called for the correctly dimensioned array
     T* ElementAddress(IntIndex i) { return Begin(i); }
-    T* ElementAddress(IntIndex i, Int32 j) { return BeginAt((j * _dimensionAndSlabLengths[0]) + i); }
+    T* ElementAddress(IntIndex i, Int32 j) { return BeginAt((j * GetDimensionLengths()[0]) + i); }
     T* ElementAddress(IntIndex i, Int32 j, Int32 k)
     {
         VIVM_CORE_ASSERT(false);
         // calculate dot produt
-        return BeginAt((j * _dimensionAndSlabLengths[2]) + i);
+        return null;
     }
     
     NIError Append(T element) { return Insert1D(Length(), 1, &element); }
     NIError Append(IntIndex count, const T* pElements) { return Insert1D(Length(), count, pElements); }
-        
+    NIError Append(TypedArray1D* array) { return Insert1D(Length(), array->Length(), array->Begin()); }
+    
 public:
 protected:
     // This creates a block of bytes described by the type supplied. There are two

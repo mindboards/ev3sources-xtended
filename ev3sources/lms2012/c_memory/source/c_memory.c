@@ -1143,6 +1143,7 @@ static char Delimiter[][3] =
 };
 
 
+/*
 enum
 {
   OPEN_FOR_WRITE    = 1,
@@ -1150,6 +1151,7 @@ enum
   OPEN_FOR_READ     = 3,
   OPEN_FOR_LOG      = 4
 };
+*/
 
 
 DSPSTAT   cMemoryGetFileHandle(PRGID PrgId,char *pFileName,HANDLER *pHandle,DATA8 *pOpenForWrite)

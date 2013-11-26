@@ -93,7 +93,7 @@ public:
     VirtualInstrument*  _owningVI;
 	//TODO we need the parameter typedef somewhere, perhaps it is a copy in instruction in the VI
 	// advantages it that aliases wont duplicate it. VBW typeref will be in copyin/copyout instruction
-	VIClump*            _nextWaitingCaller;	// If this clump is busy when called then callers are linked here.
+	VIClump*            _waitingClumps;     // If this clump is busy when called then callers are linked here.
 	VIClump*            _caller; 			// Used for sub vi calls, clump to restart once done.
 	InstructionCore*    _savePc;            // Save when paused either due to sub vi call, or time slicing
 	uTicTimeType        _wakeUpInfo;		// If clump is suspended, used to determine if wake up condition exists (e.g. time)
@@ -125,10 +125,12 @@ struct CallVIInstruction : public InstructionCore
     _ParamImmediateDef(VIClump*, viRootClump);
     _ParamImmediateDef(InstructionCore*, copyInSnippet);
     _ParamImmediateDef(InstructionCore*, copyOutSnippet);
+#if 0
     // rescheduleSnippet is the only r/w element in generated, an issue if if instructions are stored in FLASH
     // the state could be stored in the current clump a well since a clump can only be
     // suspend for one VI cal at a time.
-    _ParamImmediateDef(InstructionCore*, rescheduleSnippet);
+    // _ParamImmediateDef(InstructionCore*, rescheduleSnippet);
+#endif
 };
 
 #ifdef VIVM_DYNAMIC_ALLOCATION

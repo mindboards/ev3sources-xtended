@@ -176,6 +176,7 @@ public:
     void EatLeadingSpaces();
     void EatOptionalComma();
     Int32 ReadEscapeToken(SubString* token);
+    bool SplitString(SubString* beforeMatch, SubString* afterMatch, char separator);
 
     Int32 LengthAferProcessingEscapes();
     void ProcessEscapes(char* begin, char* end);
@@ -189,8 +190,9 @@ public:
     Boolean Compare(const char* begin);
     Boolean ComparePrefix(const char* begin, Int32 length);
     Boolean ComparePrefix(const char* begin) { return ComparePrefix (begin, (IntIndex)strlen(begin)); }
+    Boolean ReadRawChar(char* token);
     Boolean ReadChar(char token);
-    Boolean ReadChar(const char* token) { return ReadChar(token[0]);};
+    Boolean ReadChar(const char* token) { return ReadChar(token[0]);};  // TODO depricate, one used one place and thath place is depricated
     Boolean ReadInt(Int32* value);
     Boolean ParseDouble(double* value);
     Boolean ReadToken(SubString* token);
@@ -228,6 +230,7 @@ public:
         }
     }
 };
+
 }
 
 #include "TypeAndDataManager.h"

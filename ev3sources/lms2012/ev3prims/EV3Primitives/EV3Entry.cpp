@@ -1,24 +1,23 @@
 /*
  * Copyright (c) 2013 National Instruments Corp.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This file is part of the Vireo runtime module for the EV3.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The Vireo runtime module for the EV3 is free software; you can
+ * redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * The Vireo runtime module for the EV3 is distributed in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-// #include "DataTypes.h"
-// #include "TypeAndDataManager.h"
-// #include "TypeAndDataCodecUtf8.h"
 #include "VirtualInstrument.h"
 #include "ExecutionContext.h"
 #include "EggShell.h"
@@ -79,7 +78,7 @@ void VireoPeek()
 
     // If the shell or VI do not exist, do nothing.
     // TODO: Checking for a nonexistant VI causes a segfault.
-    if (pShell == null || (VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName)) == null)
+    if (pShell == null || (VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName, kPARead)) == null)
         return;
 
     dataSpace = VI->DataSpace();
@@ -127,7 +126,7 @@ void VireoPoke()
 
     if (pShell)
     {
-        VirtualInstrument *VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName);
+        VirtualInstrument *VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName, kPAWrite);
         if (VI)
         {
             TypedBlock *dataSpace = VI->DataSpace();

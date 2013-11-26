@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2013 National Instruments Corp.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This file is part of the Vireo runtime module for the EV3.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The Vireo runtime module for the EV3 is free software; you can
+ * redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * The Vireo runtime module for the EV3 is distributed in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -21,7 +23,6 @@
 
 extern "C" {
 #include "lms2012.h"
-// #include "bytecodes.h"
 #include "c_sound.h"
 }
 
@@ -33,11 +34,6 @@ using namespace Vireo;
 
 VIVM_FUNCTION_SIGNATURE0(SoundStop)
 {
-    /*
-    IMGDATA ByteCode[] = { opSOUND, LC0(BREAK), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
-
     // Stop sound
     SoundInstance.cSoundState = SOUND_STOPPED;
     if (SoundInstance.hSoundFile >= 0)
@@ -73,11 +69,6 @@ VIVM_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
-
-    /*
-    IMGDATA ByteCode[] = { opSOUND, LC0(TONE), LC0(Volume), LC2(Frequency), LC2(Duration), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    */
 
     // Change state
     (*SoundInstance.pSound).Status = BUSY;
@@ -115,20 +106,6 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, Utf8String*)
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
-
-    /*
-    IMGDATA BCStart[] = { opSOUND, LC0(PLAY), LC0(Volume), LCS};
-    IMGDATA BCEnd[]   = { opOBJECT_END };
-    IMGDATA *ByteCode = (IMGDATA *) new char[sizeof(BCStart) + fileName->Length() + 1 + sizeof(BCEnd)];
-
-    // Form the array Bytecode by concatenating BCStart, the null-terminated fileName, and BCEnd.
-    memcpy(ByteCode, BCStart, sizeof(BCStart));
-    memcpy(ByteCode+sizeof(BCStart), fileName->Begin(), fileName->Length()+1);
-    memcpy(ByteCode+sizeof(BCStart)+fileName->Length()+1, BCEnd, sizeof(BCEnd));
-
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    delete [] ByteCode;
-    */
 
     SoundInstance.cSoundState = SOUND_STOPPED;
     if (SoundInstance.hSoundFile >= 0)
@@ -212,20 +189,6 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, Utf8String*)
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
 
-    /*
-    IMGDATA BCStart[] = { opSOUND, LC0(REPEAT), LC0(Volume), LCS};
-    IMGDATA BCEnd[]   = { opOBJECT_END };
-    IMGDATA *ByteCode = new IMGDATA[sizeof(BCStart) + fileName->Length() + 1 + sizeof(BCEnd)];
-
-    // Form the array Bytecode by concatenating BCStart, the null-terminated fileName, and BCEnd.
-    memcpy(ByteCode, BCStart, sizeof(BCStart));
-    memcpy(ByteCode+sizeof(BCStart), fileName->Begin(), fileName->Length()+1);
-    memcpy(ByteCode+sizeof(BCStart)+fileName->Length()+1, BCEnd, sizeof(BCEnd));
-
-    ExecuteByteCode(ByteCode,NULL,NULL);
-    delete [] ByteCode;
-    */
-
     SoundInstance.cSoundState = SOUND_STOPPED;
     if (SoundInstance.hSoundFile >= 0)
     {
@@ -302,23 +265,15 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, Utf8String*)
 
 VIVM_FUNCTION_SIGNATURE1(SoundTest, UInt8)
 {
-    /*
-    UInt8 isBusy = _Param(0); // reference
+    UInt8 *isBusy = _ParamPointer(0); // reference
 
-    IMGDATA ByteCode[] = { opSOUND_TEST, LV0(0), opOBJECT_END };
-    ExecuteByteCode(ByteCode,NULL,(VARDATA *) &isBusy);
-    */
-
-    _Param(0) = ((*SoundInstance.pSound).Status == BUSY);
+    *isBusy = ((*SoundInstance.pSound).Status == BUSY);
 
     return _NextInstruction();
 }
 
 #include "TypeDefiner.h"
 VIREO_DEFINE_BEGIN(EV3_IO)
-    // Types
-    //VIREO_DEFINE_TYPE(FileHandle, ".DataPointer")
-    // Values
     VIREO_DEFINE_FUNCTION(SoundStop, "p()");
     VIREO_DEFINE_FUNCTION(SoundTone, "p(i(.UInt8),i(.UInt16),i(.UInt16))");
     VIREO_DEFINE_FUNCTION(SoundPlay, "p(i(.UInt8),i(.Utf8String))");

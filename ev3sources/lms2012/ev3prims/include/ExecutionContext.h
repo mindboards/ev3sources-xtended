@@ -104,7 +104,7 @@ public:
 	ECONTEXT    InstructionCore* SuspendRunningQueueElt(InstructionCore* whereToWakeUp);
 	InstructionCore*            Done();
 	void Trace(const char* message);
-	InstructionCore*            WaitMicroseconds(Int32 count, InstructionCore* next);
+	InstructionCore*            WaitMicroseconds(Int64 count, InstructionCore* next);
 	ECONTEXT    void            EnqueueRunQueue(VIClump* elt);
 	ECONTEXT    VIClump*        _runningQueueElt;		// Eement actually running
     
