@@ -22,7 +22,7 @@
 #include "VirtualInstrument.h"
 #include "EggShell.h"
 
-#include "EV3Entry.h"
+#include "EV3_Entry.h"
 extern "C" {
 #include "lms2012.h"
 }

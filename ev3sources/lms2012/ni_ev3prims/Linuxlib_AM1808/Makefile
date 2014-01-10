@@ -1,8 +1,6 @@
-SOURCES = $(EV3PRIMITIVES)
+SOURCES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3_Entry.cpp EV3_File.cpp EV3_Com.cpp
 
-EV3PRIMITIVES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3Entry.cpp EV3_File.cpp EV3_Com.cpp
-
-TARGET = libev3prims.so
+TARGET = libni_ev3prims.so
 
 CONF = Linuxlib
 ARCH = AM1808
@@ -39,7 +37,7 @@ INCLUDES = -I$(BASE)/lms2012/source \
            -I$(BASE)/c_output/source \
            -I$(BASE)/c_sound/source \
            -I$(BASE)/c_ui/source \
-           -I$(BASE)/ev3prims/include
+           -I$(BASE)/ni_ev3prims/include
 
 ifeq ($(ARCH),X86)
 DBUS_CFLAGS := $(shell pkg-config dbus-1 --cflags)
@@ -67,10 +65,10 @@ INSTALL_TARGET = $(BASE)/lms2012/Linux_$(ARCH)/$(INSTALL_DIR)/$(TARGET)
 
 all: install
 
-%.o: ../EV3Primitives/%.cpp
+%.o: ../source/%.cpp
 	$(CROSS_COMPILE)g++ $(CFLAGS) -c -MMD -MP -o $@ $<
 
-$(TARGET): $(OBJS) $(filter -lev3prims -lc_%,$(LIBS))
+$(TARGET): $(OBJS) $(filter -lni_ev3prims -lc_%,$(LIBS))
 	$(CROSS_COMPILE)g++ $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 install: $(INSTALL_TARGET)

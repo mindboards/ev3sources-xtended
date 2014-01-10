@@ -1,8 +1,8 @@
 SOURCES = c_branch.c c_compare.c c_math.c c_move.c c_timer.c \
 	  lms2012.c validate.c 
 LIBS = -lrt -lusb-1.0 -ldbus-1 -lbluetooth -lm \
-       -lc_com -lc_input -lc_memory -lc_output -lc_sound -lc_ui -lev3prims -lvireo
-SUBDIRS = c_com c_input c_memory c_output c_sound c_ui ev3prims
+       -lc_com -lc_input -lc_memory -lc_output -lc_sound -lc_ui -lni_ev3prims -lvireo
+SUBDIRS = c_com c_input c_memory c_output c_sound c_ui ni_ev3prims
 
 TARGET = lms2012
 

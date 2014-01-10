@@ -58,7 +58,7 @@
  *\n\n
  */
 
-#include  "EV3Entry.h"
+#include  "EV3_Entry.h"
 
 #include  "lms2012.h"
 #include  "c_math.h"
