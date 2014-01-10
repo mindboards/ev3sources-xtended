@@ -892,7 +892,7 @@ void      cComGetNameFromScandirList(struct  dirent *NameList, char *pBuffer, UL
       strcat(FileName,NameList->d_name);
 
       /* Get the MD5sum and put in the buffer */
-      md5_file(FileName, 0, (unsigned char *)Md5Sum);
+      // md5_file(FileName, 0, (unsigned char *)Md5Sum);
       *pNameLen  = sprintf(pBuffer, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X ",
                           ((UBYTE*)Md5Sum)[0] , ((UBYTE*)Md5Sum)[1] , ((UBYTE*)Md5Sum)[2] , ((UBYTE*)Md5Sum)[3] ,
                           ((UBYTE*)Md5Sum)[4] , ((UBYTE*)Md5Sum)[5] , ((UBYTE*)Md5Sum)[6] , ((UBYTE*)Md5Sum)[7] ,

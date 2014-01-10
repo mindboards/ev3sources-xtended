@@ -103,6 +103,7 @@ public:
 	ECONTEXT    ExecutionState  ExecuteSlices(Int32 numSlices);
 	ECONTEXT    InstructionCore* SuspendRunningQueueElt(InstructionCore* whereToWakeUp);
 	InstructionCore*            Done();
+	InstructionCore*            Stop();
 	void Trace(const char* message);
 	InstructionCore*            WaitMicroseconds(Int64 count, InstructionCore* next);
 	ECONTEXT    void            EnqueueRunQueue(VIClump* elt);

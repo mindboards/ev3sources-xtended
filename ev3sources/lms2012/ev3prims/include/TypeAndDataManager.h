@@ -38,6 +38,7 @@ SDG
 #include <stdio.h>
 #include "Platform.h"
 #include "DataTypes.h"
+#include "StringUtilities.h"
 #include "Instruction.h"
 
 namespace Vireo
@@ -88,7 +89,7 @@ enum EncodingEnum {
     kEncoding_IEEE754Binary,
     kEncoding_Ascii,
     kEncoding_Unicode,
-    kEncoding_Pointer,      //TODO any need to differentiate between code/data/flash at this point?
+    kEncoding_Pointer,              // Some systems may have more than one pointr type
     
     kEncodingBitFieldSize = 5,   //Room for up to 32 primitive encoding types
 };
@@ -98,7 +99,7 @@ enum UsageTypeEnum {
     kUsageTypeSimple = 0,       // Default for clusters, code assumed to read and write at will, not allowed in ParamBlock
     kUsageTypeInput = 1,        // Caller copies in value, VI will not change it.
     kUsageTypeOutput = 2,       // Caller provides storage(if array) VI sets value, ingores incomming value
-    kUsageTypeInputOutput =3,   // Like output, but VI uses initial value.
+    kUsageTypeInputOutput = 3,  // Like output, but VI uses initial value.
     kUsageTypeStatic = 4,       // Allocated value persists from call to call
     kUsageTypeTemp =  5,        // Storage typically carried from call to call but can be freed up.
     kUsageTypeImmediate =  6,   // For native function value in instruction block is imediate value not a pointer
@@ -399,7 +400,7 @@ public:
     NIError MultiCopyData(const void* pSingleData, void* pDataCopy, IntIndex count);
     
     Boolean CompareType(TypeRef otherType);
-    Boolean IsA(SubString* name);
+    Boolean IsA(const SubString* name);
     
     TypeRef GetSubElementFromPath(SubString* name, Int32 *offset);
 };
@@ -449,11 +450,11 @@ public:
 class NamedType : public WrappedType
 {
 private:
-    InlineArray<char>   _name;
+    InlineArray<Utf8Char>   _name;
     NamedType(TypeManager* typeManager, SubString* name, TypeRef type);
 public:
     static IntIndex StructSize(SubString* name)
-        { return sizeof(NamedType) + InlineArray<char>::ExtraStructSize(name->Length()); }
+        { return sizeof(NamedType) + InlineArray<Utf8Char>::ExtraStructSize(name->Length()); }
     static NamedType* New(TypeManager* typeManager, SubString* name, TypeRef type);
     
     virtual void    GetName(SubString* name)        { name->AliasAssign(_name.Begin(), _name.End()); }
@@ -468,11 +469,11 @@ private:
     ElementType(TypeManager* typeManager, SubString* name, TypeRef wrappedType, UsageTypeEnum usageType);
 
 public:
-    Int32               _offset;  // Relative to the begining of the aggrigate
-    InlineArray<char>   _elementName;
+    Int32                   _offset;  // Relative to the begining of the aggrigate
+    InlineArray<Utf8Char>   _elementName;
 
 public:
-    static IntIndex StructSize(SubString* name) { return sizeof(ElementType) + InlineArray<char>::ExtraStructSize(name->Length()); }
+    static IntIndex StructSize(SubString* name) { return sizeof(ElementType) + InlineArray<Utf8Char>::ExtraStructSize(name->Length()); }
     static ElementType* New(TypeManager* typeManager, SubString* name, TypeRef wrappedType, UsageTypeEnum usageType);
     
     virtual void    GetElementName(SubString* name)     { name->AliasAssign(_elementName.Begin(), _elementName.End()); }
@@ -733,6 +734,7 @@ protected:
 public:
     AQBlock1* BeginAt(IntIndex index)
     {
+        VIVM_CORE_ASSERT(index >= 0)
         VIVM_CORE_ASSERT(ElementType() != null)
         AQBlock1* begin = (RawBegin() + (index * ElementType()->TopAQSize()));
         VIVM_CORE_ASSERT(begin <= _pRawBufferEnd)  //Is there a need to return a pointer to the 'end'
@@ -808,14 +810,16 @@ public:
     // Make this array match the shape of the reference type.
     NIError ResizeToMatch(TypedArray1DCore* pReference);
     
-    // Resize for 1d arrays
+    // Resize for 1d arrays, if not enough memory leave as is.
     NIError Resize(Int32 size);
     
-public:
-    // Insert space for additional element and optional copy values in to the new location
-    NIError Insert1D(IntIndex position, IntIndex count, const void* pSource = null);
-    NIError Remove1D(IntIndex position, IntIndex count);
+    // Resize ,if not enough memory, then size to zero
+    NIError ResizeOrEmpty(Int32 size);
     
+public:
+    NIError Replace1D(IntIndex position, IntIndex count, const void* pSource, Boolean truncate);
+    NIError Insert1D(IntIndex position, IntIndex count, const void* pSource = null);
+    NIError Remove1D(IntIndex position, IntIndex count);    
 };
 
 // TypedArray1D -  a template class that provides staticly typed methods.
@@ -842,9 +846,10 @@ public:
         return null;
     }
     
-    NIError Append(T element) { return Insert1D(Length(), 1, &element); }
-    NIError Append(IntIndex count, const T* pElements) { return Insert1D(Length(), count, pElements); }
+    NIError Append(T element)                           { return Insert1D(Length(), 1, &element); }
+    NIError Append(IntIndex count, const T* pElements)  { return Insert1D(Length(), count, pElements); }
     NIError Append(TypedArray1D* array) { return Insert1D(Length(), array->Length(), array->Begin()); }
+    NIError CopyFrom(IntIndex count, const T* pElements){ return Replace1D(0, count, pElements, true); }
     
 public:
 protected:
@@ -876,9 +881,17 @@ protected:
 // Diagram types often processed by C++ code.
 // They are not direcly creatable, they must be created
 // as TypedBlocks when the dataspace is created
+class String : public TypedArray1D< Utf8Char >
+{
+public:
+    SubString MakeSubStringAlias()              { return SubString(Begin(), End()); }
+    void CopyFromSubString(SubString* string)   { CopyFrom(string->Length(), string->Begin()); }
+};
+
+typedef String *StringRef;
+typedef TypedArray1D< UInt8 > BinaryBuffer, *BinaryBufferRef;
 typedef TypedArray1D< Int32 > Int32Array1D;
-typedef TypedArray1D< Utf8Char > Utf8String, *Utf8StringRef;
-typedef TypedArray1D< Utf8StringRef > Utf8StringArray1D, *Utf8StringArray1DRef;
+typedef TypedArray1D< StringRef > StringArray1D, *StringArray1DRef;
 typedef TypedArray1D< TypeRef > TypeRefArray1D;
 
 //------------------------------------------------------------
@@ -892,54 +905,16 @@ public:
 };
 
 //------------------------------------------------------------
-// Used for making short null terminated strings when needed for calling OS APIs
-// TODO size could be templated.
-class TempStackCString
+// A derivative of the TempStackCStringFromString that knows
+// how to construct a CString from a TypedData string.
+class TempStackCStringFromString : public TempStackCString
 {
-    enum {MaxLength = 255};
-private:
-    Utf8Char    _buffer[MaxLength+1];
-    Utf8Char*   _end;
 public:
-    
-    TempStackCString(char* begin, Int32 length)
-    {
-        length = (length < MaxLength) ? length : MaxLength;
-        _end = _buffer + length;
-        memcpy(_buffer, begin, length);
-        *_end = (Utf8Char) 0;
-    }
-    
-    TempStackCString(Utf8String* string)
-    {
-        Int32 length = (string->Length() < MaxLength) ? string->Length() : MaxLength;
-        _end = _buffer + length;
-        memcpy(_buffer, string->Begin(), length);
-        *_end = (Utf8Char) 0;
-    }
-
-    TempStackCString(SubString* string)
-    {
-        Int32 length = (string->Length() < MaxLength) ? string->Length() : MaxLength;
-        _end = _buffer + length;
-        memcpy(_buffer, string->Begin(), length);
-        *_end = (Utf8Char) 0;
-    }
-    void Append(SubString* string) 
-    {
-        Utf8Char* newEnd = _end + string->Length();
-        if(newEnd > _buffer + MaxLength) {
-            newEnd = _buffer + MaxLength;
-        }
-        size_t length = newEnd - _end;
-        memcpy(_end, string->Begin(), length);
-        _end = newEnd;
-        *_end = (Utf8Char) 0;
-    }
-    
-    char*   BeginCString()  {return (char*) _buffer;}
-    char*   End()           {return (char*) _end;}
+    TempStackCStringFromString(StringRef string)
+    : TempStackCString((char*)string->Begin(), string->Length())
+    { }
 };
+
 } // namespace Vireo
 
 #endif //TypeAndDataManager_h

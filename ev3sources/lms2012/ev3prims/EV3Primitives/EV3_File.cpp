@@ -22,7 +22,6 @@
 // #include <unistd.h>
 
 extern "C" {
-#include "lms2012.h"
 #include "c_memory.h"
 }
 
@@ -31,77 +30,56 @@ extern "C" {
 
 using namespace Vireo;
 
-VIVM_FUNCTION_SIGNATURE3(FileOpenRead, Utf8String*, Int16, Int32)
+VIVM_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
 {
-    Utf8String *fileName = _Param(0);
-    Int16      *handle   = _ParamPointer(1); // reference
-    Int32      *size     = _ParamPointer(2); // reference
-
-    // Add null-terminator to fileName string
-    fileName->Resize(fileName->Length() + 1);
-    *fileName->BeginAt(fileName->Length() - 1) = '\0';
+    TempStackCStringFromString fileName(_Param(0));
+    Int16    *handle   = _ParamPointer(1); // reference
+    Int32    *size     = _ParamPointer(2); // reference
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
-    if (ConstructFilename(PrgId, (char *) fileName->Begin(), FilenameBuf, "") == OK)
+    if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
         DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_READ, FilenameBuf, handle, size);
     }
     SetDispatchStatus(DspStat);
 
-    // Remove null-terminator from fileName string
-    fileName->Resize(fileName->Length() - 1);
-
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, Utf8String*, Int16)
+VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
 {
-    Utf8String *fileName = _Param(0);
-    Int16      *handle   = _ParamPointer(1); // reference
-
-    // Add null-terminator to fileName string
-    fileName->Resize(fileName->Length() + 1);
-    *fileName->BeginAt(fileName->Length() - 1) = '\0';
+    TempStackCStringFromString fileName(_Param(0));
+    Int16    *handle   = _ParamPointer(1); // reference
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
     Int32 ISize;
-    if (ConstructFilename(PrgId, (char *) fileName->Begin(), FilenameBuf, "") == OK)
+    if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
         DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_WRITE, FilenameBuf, handle, &ISize);
     }
     SetDispatchStatus(DspStat);
 
-    // Remove null-terminator from fileName string
-    fileName->Resize(fileName->Length() - 1);
-
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, Utf8String*, Int16)
+VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
 {
-    Utf8String *fileName = _Param(0);
-    Int16      *handle   = _ParamPointer(1); // reference
-
-    // Add null-terminator to fileName string
-    fileName->Resize(fileName->Length() + 1);
-    *fileName->BeginAt(fileName->Length() - 1) = '\0';
+    TempStackCStringFromString fileName(_Param(0));
+    Int16    *handle   = _ParamPointer(1); // reference
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
     Int32 ISize;
-    if (ConstructFilename(PrgId, (char *) fileName->Begin(), FilenameBuf, "") == OK)
+    if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
         DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_APPEND, FilenameBuf, handle, &ISize);
     }
     SetDispatchStatus(DspStat);
-
-    // Remove null-terminator from fileName string
-    fileName->Resize(fileName->Length() - 1);
 
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
@@ -159,11 +137,11 @@ VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArray1dCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(FileWrite, Int16, Int32, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArray1dCoreRef)
 {
     Int16 handle = _Param(0);
-    Int32 length = _Param(1);
-    TypedArray1dCoreRef data = _Param(2); // uInt8 reference
+    TypedArray1dCoreRef data = _Param(1); // uInt8
+    Int32 length = data->Length();
 
     PRGID PrgId = CurrentProgramId();
     Int32 ISize;
@@ -196,25 +174,18 @@ VIVM_FUNCTION_SIGNATURE3(FileWrite, Int16, Int32, TypedArray1dCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(FileRemove, Utf8String*)
+VIVM_FUNCTION_SIGNATURE1(FileRemove, StringRef)
 {
-    Utf8String *fileName = _Param(0);
-
-    // Add null-terminator to fileName string
-    fileName->Resize(fileName->Length() + 1);
-    *fileName->BeginAt(fileName->Length() - 1) = '\0';
+    TempStackCStringFromString fileName(_Param(0));
 
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
 
-    if (ConstructFilename(PrgId, (char *)fileName->Begin(), FilenameBuf,"") == OK)
+    if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf,"") == OK)
     {
         cMemoryDeleteSubFolders(FilenameBuf);
         SetUiUpdate();
     }
-
-    // Remove null-terminator from fileName string
-    fileName->Resize(fileName->Length() - 1);
 
     return _NextInstruction();
 }
@@ -223,40 +194,33 @@ VIVM_FUNCTION_SIGNATURE1(FileRemove, Utf8String*)
 // If the file is not open, handle is -1 and write is 0.
 // Otherwise, handle is the file's handle number and write is 0 if the file is
 // open for read or 1 if the file is open for write/append.
-VIVM_FUNCTION_SIGNATURE3(FileResolveHandle, Utf8String*, Int16, Int8)
+VIVM_FUNCTION_SIGNATURE3(FileResolveHandle, StringRef, Int16, Int8)
 {
-    Utf8String *fileName = _Param(0);
+    TempStackCStringFromString fileName(_Param(0));
     Int16 *handle = _ParamPointer(1); // reference
     Int8  *write  = _ParamPointer(2); // reference
-
-    // Add null-terminator to fileName string
-    fileName->Resize(fileName->Length() + 1);
-    *fileName->BeginAt(fileName->Length() - 1) = '\0';
 
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
     DSPSTAT DspStat;
 
-    if (ConstructFilename(PrgId, (char *) fileName->Begin(), FilenameBuf, "") == OK)
+    if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
         DspStat = cMemoryGetFileHandle(PrgId, FilenameBuf, handle, write);
     else
         *handle = *write = -1;
-
-    // Remove null-terminator from fileName string
-    fileName->Resize(fileName->Length() - 1);
 
     return _NextInstruction();
 }
 
 #include "TypeDefiner.h"
 VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(FileOpenRead, "p(i(.Utf8String),o(.Int16),o(.Int32))");
-    VIREO_DEFINE_FUNCTION(FileOpenWrite, "p(i(.Utf8String),o(.Int16))");
-    VIREO_DEFINE_FUNCTION(FileOpenAppend, "p(i(.Utf8String),o(.Int16))");
+    VIREO_DEFINE_FUNCTION(FileOpenRead, "p(i(.String),o(.Int16),o(.Int32))");
+    VIREO_DEFINE_FUNCTION(FileOpenWrite, "p(i(.String),o(.Int16))");
+    VIREO_DEFINE_FUNCTION(FileOpenAppend, "p(i(.String),o(.Int16))");
     VIREO_DEFINE_FUNCTION(FileClose, "p(i(.Int16))");
     VIREO_DEFINE_FUNCTION(FileRead, "p(i(.Int16),i(.Int32),o(.Array))");
-    VIREO_DEFINE_FUNCTION(FileWrite, "p(i(.Int16),i(.Int32),i(.Array))");
-    VIREO_DEFINE_FUNCTION(FileRemove, "p(i(.Utf8String))");
-    VIREO_DEFINE_FUNCTION(FileResolveHandle, "p(i(.Utf8String),i(.Int16),i(.Int8))");
+    VIREO_DEFINE_FUNCTION(FileWrite, "p(i(.Int16),i(.Array))");
+    VIREO_DEFINE_FUNCTION(FileRemove, "p(i(.String))");
+    VIREO_DEFINE_FUNCTION(FileResolveHandle, "p(i(.String),i(.Int16),i(.Int8))");
 VIREO_DEFINE_END()
 

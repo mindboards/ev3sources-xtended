@@ -32,6 +32,9 @@ namespace Vireo
 
 class VIClump;
 
+#define VI_TypeName             "VirtualInstrument"
+#define ReentrantVI_TypeName    "ReentrantVirtualInstrument"
+
 #define VI_TypeString             \
 "c(                               \
     e(.ExecutionContext Context)  \
@@ -39,6 +42,7 @@ class VIClump;
     e(.Variant DataSpace)         \
     e(.VIClumpArray1D Clumps)     \
 )"
+
 
 class VirtualInstrument
 {
@@ -83,6 +87,8 @@ e(.Int64,WakeUpInfo)                \
 e(.Int32,FireCount)                 \
 e(.Int32,ShortCount)                \
 )"
+
+
 
 // A QueueElt (QE) will be allocated for every VI and every sub clump for VIs that have parallelism.
 // Reentrant callers need to maintain seperate state so a copy is needed for each call site.

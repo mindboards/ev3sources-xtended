@@ -68,15 +68,6 @@ SDG
 
 #define VIVM_SUPPORTS_COMPLEX_NUMBERS 1
 
-// TODO these are no longer used but it might be
-// Worth visiting and actually using types like uint_fast16_t uint_fast16_t
-// The primary reason is for temporary (stact) variables used as loop counters and calculations
-// that work with small numbers. The primary values is for 8/16 bit MCUs where it is helpful
-// to use the smaller types. However for ISA like hte ARM a lot of extra code will be generated
-// since the registers always work with larger values.
-#define VIVM_FAST_SMALL_INT Int32
-#define VIVM_FAST_SMALL_UINT uInt32
-
 #define VIVM_ARRAY_INDEX Int32
 
 // VIVM_DYNAMIC_ALLOCATION - legacy arduino project, but needs to be revived
@@ -192,6 +183,8 @@ SDG
 
 #elif (kVireoOS_win32U || kVireoOS_win64U)
     #define snprintf _snprintf
+    #define isinf !_finite
+    #define isnan _isnan
     #define VIREO_MAIN  __cdecl main
 
     #define VIREO_DATE_TIME_STDLIB

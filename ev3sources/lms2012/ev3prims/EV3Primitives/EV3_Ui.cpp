@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 extern "C" {
-#include "lms2012.h"
 #include "c_ui.h"
 #include "d_lcd.h"
 #include "c_memory.h"
@@ -80,12 +79,12 @@ VIVM_FUNCTION_SIGNATURE0(UiRestore)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, Utf8String*)
+VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
 {
-    UInt8       color  = _Param(0);
-    UInt16      x      = _Param(1);
-    UInt16      y      = _Param(2);
-    Utf8String *string = _Param(3);
+    UInt8     color  = _Param(0);
+    UInt16    x      = _Param(1);
+    UInt16    y      = _Param(2);
+    StringRef string = _Param(3);
 
     UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
@@ -97,12 +96,12 @@ VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, Utf8String*)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, Utf8String*)
+VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
 {
-    UInt8       color    = _Param(0);
-    UInt16      x        = _Param(1);
-    UInt16      y        = _Param(2);
-    Utf8String *fileName = _Param(3);
+    UInt8     color    = _Param(0);
+    UInt16    x        = _Param(1);
+    UInt16    y        = _Param(2);
+    StringRef fileName = _Param(3);
 
     UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
@@ -203,17 +202,41 @@ VIVM_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
     return _NextInstruction();
 }
 
+VIVM_FUNCTION_SIGNATURE2(UiButtonPressed, Int8, Int8)
+{
+    Int8 button = _Param(0);
+    Int8 *state = _ParamPointer(1); // reference
+
+    if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
+        *state = cUiGetPress(button);
+    else
+        *state = 0;
+
+    return _NextInstruction();
+}
+
+VIVM_FUNCTION_SIGNATURE1(UiGetVBattery, Single)
+{
+    Single *voltage = _ParamPointer(0); // reference
+
+    *voltage = UiInstance.Vbatt;
+
+    return _NextInstruction();
+}
+
 #include "TypeDefiner.h"
 VIREO_DEFINE_BEGIN(EV3_IO)
     VIREO_DEFINE_FUNCTION(UiSetLED,"p(i(.Int8))");
     VIREO_DEFINE_FUNCTION(UiClear,"p()");
     VIREO_DEFINE_FUNCTION(UiUpdate,"p()");
     VIREO_DEFINE_FUNCTION(UiRestore,"p()");
-    VIREO_DEFINE_FUNCTION(UiText,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.Utf8String))");
-    VIREO_DEFINE_FUNCTION(UiBmpFile,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.Utf8String))");
+    VIREO_DEFINE_FUNCTION(UiText,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
+    VIREO_DEFINE_FUNCTION(UiBmpFile,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
     VIREO_DEFINE_FUNCTION(UiPoint,"p(i(.UInt8),i(.UInt16),i(.UInt16))");
     VIREO_DEFINE_FUNCTION(UiLine,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16))");
     VIREO_DEFINE_FUNCTION(UiRectangle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
     VIREO_DEFINE_FUNCTION(UiCircle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
+    VIREO_DEFINE_FUNCTION(UiButtonPressed,"p(i(.Int8) o(.Int8))");
+    VIREO_DEFINE_FUNCTION(UiGetVBattery,"p(o(.Single))");
 VIREO_DEFINE_END()
 

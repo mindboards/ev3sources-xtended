@@ -19,7 +19,6 @@
  */
 
 extern "C" {
-#include "lms2012.h"
 #include "c_input.h"
 }
 
@@ -41,6 +40,11 @@ VIVM_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
     {
         *type = InputInstance.DeviceType[device];
         *mode = InputInstance.DeviceMode[device];
+    }
+    else
+    {
+        *type = TYPE_NONE;
+        *mode = 0;
     }
 
     return _NextInstruction();
@@ -66,22 +70,26 @@ VIVM_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
     return _NextInstruction();
 }
 
-// Functionally equivalent to opINPUT_READSI/cInputReadSi
-VIVM_FUNCTION_SIGNATURE5(InputReadSi, UInt8, UInt8, UInt8, UInt8, Single)
+VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
 {
-    UInt8   layer = _Param(0);
-    UInt8   no    = _Param(1);
-    UInt8   type  = _Param(2);
-    UInt8   mode  = _Param(3);
-    Single *si    = _ParamPointer(4); // reference
+    UInt8  layer = _Param(0);
+    UInt8  no    = _Param(1);
+    UInt8  type  = _Param(2);
+    UInt8  mode  = _Param(3);
+    UInt8  count  = _Param(4);
+    TypedArray1dCoreRef data = _Param(5); // single reference
 
     DATA8 device = no + (layer * INPUT_PORTS);
+    cInputSetType(device, type, mode, __LINE__);
+    data->Resize(count);
 
-    if (device < DEVICES)
+    for (UInt8 i = 0; i < count; i++)
     {
-        cInputSetType(device, type, mode, __LINE__);
+        if (device < DEVICES)
+            *(Single *) data->BeginAt(i) = cInputReadDeviceSi(device,i,0,NULL);
+        else
+            *(Single *) data->BeginAt(i) = DATA32_NAN;
     }
-    *si = cInputReadDeviceSi(device,0,0,NULL);
 
     return _NextInstruction();
 }
@@ -94,9 +102,9 @@ VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
     TypedArray1dCoreRef data = _Param(3); // single reference
 
     DATA8 device = no + (layer * INPUT_PORTS);
-    Int32 length = data->Length();
+    data->Resize(count);
 
-    for (UInt8 i = 0; i < count && i < length; i++)
+    for (UInt8 i = 0; i < count; i++)
     {
         if (device < DEVICES)
             *(Single *) data->BeginAt(i) = cInputReadDeviceRaw(device,i,0,NULL);
@@ -116,10 +124,10 @@ VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArray1d
     TypedArray1dCoreRef data = _Param(4); // single
 
     DATA8 device = no + (layer * INPUT_PORTS);
-    Int32 length = data->Length();
+    data->Resize(count);
 
     if (device < DEVICES)
-        for (UInt8 i = 0; i < count && i < length; i++)
+        for (UInt8 i = 0; i < count; i++)
             cInputWriteDeviceRaw(device, InputInstance.DeviceData[device].Connection, type, *(Single *) data->BeginAt(i));
 
     return _NextInstruction();
@@ -142,13 +150,30 @@ VIVM_FUNCTION_SIGNATURE4(InputIicSetup, UInt8, UInt8, TypedArray1dCoreRef, Typed
         return _NextInstruction();
 }
 
+VIVM_FUNCTION_SIGNATURE2(InputClearChanges, UInt8, UInt8)
+{
+    UInt8  layer = _Param(0);
+    UInt8  no    = _Param(1);
+
+    DATA8 device = no + (layer * INPUT_PORTS);
+
+    if (device < DEVICES)
+    {
+        InputInstance.DeviceData[device].Changes = (DATA32)0;
+        InputInstance.DeviceData[device].Bumps   = (DATA32)0;
+    }
+
+    return _NextInstruction();
+}
+
 #include "TypeDefiner.h"
 VIREO_DEFINE_BEGIN(EV3_IO)
     VIREO_DEFINE_FUNCTION(InputGetTypeMode, "p(i(.UInt8),i(.UInt8),o(.UInt8),o(.UInt8))");
     VIREO_DEFINE_FUNCTION(InputReadPct, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.UInt8))");
-    VIREO_DEFINE_FUNCTION(InputReadSi, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.Single))");
+    VIREO_DEFINE_FUNCTION(InputReadSi, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
     VIREO_DEFINE_FUNCTION(InputReadRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
-    VIREO_DEFINE_FUNCTION(InputWriteRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
+    VIREO_DEFINE_FUNCTION(InputWriteRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.Array))");
     VIREO_DEFINE_FUNCTION(InputIicSetup, "p(i(.UInt8),i(.UInt8),i(.Array),o(.Array))");
+    VIREO_DEFINE_FUNCTION(InputClearChanges, "p(i(.UInt8),i(.UInt8))");
 VIREO_DEFINE_END()
 

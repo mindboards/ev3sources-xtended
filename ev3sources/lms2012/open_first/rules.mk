@@ -39,7 +39,7 @@ DEVKIT = $(BASE)/../extra/linux-devkit/arm-none-linux-gnueabi
 INCLUDES += -I$(DEVKIT)/usr/include/dbus-1.0
 INCLUDES += -I$(DEVKIT)/usr/lib/dbus-1.0/include
 INCLUDES += -I$(DEVKIT)/usr/include
-CFLAGS = -DPCASM $(INCLUDES) -O0 -Wall -fPIC
+CFLAGS = -DPCASM $(INCLUDES) -Os -Wall -fPIC
 LDFLAGS = -L$(BASE)/lms2012/Linux_$(ARCH)/sys/lib -L$(DEVKIT)/usr/lib
 endif
 

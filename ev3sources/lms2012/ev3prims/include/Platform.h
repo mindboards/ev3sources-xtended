@@ -51,7 +51,11 @@ typedef long long           Int64;
 typedef unsigned long long  UInt64;
 typedef float               Single;
 typedef double              Double;
-typedef Double              float64;  // legacy for NITime support
+
+// For places where the Vireo kenel function hold used data
+// these types can be used.
+typedef Int64               IntMax;
+typedef UInt64              UIntMax;
 
 //This two lines copied from lvthread.h
 //struct VIREOHMUTEXREC;

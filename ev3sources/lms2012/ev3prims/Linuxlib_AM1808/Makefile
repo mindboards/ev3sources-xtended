@@ -1,6 +1,6 @@
 SOURCES = $(EV3PRIMITIVES)
 
-EV3PRIMITIVES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3Entry.cpp EV3_File.cpp
+EV3PRIMITIVES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3Entry.cpp EV3_File.cpp EV3_Com.cpp
 
 TARGET = libev3prims.so
 
@@ -43,15 +43,16 @@ INCLUDES = -I$(BASE)/lms2012/source \
 
 ifeq ($(ARCH),X86)
 DBUS_CFLAGS := $(shell pkg-config dbus-1 --cflags)
-CFLAGS = -DLinux_X86 $(INCLUDES) $(DBUS_CFLAGS) -O0 -g3 -Wall -fPIC
+CFLAGS = -DLinux_X86 $(INCLUDES) $(DBUS_CFLAGS) -Os -g3 -Wall -fPIC
 LDFLAGS = -L$(BASE)/lms2012/Linux_$(ARCH)/sys/lib
 else
 DEVKIT = $(BASE)/../extra/linux-devkit/arm-none-linux-gnueabi
 INCLUDES += -I$(DEVKIT)/usr/include/dbus-1.0
 INCLUDES += -I$(DEVKIT)/usr/lib/dbus-1.0/include
 INCLUDES += -I$(DEVKIT)/usr/include
-CFLAGS = -DPCASM $(INCLUDES) -O0 -Wall -fPIC
-LDFLAGS = -L$(BASE)/lms2012/Linux_$(ARCH)/sys/lib -L$(DEVKIT)/usr/lib
+CFLAGS = -DPCASM $(INCLUDES) -Os -Wall -fPIC
+# LDFLAGS = -L$(BASE)/lms2012/Linux_$(ARCH)/sys/lib -L$(DEVKIT)/usr/lib
+LDFLAGS = -L../include
 endif
 
 ifeq ($(CONF),Linuxlib)

@@ -180,7 +180,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
     #endif
     SetDispatchStatus(DspStat);
 
-
     return _NextInstruction();
 }
 
@@ -234,7 +233,6 @@ VIVM_FUNCTION_SIGNATURE2(OutputStart, UInt8, UInt8)
     #endif
     SetDispatchStatus(DspStat);
 
-
     return _NextInstruction();
 }
 
@@ -287,7 +285,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
     return _NextInstruction();
 }
 
-
 VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UInt32, UInt8)
 {
     UInt8  layer = _Param(0);
@@ -301,7 +298,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UI
     UBYTE len = 0;
     IP TmpIp = GetObjectIp();
     DSPSTAT DspStat = NOBREAK;
-
 
     if (layer == 0)
     {
@@ -371,7 +367,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UI
     IP TmpIp = GetObjectIp();
     DSPSTAT DspStat = NOBREAK;
 
-
     if (layer == 0)
     {
         STEPSPEED StepSpeed;
@@ -439,7 +434,6 @@ VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt
     IP TmpIp = GetObjectIp();
     DSPSTAT DspStat = NOBREAK;
 
-
     if (layer == 0)
     {
         STEPSYNC StepSync;
@@ -489,6 +483,100 @@ VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt
     #endif
     SetDispatchStatus(DspStat);
 
+    return _NextInstruction();
+}
+
+VIVM_FUNCTION_SIGNATURE2(OutputResetCount, UInt8, UInt8)
+{
+    UInt8  layer = _Param(0);
+    UInt8  nos   = _Param(1);
+
+    DATA8 OutputData[2];
+    UBYTE len = 0;
+    IP TmpIp = GetObjectIp();
+    DSPSTAT DspStat = NOBREAK;
+
+    if (layer == 0)
+    {
+        OutputData[0] = opOUTPUT_CLR_COUNT;
+        OutputData[1] = nos;
+
+        if (OutputInstance.PwmFile >= 0)
+            write(OutputInstance.PwmFile, OutputData, sizeof(OutputData));
+
+        for (DATA8 i = 0; i < OUTPUTS; i++) {
+            if (nos & (1 << i))
+                OutputInstance.pMotor[i].TachoSensor = 0;
+        }
+    }
+    #ifndef DISABLE_DAISYCHAIN_COM_CALL
+    else
+    {
+        if (cDaisyReady() != BUSY)
+        {
+            DaisyBuf[len++] = 0;
+            DaisyBuf[len++] = 0;
+            DaisyBuf[len++] = opOUTPUT_CLR_COUNT;
+            len            += cOutputPackParam((DATA32)    0, &(DaisyBuf[len]));
+            len            += cOutputPackParam((DATA32)  nos, &(DaisyBuf[len]));
+            if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
+            {
+                SetObjectIp(TmpIp - 1);
+                DspStat = BUSYBREAK;
+            }
+        }
+        else
+        {
+            SetObjectIp(TmpIp - 1);
+            DspStat = BUSYBREAK;
+        }
+    }
+    #endif
+    SetDispatchStatus(DspStat);
+
+    return _NextInstruction();
+}
+
+VIVM_FUNCTION_SIGNATURE3(OutputGetCount, UInt8, UInt8, Int32)
+{
+    UInt8  layer = _Param(0);
+    UInt8  no    = _Param(1);
+    Int32 *tacho = _ParamPointer(2); // reference
+
+    if (layer == 0)
+    {
+        if (no < OUTPUTS)
+        {
+            *tacho = OutputInstance.pMotor[no].TachoSensor;
+        }
+    }
+
+    return _NextInstruction();
+}
+
+VIVM_FUNCTION_SIGNATURE3(OutputTest, UInt8, UInt8, UInt8)
+{
+    UInt8  layer  = _Param(0);
+    UInt8  nos    = _Param(1);
+    UInt8 *isBusy = _ParamPointer(2); // reference
+
+    char OutputData[20];
+    int test1, test2;
+    *isBusy = 0;
+
+    if (layer == 0)
+    {
+        if (OutputInstance.PwmFile >= 0)
+        {
+            read(OutputInstance.PwmFile, OutputData, 10);
+            sscanf(OutputData, "%u %u", &test1, &test2);
+
+            if (nos & (DATA8)test2)
+                *isBusy = 1;
+        }
+    }
+    else if (cDaisyCheckBusyBit(layer, nos))
+        *isBusy = 1;
 
     return _NextInstruction();
 }
@@ -504,6 +592,9 @@ VIREO_DEFINE_BEGIN(EV3_IO)
     VIREO_DEFINE_FUNCTION(OutputStepPower, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
     VIREO_DEFINE_FUNCTION(OutputStepSpeed, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
     VIREO_DEFINE_FUNCTION(OutputStepSync, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.Int16),i(.UInt32),i(.UInt8))");
+    VIREO_DEFINE_FUNCTION(OutputResetCount, "p(i(.UInt8),i(.UInt8))");
+    VIREO_DEFINE_FUNCTION(OutputGetCount, "p(i(.UInt8),i(.UInt8),o(.Int32))");
+    VIREO_DEFINE_FUNCTION(OutputTest, "p(i(.UInt8),i(.UInt8),o(.UInt8))");
 
 VIREO_DEFINE_END()
 

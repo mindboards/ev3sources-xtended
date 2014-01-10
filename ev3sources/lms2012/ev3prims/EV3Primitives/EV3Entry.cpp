@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include "VirtualInstrument.h"
 #include "ExecutionContext.h"
+#include "VirtualInstrument.h"
 #include "EggShell.h"
 
 #include "EV3Entry.h"
@@ -60,6 +60,7 @@ void VireoStep()
     *(DATA8*)PrimParPointer() = (DATA8) pShell->TheExecutionContext()->ExecuteSlices(20);
 }
 
+// TODO: change VireoPeek/VireoPoke to wrap the peek/poke in CEntryPoints.cpp
 void VireoPeek()
 {
     SubString VIName((char *) PrimParPointer());

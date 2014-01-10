@@ -56,8 +56,6 @@ private:
     EggShell(TypeManager *typeManger, ExecutionContext *execContext);
     NIError ParseEnqueueVI();
     NIError ParseDefine();
-    NIError ParsePrint();
-    NIError PrintType(TypeRef t, Int32 level);
 };
 
 } // namespace Vireo

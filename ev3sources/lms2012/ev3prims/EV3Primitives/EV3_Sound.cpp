@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 extern "C" {
-#include "lms2012.h"
 #include "c_sound.h"
 }
 
@@ -99,10 +98,10 @@ VIVM_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, Utf8String*)
+VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
 {
-    UInt8       Volume   = _Param(0);
-    Utf8String *fileName = _Param(1);
+    UInt8     Volume   = _Param(0);
+    StringRef fileName = _Param(1);
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
@@ -181,10 +180,10 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, Utf8String*)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, Utf8String*)
+VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
 {
-    UInt8       Volume   = _Param(0);
-    Utf8String *fileName = _Param(1);
+    UInt8     Volume   = _Param(0);
+    StringRef fileName = _Param(1);
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
@@ -276,8 +275,8 @@ VIVM_FUNCTION_SIGNATURE1(SoundTest, UInt8)
 VIREO_DEFINE_BEGIN(EV3_IO)
     VIREO_DEFINE_FUNCTION(SoundStop, "p()");
     VIREO_DEFINE_FUNCTION(SoundTone, "p(i(.UInt8),i(.UInt16),i(.UInt16))");
-    VIREO_DEFINE_FUNCTION(SoundPlay, "p(i(.UInt8),i(.Utf8String))");
-    VIREO_DEFINE_FUNCTION(SoundPlayLoop, "p(i(.UInt8),i(.Utf8String))");
+    VIREO_DEFINE_FUNCTION(SoundPlay, "p(i(.UInt8),i(.String))");
+    VIREO_DEFINE_FUNCTION(SoundPlayLoop, "p(i(.UInt8),i(.String))");
     VIREO_DEFINE_FUNCTION(SoundTest,"p(o(.UInt8))");
 VIREO_DEFINE_END()
 
