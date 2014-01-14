@@ -369,7 +369,7 @@ static OPCODE OpCodes[256] =
   //    Spare
   OC(   opVIREO_INIT,           PAR8,                                           0,0,0,0,0,0,0         ),
   OC(   opVIREO_STEP,           PAR8,                                           0,0,0,0,0,0,0         ),
-  OC(   opVIREO_MEMACCESS,      PAR8,PAR8,PAR8,PAR32,PAR8,PAR32                 0,0,0                 ),
+  OC(   opVIREO_MEMACCESS,      PAR8,PAR8,PAR8,PAR32,PAR8,PAR32,                0,0                   ),
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),
 
