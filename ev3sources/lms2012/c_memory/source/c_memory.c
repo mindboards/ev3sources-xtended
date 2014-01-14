@@ -630,7 +630,7 @@ RESULT    cMemoryCheckFilename(char *pFilename,char *pPath,char *pName,char *pEx
 }
 
 
-RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,char *pDefaultExt)
+RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,const char *pDefaultExt)
 {
   RESULT  Result = FAIL;
   char    Path[vmPATHSIZE];

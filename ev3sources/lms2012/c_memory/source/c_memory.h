@@ -24,7 +24,7 @@
 
 #include  "lms2012.h"
 
-RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,char *pDefaultExt);
+RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,const char *pDefaultExt);
 DSPSTAT   cMemoryOpenFile(PRGID PrgId,DATA8 Access,char *pFileName,HANDLER *pHandle,DATA32 *pSize);
 DSPSTAT   cMemoryReadFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pDestination);
 DSPSTAT   cMemoryWriteFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pSource);

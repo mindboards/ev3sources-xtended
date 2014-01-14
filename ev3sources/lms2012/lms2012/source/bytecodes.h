@@ -451,8 +451,7 @@ typedef   enum
 //        SPARE                           111.....
   opVIREO_INIT                = 0xE0, //     00000
   opVIREO_STEP                = 0xE1, //     00001
-  opVIREO_PEEK                = 0xE2, //     00010
-  opVIREO_POKE                = 0xE3, //     00011
+  opVIREO_MEMACCESS           = 0xE2, //     00010
 
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111

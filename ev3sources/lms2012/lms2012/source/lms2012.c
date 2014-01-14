@@ -2820,8 +2820,7 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opMAILBOX_CLOSE]       =   &cComCloseMailBox,
   [opVIREO_INIT]          =   &VireoInit,
   [opVIREO_STEP]          =   &VireoStep,
-  [opVIREO_PEEK]          =   &VireoPeek,
-  [opVIREO_POKE]          =   &VireoPoke,
+  [opVIREO_MEMACCESS]     =   &VireoMemAccess,
 
   [opTST]                 =   &Tst
 };

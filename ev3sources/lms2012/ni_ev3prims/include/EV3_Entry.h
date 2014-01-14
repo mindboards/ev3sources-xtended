@@ -23,8 +23,7 @@ extern "C" {
 #endif
 void VireoInit(void);
 void VireoStep(void);
-void VireoPeek(void);
-void VireoPoke(void);
+void VireoMemAccess(void);
 #ifdef __cplusplus
 }
 #endif

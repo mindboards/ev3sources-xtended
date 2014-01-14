@@ -21,6 +21,7 @@
 #include "ExecutionContext.h"
 #include "VirtualInstrument.h"
 #include "EggShell.h"
+#include "CEntryPoints.h"
 
 #include "EV3_Entry.h"
 extern "C" {
@@ -60,98 +61,18 @@ void VireoStep()
     *(DATA8*)PrimParPointer() = (DATA8) pShell->TheExecutionContext()->ExecuteSlices(20);
 }
 
-// TODO: change VireoPeek/VireoPoke to wrap the peek/poke in CEntryPoints.cpp
-void VireoPeek()
+void VireoMemAccess()
 {
-    SubString VIName((char *) PrimParPointer());
-    SubString name((char *) PrimParPointer());
-    UInt16 count = *(UInt16*)PrimParPointer();
-    void *ppp = PrimParPointer();
+    Int8 peekOrPoke = *(Int8 *) PrimParPointer();
+    char *viName = (char *) PrimParPointer();
+    char *eltName = (char *) PrimParPointer();
+    Int32 bufferSize = *(Int32 *) PrimParPointer();
+    char *buffer = (char *) PrimParPointer();
+    Int32 *result = (Int32 *) PrimParPointer();
 
-    VirtualInstrument *VI;
-    TypedBlock *dataSpace;
-    TypedBlock *paramBlock;
-    AQBlock1 *pData = null;
-    Int32 offset = 0;
-
-    // TODO: Get rid of this
-    memset(ppp, 0, 20);
-
-    // If the shell or VI do not exist, do nothing.
-    // TODO: Checking for a nonexistant VI causes a segfault.
-    if (pShell == null || (VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName, kPARead)) == null)
-        return;
-
-    dataSpace = VI->DataSpace();
-    paramBlock = VI->ParamBlock();
-
-    // Search the dataSpace and paramBlock for the desired element
-    TypeRef actualType = dataSpace->Type()->GetSubElementFromPath(&name, &offset);
-    if (actualType != null)
-        pData = dataSpace->RawBegin() + offset;
-    else if (paramBlock)
-    {
-        actualType = paramBlock->Type()->GetSubElementFromPath(&name, &offset);
-        if (actualType != null)
-            pData = paramBlock->RawBegin() + offset;
-    }
-
-    if (actualType != null)
-    {
-printf("ppp value = %x, data value = %x\r\n", *(Int32*)ppp, *(Int32*)pData);
-        // Reply with the count and element width
-        if (count == 0)
-        {
-            ((UInt16 *) ppp)[0] = actualType->IsArray() ? (*(TypedBlock **)pData)->Length() : 1;
-            ((UInt16 *) ppp)[1] = actualType->IsArray() ? actualType->GetSubElement(0)->TopAQSize() : actualType->TopAQSize();
-        }
-        // Reply with an array which is assumed to be inlined
-        else if (actualType->IsArray())
-        {
-            size_t aqlength = count * actualType->TopAQSize();
-            memcpy(ppp, **(void ***)pData, aqlength);
-        }
-        // Reply with a scalar.
-        else
-            actualType->CopyData(pData, ppp, count);
-printf("ppp value = %x, data value = %x\r\n\r\n", *(Int32*)ppp, *(Int32*)pData);
-    }
-}
-
-void VireoPoke()
-{
-    SubString VIName((char *) PrimParPointer());
-    SubString name((char *) PrimParPointer());
-    UInt16 count = *(UInt16*)PrimParPointer();
-    void *ppp = PrimParPointer();
-
-    if (pShell)
-    {
-        VirtualInstrument *VI = (VirtualInstrument *) pShell->TheExecutionContext()->TheTypeManager()->FindNamedTypedBlock(&VIName, kPAWrite);
-        if (VI)
-        {
-            TypedBlock *dataSpace = VI->DataSpace();
-            TypedBlock *paramBlock = VI->ParamBlock();
-
-            AQBlock1 *pData = null;
-            Int32 offset = 0;
-            TypeRef actualType = dataSpace->Type()->GetSubElementFromPath(&name, &offset);
-            if (actualType != null)
-                pData = dataSpace->RawBegin() + offset;
-            else if (paramBlock)
-            {
-                actualType = paramBlock->Type()->GetSubElementFromPath(&name, &offset);
-                if (actualType != null)
-                    pData = paramBlock->RawBegin() + offset;
-            }
-
-            if (actualType != null)
-            {
-printf("ppp value = %x, data value = %x\r\n", *(Int32*)ppp, *(Int32*)pData);
-                actualType->CopyData(ppp, pData, count);
-printf("ppp value = %x, data value = %x\r\n", *(Int32*)ppp, *(Int32*)pData);
-            }
-        }
-    }
+    if (peekOrPoke == 0)
+        *result = EggShell_PeekMemory(pShell, viName, eltName, bufferSize, buffer);
+    else
+        *result = EggShell_PokeMemory(pShell, viName, eltName, bufferSize, buffer);
 }
 

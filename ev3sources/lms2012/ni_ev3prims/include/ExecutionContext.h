@@ -164,10 +164,12 @@ public:
 };
 
 //------------------------------------------------------------
-// When runtime functions need stack based instances of a TypeAndDataManager
-// they can use the StackVar class. Its not intended for non stack use since the life time
+// When runtime functions need stack based instances of a
+// TypeAndDataManager array values they can use the StackVar class.
+// Its not intended for non stack use since the life time
 // of TypeAndDataMangert values are generally conneced to data spaces.
-// The macro prevents the need for RTTI.
+// The macro prevents the need for C++ RTTI.
+
 #define STACK_VAR(_t_, _v_) StackVar<_t_> _v_(#_t_)
 template <class T>
 class StackVar
@@ -180,6 +182,7 @@ public:
         static TypeRef type = null;
         if (!type) {
             type = THREAD_EXEC()->TheTypeManager()->FindType(&stringTypeName);
+            VIVM_ASSERT(type->IsArray() && !type->IsFlat());
         }
         Value = null;
         if (type) {

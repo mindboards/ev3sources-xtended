@@ -886,6 +886,8 @@ class String : public TypedArray1D< Utf8Char >
 public:
     SubString MakeSubStringAlias()              { return SubString(Begin(), End()); }
     void CopyFromSubString(SubString* string)   { CopyFrom(string->Length(), string->Begin()); }
+    void AppendCStr(const char* cstr)           { Append((IntIndex)strlen(cstr), (Utf8Char*)cstr); }
+
 };
 
 typedef String *StringRef;
@@ -903,6 +905,13 @@ private:
 public:
     static NIError Create(TypeRef typeRef, TypedBlockRef* pData);
 };
+
+//------------------------------------------------------------
+// Utility functions to read and write numbers to memory basd on size and encoding
+NIError ReadIntFromMemory(EncodingEnum encoding, Int32 aqSize, void* pData, IntMax* pValue);
+NIError WriteIntToMemory(EncodingEnum encoding, Int32 aqSize, void* pData, IntMax value);
+NIError ReadRealFromMemory(EncodingEnum encoding, Int32 aqSize, void* pData, Double* pValue);
+NIError WriteRealToMemory(EncodingEnum encoding, Int32 aqSize, void* pData, Double value);
 
 //------------------------------------------------------------
 // A derivative of the TempStackCStringFromString that knows

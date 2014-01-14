@@ -41,11 +41,13 @@ typedef Int32 CounterType;
 
 typedef enum {
     kNIError_Success = 0,
-    kNIError_kInsufficientResources = 1,
+    kNIError_kInsufficientResources = 1,// Typically memory
     kNIError_kResourceNotFound = 2,
     kNIError_kArrayRankMismatch = 3,    // Arrays ranks do not fir function requirements (typically they must be the same)
     kNIError_kCantDecode = 4,           // Data in stream does not fit grammar
-    kNIError_kLogicFailure = 5,
+    kNIError_kCantEncode = 5,           // Data type not supported by encoder
+    kNIError_kLogicFailure = 6,
+    kNIError_ValueTruncated = 7,
 } NIError ;
 
 // Types used for structs and pointers when the symantics of the underlying bits may vary

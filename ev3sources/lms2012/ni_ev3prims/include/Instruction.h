@@ -36,7 +36,7 @@ namespace Vireo
 #ifdef VIVM_HARVARD
     #ifdef PROGMEM
         #define _PROGMEM PROGMEM
-        // AVR uses GCC which supports 'typeof' extension Cx standard woudl be decltype, tough arduinos
+        // AVR uses GCC which supports 'typeof' extension Cx standard would be decltype, tough arduinos
         // gcc does not yet have full support for this function
         #define _PROGMEM_PTR(__this_ptr, _field) ((typeof(__this_ptr->_field))pgm_read_word(&(__this_ptr->_field)))
     #else
