@@ -27,6 +27,8 @@ SDG
 #define VirtualInstrument_h
 
 #include "DataTypes.h"
+#include "EventLog.h"
+
 namespace Vireo
 {
 
@@ -187,6 +189,7 @@ class ClumpParseState
     static const Int32 kMaxArguments = 100; // TODO dynamic
     static const Int32 kMaxPatchInfos = 100; // TODO allow more
 public:
+    EventLog*       _pLog;
     Int32           _argCount;
     void*           _argPointers[kMaxArguments];
     TypeRef         _argTypes[kMaxArguments];
@@ -215,7 +218,7 @@ public:
     TypedBlock*     _dataSpace;
     
     // ---
-    // The type that has the pointer to the specific target of the funciton.
+    // The type that has the pointer to the specific target of the function.
     TypeRef         _instructionPointerType;
     
     // The calling signature descriptor for the instruciton's function. Its the BaseType Of the PointerType.
@@ -227,13 +230,12 @@ public:
     
     size_t*          _pVarArgCount;
     Boolean         _bIsVI;
-    Boolean         _traceEnabled;
     
     // Class to help thread instrucitons together.
     VIClumpInstructionBuilder _builder;
     
     //------------------------------------------------------------
-                    ClumpParseState(VIClump* clump, Boolean traceEnabled);
+                    ClumpParseState(VIClump* clump, EventLog* pLog);
     void            StartSnippet(InstructionCore** startLocation);
     TypeRef         FormalParameterType();
     TypeRef         ReadFormalParameterType();

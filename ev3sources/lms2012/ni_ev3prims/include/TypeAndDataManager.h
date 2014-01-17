@@ -111,7 +111,7 @@ enum PointerTypeEnum {
     kPTInt,
     kPTInstructionFunction,
     kPTGenericFucntionPropType,
-    kPTGenericFuncitonCodeGen,
+    kPTGenericFunctionCodeGen,
 };
 
 // PointerTypeEnum defines how a pointer to data will be used.
@@ -215,7 +215,7 @@ public:
     // Low level allocation functions
     // TODO pull out into its own class.
     void* Malloc(size_t countAQ);
-    void* ReAlloc(void* pBuffer, size_t countAQ);
+    void* Realloc(void* pBuffer, size_t countAQ, size_t preserveAQ);
     void Free(void* pBuffer);
     
     Boolean AllocationPermitted(size_t countAQ);
@@ -751,7 +751,7 @@ public:
     
 protected:
     NIError AQAlloc(IntIndex countBytes);
-    NIError AQRealloc(IntIndex countBytes);
+    NIError AQRealloc(IntIndex countBytes, IntIndex preserveBytes);
     void AQFree();
     
 public:
@@ -887,7 +887,7 @@ public:
     SubString MakeSubStringAlias()              { return SubString(Begin(), End()); }
     void CopyFromSubString(SubString* string)   { CopyFrom(string->Length(), string->Begin()); }
     void AppendCStr(const char* cstr)           { Append((IntIndex)strlen(cstr), (Utf8Char*)cstr); }
-
+    void AppendSubString(SubString* string)     { Append((IntIndex)string->Length(), (Utf8Char*)string->Begin()); }
 };
 
 typedef String *StringRef;

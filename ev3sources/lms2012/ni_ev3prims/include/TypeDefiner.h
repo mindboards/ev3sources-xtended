@@ -75,7 +75,7 @@ static void TOKENPASTE2(DefineTypes, _section_, __LINE__) (TypeManager& tm) {
 (TypeDefiner::DefineCustomValue(tm, #_name_, value, _typeTypeString_));
 
 #define VIREO_DEFINE_GENERIC(_name_, _typeTypeString_, _genericEmitProc_) \
-(TypeDefiner::DefineCustomPointerTypeWithValue(tm, #_name_, (void*)_genericEmitProc_, _typeTypeString_, kPTGenericFuncitonCodeGen));
+(TypeDefiner::DefineCustomPointerTypeWithValue(tm, #_name_, (void*)_genericEmitProc_, _typeTypeString_, kPTGenericFunctionCodeGen));
 
 #endif // TypeDefiner_h
 

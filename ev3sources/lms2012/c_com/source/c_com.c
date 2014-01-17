@@ -161,11 +161,14 @@ RESULT    cComInit(void)
 
   for(Cnt = 0; Cnt < NO_OF_MAILBOXES; Cnt++)
   {
-    ComInstance.MailBox[Cnt].Status   =  FAIL;
     ComInstance.MailBox[Cnt].DataSize =  0;
     ComInstance.MailBox[Cnt].ReadCnt  =  0;
     ComInstance.MailBox[Cnt].WriteCnt =  0;
-    ComInstance.MailBox[Cnt].Name[0]  =  0;
+
+    snprintf((char*)(&(ComInstance.MailBox[Cnt].Name[0])), 50,"%d", Cnt);
+    memset(ComInstance.MailBox[Cnt].Content, 0, MAILBOX_CONTENT_SIZE);
+    ComInstance.MailBox[Cnt].Type      =  DATA_8;
+    ComInstance.MailBox[Cnt].Status    =  OK;
   }
 
   ComInstance.ComResult = OK;
