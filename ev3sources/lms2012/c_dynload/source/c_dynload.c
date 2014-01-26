@@ -29,7 +29,7 @@ void dynloadInit()
 	virtualMachineInfo.vmIndex = -1;
 
 	// Initialise all of the pointers to functions
-	virtualMachineInfo.exit_vm = NULL;
+	virtualMachineInfo.vm_exit = NULL;
 
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
@@ -53,8 +53,8 @@ void dynLoadExit()
 {
 	// Execute our entry (or should that be exit) point function,
   // this will clean up anything that requires it, in the VM
-	if (virtualMachineInfo.exit_vm != NULL)
-		(virtualMachineInfo.exit_vm)();
+	if (virtualMachineInfo.vm_exit != NULL)
+		(virtualMachineInfo.vm_exit)();
 
 	// Close the .so
 	dlclose(virtualMachineInfo.soHandle);

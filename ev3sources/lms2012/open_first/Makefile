@@ -15,7 +15,10 @@ include rules.mk
 # lms2012 program.
 #
 
-LIBS = c_com c_input c_memory c_output c_sound c_ui ni_ev3prims c_dynload
+LIBS = c_com c_input c_memory c_output c_sound c_ui ni_ev3prims c_dynload 
+
+robotcvm: 
+	$(MAKE) -C $(BASE)/c_robotcvm/Linuxlib_$(ARCH)
 
 lms2012:
 	$(MAKE) -C $(BASE)/lms2012/Linux_$(ARCH)
@@ -130,6 +133,7 @@ help:
 	@echo ' kernel: to build Linux kernel'
 	@echo ' u-boot: to build u-Boot'
 	@echo ' doc: to build documentation'
+	@echo ' robotcvm: to build a dummy robotc vm shared object'
 	@echo
 	@echo 'Execute "make doc.view" to view the documentation in a web'
 	@echo 'browser'

@@ -37,7 +37,7 @@ Development with debug messages:    DEBUG defined, TERMINAL_ENABLED = 1, DEBUG_U
 
 //#define   DEBUG                         //!< When defined debug messages is output on standard I/O (d_uart is different)
 
-#define   TERMINAL_ENABLED      0       //!< DEBUG terminal enabled (0 = disabled, 1 = enabled)
+#define   TERMINAL_ENABLED      1       //!< DEBUG terminal enabled (0 = disabled, 1 = enabled)
 #define   DEBUG_UART            4       //!< UART used for debug (0 = port1, 1 = port2, ... 4 = none)
 
 
@@ -89,6 +89,7 @@ Development with debug messages:    DEBUG defined, TERMINAL_ENABLED = 1, DEBUG_U
 //#define   DEBUG_BACK_BLOCKED
 #define   DEBUG_RECHARGEABLE
 
+#define DEBUG_DYNLOAD
 
 
 #ifndef   LMS2012_H_
