@@ -58,6 +58,7 @@
  *\n\n
  */
 
+#include  "c_dynload.h"
 #include  "EV3_Entry.h"
 
 #include  "lms2012.h"
@@ -2822,7 +2823,18 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opVIREO_STEP]          =   &VireoStep,
   [opVIREO_PEEK]          =   &VireoPeek,
   [opVIREO_POKE]          =   &VireoPoke,
-
+  [opDYNLOAD_VMLOAD]			= 	&dynloadVMLoad,
+//  [opDYNLOAD_VMEXIT]			= 	&dynloadVMExit,
+  [opDYNLOAD_ENTRY_0]			= 	&dynloadEntry_0,
+  [opDYNLOAD_ENTRY_1]			= 	&dynloadEntry_1,
+  [opDYNLOAD_ENTRY_2]			= 	&dynloadEntry_2,
+  [opDYNLOAD_ENTRY_3]			= 	&dynloadEntry_3,
+  [opDYNLOAD_ENTRY_4]			= 	&dynloadEntry_4,
+  [opDYNLOAD_ENTRY_5]			= 	&dynloadEntry_5,
+  [opDYNLOAD_ENTRY_6]			= 	&dynloadEntry_6,
+  [opDYNLOAD_ENTRY_7]			= 	&dynloadEntry_7,
+  [opDYNLOAD_ENTRY_8]			= 	&dynloadEntry_8,
+  [opDYNLOAD_ENTRY_9]			= 	&dynloadEntry_9,
   [opTST]                 =   &Tst
 };
 

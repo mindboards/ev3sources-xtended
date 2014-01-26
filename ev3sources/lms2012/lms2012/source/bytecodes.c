@@ -371,6 +371,24 @@ static OPCODE OpCodes[256] =
   OC(   opVIREO_STEP,           PAR8,                                           0,0,0,0,0,0,0         ),
   OC(   opVIREO_PEEK,           PAR8, PAR8, PAR16, PAR8,                        0,0,0,0               ),
   OC(   opVIREO_POKE,           PAR8, PAR8, PAR16, PAR8,                        0,0,0,0               ),
+
+  // For dynload
+  OC(		opDYNLOAD_VMLOAD,				PAR8,																						0,0,0,0,0,0,0         ),
+//  OC(		opDYNLOAD_VMEXIT,				0,                                              0,0,0,0,0,0,0         ),
+
+  // Each opcode takes 2 parameters: one is a sub command and the other is the size of the data passed
+  // to it.  This allows for maximum flexibility.
+  OC(		opDYNLOAD_ENTRY_0,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_1,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_2,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_3,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_4,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_5,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_6,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_7,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_8,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  OC(		opDYNLOAD_ENTRY_9,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),
 

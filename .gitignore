@@ -1,0 +1,14 @@
+CVS
+.cvsignore
+.metadata
+*.d
+*.ko
+*.o
+*.so
+*.cmd
+*.mod.c
+.tmp_versions
+modules.order
+Module.symvers
+!ev3sources/extra/linux-devkit/*/*.d
+RemoteSystemsTempFiles

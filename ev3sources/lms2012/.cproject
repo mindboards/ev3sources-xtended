@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="0.1041156883">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.1041156883" moduleId="org.eclipse.cdt.core.settings" name="Default AM1808">
@@ -28,7 +26,41 @@
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.604652459" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool errorParsers="org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser" id="org.eclipse.cdt.build.core.settings.holder.1615461005" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.2140503344" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/opt/CodeSourcery/Sourcery_G++_Lite/arm-none-linux-gnueabi/libc/usr/include"/>
+									<listOptionValue builtIn="false" value="/opt/CodeSourcery/Sourcery_G++_Lite/arm-none-linux-gnueabi/include/c++/4.3.3"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/lego-vm/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/dbus-1.0"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/c++/4.3.3/tr1"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/mach-davinci/include"/>
+								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.691811343" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="0.1041156883.1261867805" name="/" resourcePath="c_com/source">
+						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.582154560" name="No ToolChain" superClass="org.eclipse.cdt.build.core.prefbase.toolchain" unusedChildren="">
+							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1380290983" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs.664947023"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.754255104" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder.1331237744">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1595478087" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.328057026" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder.1331237744">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1552421218" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.963314315" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.1331237744">
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1941052914" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/opt/CodeSourcery/Sourcery_G++_Lite/arm-none-linux-gnueabi/libc/usr/include"/>
+									<listOptionValue builtIn="false" value="/opt/CodeSourcery/Sourcery_G++_Lite/arm-none-linux-gnueabi/include/c++/4.3.3"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/c++/4.3.3/tr1"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/mach-davinci/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/dbus-1.0"/>
+								</option>
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1049357036" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
