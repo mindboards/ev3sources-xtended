@@ -16,7 +16,7 @@
 void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "ROBOTC: %s called\n", __func__);
+	fprintf(stderr, "ROBOTC: %s called: ", __func__);
 #endif
 
 	// Here's where the entry points are configured.
@@ -29,6 +29,9 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
 
 	(virtualMachineInfo->vm_exit) = &vm_exit;
 
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "done.\n");
+#endif
 }
 
 

@@ -4,9 +4,11 @@ CVS
 *.d
 *.ko
 *.o
+*.err
 *.so
 *.cmd
 *.mod.c
+*.bin
 .tmp_versions
 modules.order
 Module.symvers

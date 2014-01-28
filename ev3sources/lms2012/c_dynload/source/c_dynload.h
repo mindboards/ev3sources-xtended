@@ -21,13 +21,10 @@
 #define	DYNLOAD_VM_ROBOTC							0
 #define DYNLOAD_VM_LABVIEW						1
 
-#define DYNLOAD_VM_SO_PATH						"/home/root/3rdparty-vm"
+#define DYNLOAD_VM_SO_PATH						"/home/root/lms2012/3rdparty-vm"
 
 #define DYNLOAD_VM_ROBOTC_SO_NAME			"robotc.so"
-#define DYNLOAD_VM_ROBOTC_INIT_FUNC		"robotc_init"
-
 #define DYNLOAD_VM_LABVIEW_SO_NAME		"labview.so"
-#define DYNLOAD_VM_LABVIEW_INIT_FUNC	"vireo_init"
 
 
 typedef void (*tEntryPointFunc)(void);
@@ -47,7 +44,7 @@ typedef void (*vmInitPointFunc)(struct tVirtualMachineInfo*);
 
 void dynloadInit();
 void dynLoadExit();
-void dynloadVMLoad(int vmIndex);
+void dynloadVMLoad();
 
 void dynloadEntry_0();
 void dynloadEntry_1();

@@ -75,7 +75,7 @@ void dynLoadExit()
 /*! \brief  opINPUT_READ byte code
  *
  */
-void dynloadVMLoad(int vmIndex)
+void dynloadVMLoad()
 {
 	RESULT res = FAIL;
 
@@ -83,7 +83,16 @@ void dynloadVMLoad(int vmIndex)
 
   char *error = NULL;
 
+  char vmIndex;
+
   vmInitPointFunc initFunc = NULL;
+
+  vmIndex = *(char *)PrimParPointer();
+//  vmIndex = 0;
+
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "DYNLOAD: Called with index: %d\n", vmIndex);
+#endif
 
   // A VM has already been loaded.
   if (virtualMachineInfo.vmIndex < 0)
@@ -104,24 +113,23 @@ void dynloadVMLoad(int vmIndex)
 			sprintf(fullVMPath, "%s/%s", DYNLOAD_VM_SO_PATH, DYNLOAD_VM_ROBOTC_SO_NAME);
 			break;
 		default:
-#ifdef DYNLOAD_DEBUG
+#ifdef DEBUG_DYNLOAD
 			fprintf(stderr, "DYNLOAD: Illegal VM Index %d\n", vmIndex);
 #endif
-			res = FAIL;
 			res = FAIL;
 			*(DATA8*)PrimParPointer() =  res;
 			return;
 	}
 
-#ifdef DYNLOAD_DEBUG
-	fprintf(stderr, "DYNLOAD: Loading %s\n", fullVMPath);
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "DYNLOAD: Loading %s: ", fullVMPath);
 #endif
 
 	// You can change this to another type of binding.
 	// This one only resolves the required symbols.
 	virtualMachineInfo.soHandle = dlopen(fullVMPath, RTLD_LAZY);
 	if (!virtualMachineInfo.soHandle) {
-#ifdef DYNLOAD_DEBUG
+#ifdef DEBUG_DYNLOAD
 		fprintf(stderr, "DYNLOAD: %s\n", dlerror());
 #endif
 		res = FAIL;
@@ -129,16 +137,29 @@ void dynloadVMLoad(int vmIndex)
 		return;
 	}
 
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "done\n", fullVMPath);
+#endif
+
 	dlerror();    /* Clear any existing error */
 
 	// Setup our pointer to function.  The *(void **) construction
 	// is taken from the dlopen man page, apparently it's required.
-	*(void **) (initFunc) = dlsym(virtualMachineInfo.soHandle, "vm_init");
+
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "DYNLOAD: Binding to vm_init: ");
+#endif
+
+	*(void **) (&initFunc) = dlsym(virtualMachineInfo.soHandle, "vm_init");
+
+#ifdef DEBUG_DYNLOAD
+	fprintf(stderr, "done\n");
+#endif
 
 	// If an error occured revolving our entry point, shout about it.
 	if ((error = dlerror()) != NULL)
 	{
-#ifdef DYNLOAD_DEBUG
+#ifdef DEBUG_DYNLOAD
 		fprintf(stderr, "DYNLOAD: %s\n", error);
 #endif
 		dlclose(virtualMachineInfo.soHandle);
@@ -146,6 +167,8 @@ void dynloadVMLoad(int vmIndex)
 		*(DATA8*)PrimParPointer() =  res;
 		return;
 	}
+
+
 
 	// Set the VM type
 	virtualMachineInfo.vmIndex = vmIndex;
