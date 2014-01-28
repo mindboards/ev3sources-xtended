@@ -2256,6 +2256,9 @@ RESULT    mSchedInit(int argc,char *argv[])
   Result |=  cComInit();
   Result |=  cSoundInit();
 
+  // Initialise the dynamic loading, does not return anything
+  dynloadInit();
+
   cValidateInit();
 
   for (PrgId = 0;PrgId < MAX_PROGRAMS;PrgId++)

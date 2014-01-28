@@ -88,7 +88,6 @@ void dynloadVMLoad()
   vmInitPointFunc initFunc = NULL;
 
   vmIndex = *(char *)PrimParPointer();
-//  vmIndex = 0;
 
 #ifdef DEBUG_DYNLOAD
 	fprintf(stderr, "DYNLOAD: Called with index: %d\n", vmIndex);
