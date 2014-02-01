@@ -54,6 +54,7 @@ enum
   BT_HOST_CH6,
   NO_OF_BT_CHS
 };
+#define   NUMBER_OF_ATTACHED_SLAVES     (NO_OF_BT_CHS - BT_HOST_CH0)
 
 
 // Defines related to Device List

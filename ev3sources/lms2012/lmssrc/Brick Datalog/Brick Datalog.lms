@@ -19,14 +19,14 @@
  */
 
 
-//  TCP 04.04.2013
+//  TCP 15.08.2013
 //! \page brickdatalogapp Brick Datalog Source Code
 //!
 //! <hr size="1"/>
 //!
 //! \verbatim
 //**********************************************************************
-define appv 'Brick Datalog V1.02'                                     //
+define appv 'Brick Datalog V1.03'                                     //
 //**********************************************************************
                                                                       //
 define    MAX_PORTS                     (INPUTS + OUTPUTS)            //  Number of ports supported
@@ -1795,6 +1795,7 @@ NotSuggested:                                                         //      }
   FILE(MOVE,TMPLOGFILE,Name)                                          //      FILE(MOVE,TMPLOGFILE,Name)
                                                                       //
 NoName:                                                               //    }
+  FILE(REMOVE,TMPLOGFILE)                                             //    FILE(REMOVE,TMPLOGFILE)
 }                                                                     //  }
                                                                       //
                                                                       //

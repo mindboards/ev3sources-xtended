@@ -1087,9 +1087,9 @@ ModeOk:
 
 NotTooLowMode:  
 
-  JR_LT8(SetMode,Views,NotTooHighMode)
+  JR_LT8(SetMode,Modes,NotTooHighMode)
 
-  MOVE8_8(Views,SetMode)
+  MOVE8_8(Modes,SetMode)
   SUB8(SetMode,1,SetMode)
 
 NotTooHighMode:  
@@ -2260,7 +2260,7 @@ Repeat:                                                               //
                                                                       //
   MOVE16_16(SOUND_TEXTY,Ypos)                                         //
   UI_DRAW(SELECT_FONT,1)                                              //
-  UI_DRAW(TEXT,FG_COLOR,SOUND_TEXTX,Ypos,'CALIBRATE GYRO: ')          //
+  UI_DRAW(TEXT,FG_COLOR,SOUND_TEXTX,Ypos,'CALIBRATE GYRO:-')          //
   ADD16(Ypos,SOUND_SPACEY,Ypos)                                       //
   UI_DRAW(SELECT_FONT,0)                                              //
   UI_DRAW(TEXT,FG_COLOR,SOUND_TEXTX,Ypos,'1.Connect sensor')          //
@@ -2487,9 +2487,13 @@ Not2:                                                                 //      }
   JR_GTF(Value1,1060.0F,NotOk)
   JR_LTF(Value2,940.0F,NotOk)
   JR_GTF(Value2,1060.0F,NotOk)
+// (2)  
+  JR_LTF(Value3,-1000.0F,NotOk)
+  JR_GTF(Value3,1000.0F,NotOk)
+/*  
   JR_LTF(Value3,403.0F,NotOk)
   JR_GTF(Value3,470.0F,NotOk)
-
+*/
 Ok:
 
   // Green lamp on                                                    //

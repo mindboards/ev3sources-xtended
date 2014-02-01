@@ -48,7 +48,6 @@ static    void ModuleExit(void);
 #include  <linux/debugfs.h>
 
 #include  <linux/ioport.h>
-#include  <asm/gpio.h>
 #include  <asm/io.h>
 #include  <linux/module.h>
 #include  <linux/miscdevice.h>

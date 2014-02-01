@@ -570,31 +570,32 @@ DATA8     dLcdReadPixel(UBYTE *pImage,DATA16 X0,DATA16 Y0)
 
 void      dLcdDrawLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X1,DATA16 Y1)
 {
-  DATA16  XLength;
-  DATA16  YLength;
+  DATA32  XLength;
+  DATA32  YLength;
   DATA16  XInc;
   DATA16  YInc;
-  DATA16  Diff;
-  DATA16  Tmp;
+  DATA32  Diff;
+  DATA32  Tmp;
+
 
   if (X0 < X1)
   {
-    XLength  =  X1 - X0;
+    XLength  =  (DATA32)X1 - (DATA32)X0;
     XInc     =  1;
   }
   else
   {
-    XLength  =  X0 - X1;
+    XLength  =  (DATA32)X0 - (DATA32)X1;
     XInc     = -1;
   }
   if (Y0 < Y1)
   {
-    YLength  =  Y1 - Y0;
+    YLength  =  (DATA32)Y1 - (DATA32)Y0;
     YInc     =  1;
   }
   else
   {
-    YLength  =  Y0 - Y1;
+    YLength  =  (DATA32)Y0 - (DATA32)Y1;
     YInc     = -1;
   }
   Diff  =  XLength - YLength;
@@ -621,12 +622,12 @@ void      dLcdDrawLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X1,D
 
 void      dLcdDrawDotLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X1,DATA16 Y1,DATA16 On,DATA16 Off)
 {
-  DATA16  XLength;
-  DATA16  YLength;
+  DATA32  XLength;
+  DATA32  YLength;
   DATA16  XInc;
   DATA16  YInc;
-  DATA16  Diff;
-  DATA16  Tmp;
+  DATA32  Diff;
+  DATA32  Tmp;
   DATA16  Count;
 
   if ((X0 != X1) && (Y0 != Y1))
@@ -635,24 +636,41 @@ void      dLcdDrawDotLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X
   }
   else
   {
+    if (On < 0)
+    {
+      On  =  0;
+    }
+    if (On > 255)
+    {
+      On  =  255;
+    }
+    if (Off < 0)
+    {
+      Off  =  0;
+    }
+    if (Off > 255)
+    {
+      Off  =  255;
+    }
+
     if (X0 < X1)
     {
-      XLength  =  X1 - X0;
+      XLength  =  (DATA32)X1 - (DATA32)X0;
       XInc     =  1;
     }
     else
     {
-      XLength  =  X0 - X1;
+      XLength  =  (DATA32)X0 - (DATA32)X1;
       XInc     = -1;
     }
     if (Y0 < Y1)
     {
-      YLength  =  Y1 - Y0;
+      YLength  =  (DATA32)Y1 - (DATA32)Y0;
       YInc     =  1;
     }
     else
     {
-      YLength  =  Y0 - Y1;
+      YLength  =  (DATA32)Y0 - (DATA32)Y1;
       YInc     = -1;
     }
     Diff  =  XLength - YLength;

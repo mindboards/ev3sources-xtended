@@ -73,7 +73,7 @@
  \verbatim
 
     The "Device Type" is a DATA8 (signed byte) used for quick reference to a devices type in the VM byte codes.
-    The range is from 0 to 127 and it is possible to have 100 different device types. The value is allocated below:
+    The range is from 0 to 127 and it is possible to have 99 different device types. The value is allocated below:
 
 
     Type No     Description
@@ -81,11 +81,13 @@
 
     0           "Don't change type" type
 
-    1..50       Reserved for LEGO existing and future devices
+    1..49       Reserved for LEGO existing and future devices
 
-    51..100     Free to 3th. party devices
+    50..98      Free to 3th. party devices
 
-    101..127    Reserved for internal use
+    99          Reserved for LEGO energy meter
+
+    100..127    Reserved for internal use
 
 
     An additional MODE is used to change function on sensors that supports more than one function.
@@ -578,6 +580,37 @@ RESULT    cInputGetIicString(DATA8 Type,DATA8 Mode,IICSTR *IicStr)
 }
 
 
+RESULT    cInputChangeTypeData(DATA8 Type,DATA8 Mode,DATA8 NewType,DATA8 NewMode)
+{
+  RESULT  Result    = FAIL;  // FAIL=Not found, OK=changed
+  UWORD   Index     = 0;
+
+  if ((Type >= 0) && (Type < (MAX_DEVICE_TYPE + 1)) && (Mode >= 0) && (Mode < MAX_DEVICE_MODES))
+  { // Type and mode valid
+
+    if ((NewType >= 0) && (NewType < (MAX_DEVICE_TYPE + 1)) && (NewMode >= 0) && (NewMode < MAX_DEVICE_MODES))
+    { // Type and mode valid
+
+      while ((Index < InputInstance.MaxDeviceTypes) && (Result != OK))
+      { // trying to find device type
+
+        if ((InputInstance.TypeData[Index].Type == Type) && (InputInstance.TypeData[Index].Mode == Mode))
+        { // match on type and mode
+
+          InputInstance.TypeData[Index].Type  =  NewType;
+          InputInstance.TypeData[Index].Mode  =  NewMode;
+
+          Result    =  OK;
+        }
+        Index++;
+      }
+    }
+  }
+
+  return (Result);
+}
+
+
 RESULT    cInputGetNewTypeDataPointer(SBYTE *pName,DATA8 Type,DATA8 Mode,DATA8 Connection,TYPES **ppPlace)
 {
   RESULT  Result    = FAIL;  // FAIL=full, OK=new, BUSY=found
@@ -633,11 +666,9 @@ RESULT    cInputGetNewTypeDataPointer(SBYTE *pName,DATA8 Type,DATA8 Mode,DATA8 C
 }
 
 
-RESULT    cInputInsertTypeData(char *pFilename)
+RESULT    cInputInsertTypeData(char *pTypeDataString,DATA8 Force)
 {
   RESULT  Result = FAIL;
-  LFILE   *pFile;
-  char    Buf[256];
   char    Name[256];
   char    Symbol[256];
   char    Manufacturer[256];
@@ -658,10 +689,93 @@ RESULT    cInputInsertTypeData(char *pFilename)
   unsigned int PollLng;
   unsigned int PollString;
   int ReadLng;
-  char    *Str;
   TYPES   Tmp;
   TYPES   *pTypes;
   int     Count;
+
+  Count  =  sscanf(pTypeDataString,"%u %u %s %u %u %u %u %u %u %x %f %f %f %f %f %f %u %u %s",&Type,&Mode,Name,&DataSets,&Format,&Figures,&Decimals,&Views,&Connection,&Pins,&Tmp.RawMin,&Tmp.RawMax,&Tmp.PctMin,&Tmp.PctMax,&Tmp.SiMin,&Tmp.SiMax,&Time,&IdValue,Symbol);
+  if (Count == TYPE_PARAMETERS)
+  {
+    Tmp.Type         =  (DATA8)Type;
+    Tmp.Mode         =  (DATA8)Mode;
+    Tmp.DataSets     =  (DATA8)DataSets;
+    Tmp.Format       =  (DATA8)Format;
+    Tmp.Figures      =  (DATA8)Figures;
+    Tmp.Decimals     =  (DATA8)Decimals;
+    Tmp.Connection   =  (DATA8)Connection;
+    Tmp.Views        =  (DATA8)Views;
+    Tmp.Pins         =  (DATA8)Pins;
+    Tmp.InvalidTime  =  (UWORD)Time;
+    Tmp.IdValue      =  (UWORD)IdValue;
+
+    Result  =  cInputGetNewTypeDataPointer((SBYTE*)Name,(DATA8)Type,(DATA8)Mode,(DATA8)Connection,&pTypes);
+//            printf("cInputTypeDataInit\r\n");
+    if ((Result == OK) || ((Force) && (Result == BUSY)))
+    {
+      (*pTypes)  =  Tmp;
+
+      Count  =  0;
+      while ((Name[Count]) && (Count < TYPE_NAME_LENGTH))
+      {
+        if (Name[Count] == '_')
+        {
+          (*pTypes).Name[Count]  =  ' ';
+        }
+        else
+        {
+          (*pTypes).Name[Count]  =  Name[Count];
+        }
+        Count++;
+      }
+      (*pTypes).Name[Count]    =  0;
+
+      if (Symbol[0] == '_')
+      {
+        (*pTypes).Symbol[0]  =  0;
+      }
+      else
+      {
+        Count  =  0;
+        while ((Symbol[Count]) && (Count < SYMBOL_LENGTH))
+        {
+          if (Symbol[Count] == '_')
+          {
+            (*pTypes).Symbol[Count]  =  ' ';
+          }
+          else
+          {
+            (*pTypes).Symbol[Count]  =  Symbol[Count];
+          }
+          Count++;
+        }
+        (*pTypes).Symbol[Count]    =  0;
+      }
+      if (Tmp.Connection == CONN_NXT_IIC)
+      { // NXT IIC sensor
+
+        // setup string + poll string
+        // 3 0x01420000 2 0x01000000
+
+        Count  =  sscanf(pTypeDataString,"%u %u %s %u %u %u %u %u %u %x %f %f %f %f %f %f %u %u %s %s %s %u %X %u %X %d",&Type,&Mode,Name,&DataSets,&Format,&Figures,&Decimals,&Views,&Connection,&Pins,&Tmp.RawMin,&Tmp.RawMax,&Tmp.PctMin,&Tmp.PctMax,&Tmp.SiMin,&Tmp.SiMax,&Time,&IdValue,Symbol,Manufacturer,SensorType,&SetupLng,&SetupString,&PollLng,&PollString,&ReadLng);
+        if (Count == (TYPE_PARAMETERS + 7))
+        {
+          cInputInsertNewIicString(Type,Mode,(DATA8*)Manufacturer,(DATA8*)SensorType,(DATA8)SetupLng,(ULONG)SetupString,(DATA8)PollLng,(ULONG)PollString,(DATA8)ReadLng);
+//                  printf("%02u %01u IIC %u 0x%08X %u 0x%08X %u\r\n",Type,Mode,SetupLng,SetupString,PollLng,PollString,ReadLng);
+        }
+      }
+    }
+  }
+
+  return (Result);
+}
+
+
+RESULT    cInputInsertTypeDataFile(char *pFilename)
+{
+  RESULT  Result = FAIL;
+  LFILE   *pFile;
+  char    Buf[256];
+  char    *Str;
 
   pFile = fopen (pFilename,"r");
   if (pFile != NULL)
@@ -674,78 +788,7 @@ RESULT    cInputInsertTypeData(char *pFilename)
       {
         if ((Buf[0] != '/') && (Buf[0] != '*'))
         {
-          Count  =  sscanf(Buf,"%u %u %s %u %u %u %u %u %u %x %f %f %f %f %f %f %u %u %s",&Type,&Mode,Name,&DataSets,&Format,&Figures,&Decimals,&Views,&Connection,&Pins,&Tmp.RawMin,&Tmp.RawMax,&Tmp.PctMin,&Tmp.PctMax,&Tmp.SiMin,&Tmp.SiMax,&Time,&IdValue,Symbol);
-          if (Count == TYPE_PARAMETERS)
-          {
-            Tmp.Type         =  (DATA8)Type;
-            Tmp.Mode         =  (DATA8)Mode;
-            Tmp.DataSets     =  (DATA8)DataSets;
-            Tmp.Format       =  (DATA8)Format;
-            Tmp.Figures      =  (DATA8)Figures;
-            Tmp.Decimals     =  (DATA8)Decimals;
-            Tmp.Connection   =  (DATA8)Connection;
-            Tmp.Views        =  (DATA8)Views;
-            Tmp.Pins         =  (DATA8)Pins;
-            Tmp.InvalidTime  =  (UWORD)Time;
-            Tmp.IdValue      =  (UWORD)IdValue;
-
-            Result  =  cInputGetNewTypeDataPointer((SBYTE*)Name,(DATA8)Type,(DATA8)Mode,(DATA8)Connection,&pTypes);
-//            printf("cInputTypeDataInit\r\n");
-            if (Result == OK)
-            {
-              (*pTypes)  =  Tmp;
-
-              Count  =  0;
-              while ((Name[Count]) && (Count < TYPE_NAME_LENGTH))
-              {
-                if (Name[Count] == '_')
-                {
-                  (*pTypes).Name[Count]  =  ' ';
-                }
-                else
-                {
-                  (*pTypes).Name[Count]  =  Name[Count];
-                }
-                Count++;
-              }
-              (*pTypes).Name[Count]    =  0;
-
-              if (Symbol[0] == '_')
-              {
-                (*pTypes).Symbol[0]  =  0;
-              }
-              else
-              {
-                Count  =  0;
-                while ((Symbol[Count]) && (Count < SYMBOL_LENGTH))
-                {
-                  if (Symbol[Count] == '_')
-                  {
-                    (*pTypes).Symbol[Count]  =  ' ';
-                  }
-                  else
-                  {
-                    (*pTypes).Symbol[Count]  =  Symbol[Count];
-                  }
-                  Count++;
-                }
-                (*pTypes).Symbol[Count]    =  0;
-              }
-              if (Tmp.Connection == CONN_NXT_IIC)
-              { // NXT IIC sensor
-
-                // setup string + poll string
-                // 3 0x01420000 2 0x01000000
-
-                Count  =  sscanf(Buf,"%u %u %s %u %u %u %u %u %u %x %f %f %f %f %f %f %u %u %s %s %s %u %X %u %X %d",&Type,&Mode,Name,&DataSets,&Format,&Figures,&Decimals,&Views,&Connection,&Pins,&Tmp.RawMin,&Tmp.RawMax,&Tmp.PctMin,&Tmp.PctMax,&Tmp.SiMin,&Tmp.SiMax,&Time,&IdValue,Symbol,Manufacturer,SensorType,&SetupLng,&SetupString,&PollLng,&PollString,&ReadLng);
-                if (Count == (TYPE_PARAMETERS + 7))
-                {
-                  cInputInsertNewIicString(Type,Mode,(DATA8*)Manufacturer,(DATA8*)SensorType,(DATA8)SetupLng,(ULONG)SetupString,(DATA8)PollLng,(ULONG)PollString,(DATA8)ReadLng);
-//                  printf("%02u %01u IIC %u 0x%08X %u 0x%08X %u\r\n",Type,Mode,SetupLng,SetupString,PollLng,PollString,ReadLng);
-                }
-              }
-            }
-          }
+          cInputInsertTypeData(Buf,0);
         }
       }
     }
@@ -796,7 +839,7 @@ void      cInputTypeDataInit(void)
 //  printf("Search start\r\n");
   snprintf(PrgNameBuf,vmFILENAMESIZE,"%s/%s%s",vmSETTINGS_DIR,TYPEDATE_FILE_NAME,EXT_CONFIG);
 
-  if (cInputInsertTypeData(PrgNameBuf) == OK)
+  if (cInputInsertTypeDataFile(PrgNameBuf) == OK)
   {
     TypeDataFound  =  1;
   }
@@ -804,7 +847,7 @@ void      cInputTypeDataInit(void)
   for (Index = TYPE_THIRD_PARTY_START;Index <= TYPE_THIRD_PARTY_END;Index++)
   {
     snprintf(PrgNameBuf,vmFILENAMESIZE,"%s/%s%02d%s",vmSETTINGS_DIR,TYPEDATE_FILE_NAME,Index,EXT_CONFIG);
-    if (cInputInsertTypeData(PrgNameBuf) == OK)
+    if (cInputInsertTypeDataFile(PrgNameBuf) == OK)
     {
       TypeDataFound  =  1;
     }
@@ -818,10 +861,11 @@ void      cInputTypeDataInit(void)
 }
 
 
-RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DATA8 *pWrData,DATA8 RdLng,DATA8 *pRdData)
+RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DATA8 *pWrData,DATA8 RdLng,DATA8 *pRdData,RESULT *pResult)
 {
+  DATA8    Tmp;
 
-  InputInstance.IicDat.Result  =  FAIL;
+  InputInstance.IicDat.Result   =  *pResult;
 
   if (Device < INPUTS)
   {
@@ -839,6 +883,10 @@ RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DA
         {
           RdLng  =  MAX_DEVICE_DATALENGTH;
         }
+        if (RdLng < -MAX_DEVICE_DATALENGTH)
+        {
+          RdLng  =  -MAX_DEVICE_DATALENGTH;
+        }
 
         if (Time != 0)
         {
@@ -852,7 +900,6 @@ RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DA
           }
         }
 
-        InputInstance.IicDat.Result   =  BUSY;
         InputInstance.IicDat.Port     =  Device;
         InputInstance.IicDat.Repeat   =  Repeat;
         InputInstance.IicDat.Time     =  Time;
@@ -865,11 +912,29 @@ RESULT    cInputSetupDevice(DATA8 Device,DATA8 Repeat,DATA16 Time,DATA8 WrLng,DA
 
         if (InputInstance.IicDat.Result == OK)
         {
-          Memcpy(pRdData,&InputInstance.IicDat.RdData[0],InputInstance.IicDat.RdLng);
+          Tmp  =  InputInstance.IicDat.RdLng;
+          if (Tmp < 0)
+          {
+            Tmp  =  0 - Tmp;
+          }
+          Memcpy(pRdData,&InputInstance.IicDat.RdData[0],Tmp);
         }
       }
+      else
+      {
+        InputInstance.IicDat.Result  =  FAIL;
+      }
+    }
+    else
+    {
+      InputInstance.IicDat.Result  =  FAIL;
     }
   }
+  else
+  {
+    InputInstance.IicDat.Result  =  FAIL;
+  }
+  *pResult  =  InputInstance.IicDat.Result;
 
   return (InputInstance.IicDat.Result);
 }
@@ -904,37 +969,40 @@ RESULT    cInputFindDumbInputDevice(DATA8 Device,DATA8 Type,DATA8 Mode,UWORD *pT
 
   while ((Index < InputInstance.MaxDeviceTypes) && (Result != OK))
   {
-    Tmp  =  InputInstance.TypeData[Index].IdValue;
-
-    if (Tmp >= IN1_ID_HYSTERESIS)
+    if (InputInstance.TypeData[Index].Connection == CONN_INPUT_DUMB)
     {
-      if ((IdValue >= (Tmp - IN1_ID_HYSTERESIS)) && (IdValue < (Tmp + IN1_ID_HYSTERESIS)))
-      { // id value match
+      Tmp  =  InputInstance.TypeData[Index].IdValue;
 
-        if (Type == TYPE_UNKNOWN)
-        { // first search
+      if (Tmp >= IN1_ID_HYSTERESIS)
+      {
+        if ((IdValue >= (Tmp - IN1_ID_HYSTERESIS)) && (IdValue < (Tmp + IN1_ID_HYSTERESIS)))
+        { // id value match
 
-          // "type data" entry found
-          *pTypeIndex  =  Index;
+          if (Type == TYPE_UNKNOWN)
+          { // first search
 
-        }
-        else
-        { // next search
-
-          if (Type == InputInstance.TypeData[Index].Type)
-          { //
-
+            // "type data" entry found
             *pTypeIndex  =  Index;
+
           }
-        }
-        if (Mode == InputInstance.TypeData[Index].Mode)
-        { // mode match
+          else
+          { // next search
 
-          // "type data" entry found
-          *pTypeIndex  =  Index;
+            if (Type == InputInstance.TypeData[Index].Type)
+            { //
 
-          // skip looping
-          Result  =  OK;
+              *pTypeIndex  =  Index;
+            }
+          }
+          if (Mode == InputInstance.TypeData[Index].Mode)
+          { // mode match
+
+            // "type data" entry found
+            *pTypeIndex  =  Index;
+
+            // skip looping
+            Result  =  OK;
+          }
         }
       }
     }
@@ -957,24 +1025,27 @@ RESULT    cInputFindDumbOutputDevice(DATA8 Device,DATA8 Type,DATA8 Mode,UWORD *p
 
   while ((Index < InputInstance.MaxDeviceTypes) && (Result != OK))
   {
-    Tmp  =  InputInstance.TypeData[Index].IdValue;
-
-    if (Tmp >= OUT5_ID_HYSTERESIS)
+    if (InputInstance.TypeData[Index].Connection == CONN_OUTPUT_DUMB)
     {
-      if ((IdValue >= (Tmp - OUT5_ID_HYSTERESIS)) && (IdValue < (Tmp + OUT5_ID_HYSTERESIS)))
-      { // id value match
+      Tmp  =  InputInstance.TypeData[Index].IdValue;
 
-        // "type data" entry found
-        *pTypeIndex  =  Index;
-
-        if (Mode == InputInstance.TypeData[Index].Mode)
-        { // mode match
+      if (Tmp >= OUT5_ID_HYSTERESIS)
+      {
+        if ((IdValue >= (Tmp - OUT5_ID_HYSTERESIS)) && (IdValue < (Tmp + OUT5_ID_HYSTERESIS)))
+        { // id value match
 
           // "type data" entry found
           *pTypeIndex  =  Index;
 
-          // skip looping
-          Result  =  OK;
+          if (Mode == InputInstance.TypeData[Index].Mode)
+          { // mode match
+
+            // "type data" entry found
+            *pTypeIndex  =  Index;
+
+            // skip looping
+            Result  =  OK;
+          }
         }
       }
     }
@@ -1151,7 +1222,7 @@ void      cInputSetDeviceType(DATA8 Device,DATA8 Type, DATA8 Mode,int Line)
         if (InputInstance.DeviceData[Device].Connection == CONN_OUTPUT_DUMB)
         { // search "type data" for matching "dumb" output device
 
-          cInputFindDumbInputDevice(Device,Type,Mode,&TypeIndex);
+          cInputFindDumbOutputDevice(Device,Type,Mode,&TypeIndex);
         }
 
         // IF NOT FOUND YET - TRY TO FIND TYPE ANYWAY
@@ -3065,7 +3136,7 @@ void      cInputDcmUpdate(UWORD Time)
           if (InputInstance.DeviceData[Device].Connection !=  (*InputInstance.pAnalog).OutConn[Port])
           { // Connection type has changed
 
-            InputInstance.DeviceData[Device].Connection  =  (*InputInstance.pAnalog).OutConn[Port];
+            InputInstance.DeviceData[Device].Connection   =  (*InputInstance.pAnalog).OutConn[Port];
             cInputSetDeviceType(Device,(*InputInstance.pAnalog).OutDcm[Port],0,__LINE__);
           }
 
@@ -3426,11 +3497,11 @@ RESULT    cInputInit(void)
 
   InputInstance.MaxDeviceTypes  =  3;
 
-  cMemoryMalloc((void*)&InputInstance.TypeData,(DATA32)(sizeof(TYPES) * InputInstance.MaxDeviceTypes));
+  cMemoryRealloc(NULL,(void*)&InputInstance.TypeData,(DATA32)(sizeof(TYPES) * InputInstance.MaxDeviceTypes));
 
   InputInstance.IicDeviceTypes  =  1;
 
-  cMemoryMalloc((void*)&InputInstance.IicString,(DATA32)(sizeof(IICSTR) * InputInstance.IicDeviceTypes));
+  cMemoryRealloc(NULL,(void*)&InputInstance.IicString,(DATA32)(sizeof(IICSTR) * InputInstance.IicDeviceTypes));
 
   InputInstance.pAnalog     =  &InputInstance.Analog;
 
@@ -3607,17 +3678,16 @@ RESULT    cInputExit(void)
 
   if (InputInstance.DcmFile >= MIN_HANDLE)
   {
-    munmap(InputInstance.pUart,sizeof(UART));
     close(InputInstance.DcmFile);
   }
 
   if (InputInstance.IicString != NULL)
   {
-    free((void*)InputInstance.IicString);
+    cMemoryFree((void*)InputInstance.IicString);
   }
   if (InputInstance.TypeData != NULL)
   {
-    free((void*)InputInstance.TypeData);
+    cMemoryFree((void*)InputInstance.TypeData);
   }
 
   Result  =  OK;
@@ -3723,6 +3793,13 @@ void      cInputDeviceList(void)
  *    -  \return (DATA8)   MODE         - Device mode [0..7]
  *
  *\n
+ *  - CMD = GET_CONNECTION
+ *\n  Get device connection type (for test)\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA8) \ref connectiontypes "CONN" - Connection type
+ *
+ *\n
  *  - CMD = GET_NAME
  *\n  Get device name\n
  *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
@@ -3788,6 +3865,7 @@ void      cInputDeviceList(void)
  *       \return (DATA8)   VALUE1       - First value from input
  *
  *\n
+ *\anchor opINPUT_DEVICE_READY_RAW
  *  - CMD = READY_RAW
  *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
  *    -  \param  (DATA8)   NO           - Port number
@@ -3799,6 +3877,7 @@ void      cInputDeviceList(void)
  *       \return (DATA32)  VALUE1       - First value from input
  *
  *\n
+ *\anchor opINPUT_DEVICE_READY_SI
  *  - CMD = READY_SI
  *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
  *    -  \param  (DATA8)   NO           - Port number
@@ -3858,6 +3937,18 @@ void      cInputDeviceList(void)
  *    -  \param  (DATA8)   MODE         - Device mode [0..7]
  *
  *\n
+ *  - CMD = READY_IIC
+ *\n  Generic setup/read IIC sensors with result\n
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   WRLNG        - No of bytes to write
+ *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read (if negative -> byte order is reversed)
+ *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
+ *    -  \return (DATA8)   RESULT       - Write/read result (OK, FAIL)
+ *
+ *\n
+ *\anchor opINPUT_DEVICE_SETUP
  *  - CMD = SETUP
  *\n  Generic setup/read IIC sensors \ref cinputdevicesetup "Example"\n
  *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
@@ -3866,7 +3957,7 @@ void      cInputDeviceList(void)
  *    -  \param  (DATA16)  TIME         - Time between repeats [10..1000mS] (0 = 10)
  *    -  \param  (DATA8)   WRLNG        - No of bytes to write
  *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
- *    -  \param  (DATA8)   RDLNG        - No of bytes to read
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read (if negative -> byte order is reversed)
  *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
  *
  *\n
@@ -3878,6 +3969,24 @@ void      cInputDeviceList(void)
  *  - CMD = STOP_ALL
  *\n  Stop all devices (e.c. motors, ...)\n
  *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3] (-1 = all)
+ *
+ *\n
+ *\anchor opINPUT_DEVICE_SET_TYPEMODE
+ *  - CMD = SET_TYPEMODE
+ *\n  Set new type and mode on existing devices (if TYPE==NEWTYPE and MODE==NEWMODE -> ERROR will be 0 if exists and nothing is changed)\n
+ *    -  \param  (DATA8)   TYPE         - Existing type\n
+ *    -  \param  (DATA8)   MODE         - Existing mode\n
+ *    -  \param  (DATA8)   NEWTYPE      - New type\n
+ *    -  \param  (DATA8)   NEWMODE      - New mode\n
+ *    -  \return (DATA8)   ERROR        - Error if not Third Party type (0 = no error, 1 = error or not found)\n
+ *
+ *\n
+ *\anchor opINPUT_DEVICE_INSERT_TYPE
+ *  - CMD = INSERT_TYPE
+ *\n  Insert type in tabel\n
+ *    -  \param  (DATA8)   TYPEDATA     - String variable or handle to string containing type data\n
+ *    -  \param  (DATA8)   FORCE        - Force type insert even if present (0 = don't force, 1 = force)\n
+ *    -  \return (DATA8)   ERROR        - Error if not Third Party type (0 = no error, 1 = error or known)\n
  *
  *\n
  *
@@ -3918,14 +4027,18 @@ void      cInputDevice(void)
   DATA8   *pWrData;
   DATA8   *pRdData;
   UWORD   TypeIndex;
-#ifndef    DISABLE_DAISYCHAIN_COM_CALL
+  DATA8   *pTypeData;
+  DATA8   Force;
+  DATA8   TmpType;
+  DATA8   TmpMode;
+  unsigned int IntType;
   RESULT  Result;
-#endif
+  DATA8   *pResult;
 
 
   TmpIp   =  GetObjectIp();
   Cmd     =  *(DATA8*)PrimParPointer();
-  if ((Cmd != CAL_MINMAX) && (Cmd != CAL_MIN) && (Cmd != CAL_MAX) && (Cmd != CAL_DEFAULT) && (Cmd != CLR_ALL) && (Cmd != STOP_ALL))
+  if ((Cmd != CAL_MINMAX) && (Cmd != CAL_MIN) && (Cmd != CAL_MAX) && (Cmd != CAL_DEFAULT) && (Cmd != INSERT_TYPE) && (Cmd != SET_TYPEMODE) && (Cmd != CLR_ALL) && (Cmd != STOP_ALL))
   {
     Device  =  cInputGetDevice();
   }
@@ -4010,6 +4123,55 @@ void      cInputDevice(void)
     }
     break;
 
+    case INSERT_TYPE :
+    {
+      pTypeData  =  (DATA8*)PrimParPointer();
+      Force      =  *(DATA8*)PrimParPointer();
+
+      Tmp        =  1;
+      if (sscanf((char*)pTypeData,"%u",&IntType) == 1)
+      {
+        Type  =  (DATA8)IntType;
+        if ((Type >= TYPE_THIRD_PARTY_START) && (Type <= TYPE_THIRD_PARTY_END))
+        {
+          if (cInputInsertTypeData((char*)pTypeData,Force) == OK)
+          {
+            Tmp      =  0;
+          }
+        }
+      }
+      *(DATA8*)PrimParPointer()  =  Tmp;
+    }
+    break;
+
+    case SET_TYPEMODE :
+    {
+      Type      =  *(DATA8*)PrimParPointer();
+      Mode      =  *(DATA8*)PrimParPointer();
+      TmpType   =  *(DATA8*)PrimParPointer();
+      TmpMode   =  *(DATA8*)PrimParPointer();
+
+      Tmp     =  1;
+      if ((Type >= TYPE_THIRD_PARTY_START) && (Type <= TYPE_THIRD_PARTY_END))
+      {
+        if ((Mode >= 0) && (Mode < MAX_DEVICE_MODES))
+        {
+          if ((TmpType >= TYPE_THIRD_PARTY_START) && (TmpType <= TYPE_THIRD_PARTY_END))
+          {
+            if ((TmpMode >= 0) && (TmpMode < MAX_DEVICE_MODES))
+            {
+              if (cInputChangeTypeData(Type,Mode,TmpType,TmpMode) == OK)
+              {
+                Tmp      =  0;
+              }
+            }
+          }
+        }
+      }
+      *(DATA8*)PrimParPointer()  =  Tmp;
+    }
+    break;
+
     case GET_TYPEMODE :
     {
       Type    =  TYPE_NONE;
@@ -4027,7 +4189,7 @@ void      cInputDevice(void)
 
     case GET_CONNECTION :
     {
-      Connection  =  TYPE_NONE;
+      Connection  =  CONN_NONE;
 
       if (Device < DEVICES)
       {
@@ -4495,6 +4657,39 @@ void      cInputDevice(void)
     }
     break;
 
+    case READY_IIC :
+    { // INPUT_DEVICE(READY_IIC,LAYER,NO,WRLNG,WRDATA,RDLNG,RDDATA,RESULT)
+
+      WrLng         =  *(DATA8*)PrimParPointer();
+      pWrData       =  (DATA8*)PrimParPointer();
+      RdLng         =  *(DATA8*)PrimParPointer();
+      pRdData       =  (DATA8*)PrimParPointer();
+      pResult       =  (DATA8*)PrimParPointer();
+
+      if (VMInstance.Handle >= 0)
+      {
+        Data32      =  (DATA32)RdLng;
+        if (Data32 < 0)
+        {
+          Data32    =  0 - Data32;
+        }
+        pRdData  =  (DATA8*)VmMemoryResize(VMInstance.Handle,Data32);
+      }
+      if (pRdData != NULL)
+      {
+        Result  =  BUSY;
+        if  (cInputSetupDevice(Device,1,0,WrLng,pWrData,RdLng,pRdData,&Result) == BUSY)
+        { // Busy -> block VMThread
+
+          SetObjectIp(TmpIp - 1);
+          SetDispatchStatus(BUSYBREAK);
+        }
+
+        *pResult  =  (DATA8)Result;
+      }
+    }
+    break;
+
     case SETUP :
     { // INPUT_DEVICE(SETUP,LAYER,NO,REPEAT,TIME,WRLNG,WRDATA,RDLNG,RDDATA)
 
@@ -4507,12 +4702,17 @@ void      cInputDevice(void)
 
       if (VMInstance.Handle >= 0)
       {
-        pRdData  =  (DATA8*)VmMemoryResize(VMInstance.Handle,(DATA32)RdLng);
+        Data32      =  (DATA32)RdLng;
+        if (Data32 < 0)
+        {
+          Data32    =  0 - Data32;
+        }
+        pRdData  =  (DATA8*)VmMemoryResize(VMInstance.Handle,Data32);
       }
       if (pRdData != NULL)
       {
-
-        if  (cInputSetupDevice(Device,Repeat,Time,WrLng,pWrData,RdLng,pRdData) == BUSY)
+        Result  =  BUSY;
+        if  (cInputSetupDevice(Device,Repeat,Time,WrLng,pWrData,RdLng,pRdData,&Result) == BUSY)
         { // Busy -> block VMThread
 
           SetObjectIp(TmpIp - 1);
@@ -4876,41 +5076,9 @@ void      cInputWrite(void)
       }
       else
       {
+        // don't bother if not UART
 
-        if (InputInstance.DeviceData[Device].Connection == CONN_NXT_IIC)
-        {
-          if ((Bytes > 0) && (Bytes <= IIC_DATA_LENGTH))
-          {
-            if (((*InputInstance.pIic).Status[Device] & IIC_WRITE_REQUEST))
-            {
-              DspStat  =  BUSYBREAK;
-            }
-            else
-            {
-              InputInstance.DeviceData[Device].DevStatus  =  BUSY;
-
-              (*InputInstance.pIic).Status[Device]      &= ~IIC_DATA_READY;
-
-              Buffer[0]  =  Device;
-              for (Tmp = 0;Tmp < Bytes;Tmp++)
-              {
-                Buffer[Tmp + 1]  =  Data[Tmp];
-              }
-
-              // write setup string to "IIC Device Controller" driver
-              if (InputInstance.IicFile >= MIN_HANDLE)
-              {
-                write(InputInstance.IicFile,Buffer,Bytes + 1);
-              }
-              DspStat  =  NOBREAK;
-            }
-          }
-        }
-        else
-        { // don't bother if not UART or IIC device
-
-          DspStat  =  NOBREAK;
-        }
+        DspStat  =  NOBREAK;
       }
     }
     else

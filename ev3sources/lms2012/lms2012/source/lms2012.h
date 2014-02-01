@@ -16,6 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros or
+ * inline functions from this file, or you  compile this file and link it with
+ * other works to produce a work based on this file, this file does not by itself
+ * cause the resulting work to be covered by the GNU General Public License.
+ * However the source code for this file must still be made available in accordance
+ * with section (3) of the GNU General Public License.
+ *
  */
 
 
@@ -82,12 +90,15 @@ Development with debug messages:    DEBUG defined, TERMINAL_ENABLED = 1, DEBUG_U
 //#define   DEBUG_BYTECODE_TIME
 //#define   DEBUG_TRACE_FREEZE
 //#define   DEBUG_TRACE_FILENAME
+//#define   DEBUG_TRACE_IIC
 //#define   DEBUG_SDCARD
 //#define   DEBUG_USBSTICK
 //#define   DEBUG_VIRTUAL_BATT_TEMP
 //#define   DEBUG_TEMP_SHUTDOWN
 //#define   DEBUG_BACK_BLOCKED
+//#define   DEBUG_MEMORY_USAGE
 #define   DEBUG_RECHARGEABLE
+#define   ALLOW_DEBUG_PULSE
 
 
 
@@ -171,6 +182,8 @@ char      *HwId = "03";
 //#define   DISABLE_SYSTEM_BYTECODE       //!< Disable the use of opSYSTEM command
 //#define   DISABLE_FILENAME_CHECK        //!< Disable "c_memory" filename check
 //#define   DISABLE_AD_WORD_PROTECT       //!< Disable A/D word result protection
+//#define   DISABLE_UPDATE_DISASSEMBLY    //!< Disable disassemble of running update commands
+#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
 
 #define   TESTDEVICE    3
 
@@ -228,14 +241,19 @@ char      *HwId = "03";
 #define   EXT_PROGRAM                   vmEXT_PROGRAM                 //!< Rudolf program byte code file
 #define   EXT_CONFIG                    vmEXT_CONFIG                  //!< rudolf configuration file
 
-/*! \page system
+/*! \page system System Configuration
+ *
+ *  <hr size="1"/>
+ *
+ *  Following defines sets the system configuration and limitations.\n
+ *  Defines with preceding "vm" is visible for the byte code assembler\n
  *
  *  \verbatim
  */
 
 #define   PROJECT                       "LMS2012"
 #define   VERS                          1.04
-#define   SPECIALVERS                   'H'           //!< Minor version (not shown if less than ASCII zero)
+#define   SPECIALVERS                   'w'           //!< Minor version (not shown if less than ASCII zero)
 
 
 #define   MAX_PROGRAMS          SLOTS                 //!< Max number of programs (including UI and direct commands) running at a time
@@ -260,7 +278,6 @@ char      *HwId = "03";
 #define   MIN_ARRAY_ELEMENTS    0                     //!< Min elements in a DATA8 array
 
 #define   INSTALLED_MEMORY      6000                  //!< Flash allocated to hold user programs/data
-#define   RESERVED_MEMORY       100                   //!< Memory reserve for system [KB]
 #define   LOW_MEMORY            500                   //!< Low memory warning [KB]
 
 #define   LOGBUFFER_SIZE        1000                  //!< Min log buffer size
@@ -557,36 +574,6 @@ enum
   FALSE = 0,
   TRUE  = 1,
 };
-
-
-// Reserved device types
-typedef   enum
-{
-//  TYPE_KEEP                     =   0,  //!< Type value that won't change type in byte codes
-  TYPE_NXT_TOUCH                =   1,  //!< Device is NXT touch sensor
-  TYPE_NXT_LIGHT                =   2,  //!< Device is NXT light sensor
-  TYPE_NXT_SOUND                =   3,  //!< Device is NXT sound sensor
-  TYPE_NXT_COLOR                =   4,  //!< Device is NXT color sensor
-
-  TYPE_TACHO                    =   7,  //!< Device is a tacho motor
-  TYPE_MINITACHO                =   8,  //!< Device is a mini tacho motor
-  TYPE_NEWTACHO                 =   9,  //!< Device is a new tacho motor
-
-  TYPE_THIRD_PARTY_START        =  50,
-  TYPE_THIRD_PARTY_END          =  99,
-
-  TYPE_IIC_UNKNOWN              = 100,
-
-  TYPE_NXT_TEST                 = 101,  //!< Device is a NXT ADC test sensor
-
-  TYPE_NXT_IIC                  = 123,  //!< Device is NXT IIC sensor
-  TYPE_TERMINAL                 = 124,  //!< Port is connected to a terminal
-  TYPE_UNKNOWN                  = 125,  //!< Port not empty but type has not been determined
-  TYPE_NONE                     = 126,  //!< Port empty or not available
-  TYPE_ERROR                    = 127,  //!< Port not empty and type is invalid
-}
-TYPE;
-
 
 
 /*! \page connections Connections
@@ -1504,6 +1491,11 @@ typedef struct
 
 #ifdef ENABLE_STATUS_TEST
   DATA8     Status;
+#endif
+
+#ifdef ALLOW_DEBUG_PULSE
+  DATA8     PulseShow;
+  DATA8     Pulse;
 #endif
 
 #if       (HARDWARE == SIMULATION)

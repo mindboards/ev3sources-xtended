@@ -1,0 +1,124 @@
+
+define	US_PORT			1
+
+vmthread  MAIN
+{
+	DATAF		Errors
+	DATAF		Count
+	DATAF		DataF
+	DATA16	hCmd
+	DATA16	hData
+	DATA16	Cmd
+	DATA8		Data
+	DATA8		Dummy
+	DATA8		Data8
+	DATA8		Result
+
+	ARRAY(CREATE8,0,hCmd)
+	ARRAY(CREATE8,0,hData)
+
+	MOVE8_F(-1,Errors)
+	MOVE8_F(0,Count)
+	MOVE8_8(0,Data)
+	MOVE16_16(0x024C,Cmd)
+
+	ARRAY_WRITE(hCmd,0,0x4C)
+	ARRAY_WRITE(hCmd,1,0x02)
+
+  UI_DRAW(FILLWINDOW,0x00,0,0)
+  UI_DRAW(UPDATE)
+
+Loop:
+
+	ARRAY_WRITE(hCmd,2,Data)
+
+	INPUT_DEVICE(READY_IIC,0,US_PORT,3,@hCmd,0,Dummy,Result)
+//	INPUT_DEVICE(SETUP,0,US_PORT,1,0,3,@hCmd,0,Dummy)
+
+	INPUT_DEVICE(READY_IIC,0,US_PORT,2,Cmd,1,Data8,Result)
+//	INPUT_DEVICE(SETUP,0,US_PORT,1,0,2,Cmd,1,Data8)
+
+	MOVE8_F(Data8,DataF)
+	JR_EQ8(Result,FAIL,Fail)
+
+	ADDF(1.0F,Count,Count)
+
+	JR_EQ8(Data,Data8,NoError)
+
+	ADDF(1.0F,Errors,Errors)
+
+NoError:
+
+	JR(EndFail)
+
+Fail:
+
+	MOVEF_F(DATAF_NAN,DataF)
+
+EndFail:
+
+	UI_DRAW(VALUE,FG_COLOR,10,50,DataF,4,0)
+	UI_DRAW(VALUE,FG_COLOR,10,70,Errors,4,0)
+	UI_DRAW(TEXT,FG_COLOR,42,70,' / ')
+	UI_DRAW(VALUE,FG_COLOR,66,70,Count,-10,0)
+
+  UI_DRAW(UPDATE)
+
+	ADD8(1,Data,Data)
+
+	JR(Loop)
+}
+
+
+
+
+/*
+define	US_PORT			1
+
+vmthread  MAIN
+{
+	DATAF		Errors
+	DATAF		DataF
+	DATA16	hCmd
+	DATA16	hData
+	DATA16	Cmd
+	DATA8		Data
+	DATA8		Dummy
+	DATA8		Data8
+
+	ARRAY(CREATE8,0,hCmd)
+	ARRAY(CREATE8,0,hData)
+
+	MOVE8_F(-1,Errors)
+	MOVE8_8(0,Data)
+	MOVE16_16(0x024C,Cmd)
+
+	ARRAY_WRITE(hCmd,0,0x4C)
+	ARRAY_WRITE(hCmd,1,0x02)
+
+  UI_DRAW(FILLWINDOW,0x00,0,0)
+  UI_DRAW(UPDATE)
+
+Loop:
+
+	ARRAY_WRITE(hCmd,2,Data)
+
+	INPUT_DEVICE(SETUP,0,US_PORT,1,0,3,@hCmd,0,Dummy)
+	INPUT_DEVICE(SETUP,0,US_PORT,1,0,2,Cmd,1,Data8)
+
+	JR_EQ8(Data,Data8,NoError)
+
+	ADDF(1.0F,Errors,Errors)
+
+NoError:
+
+	MOVE8_F(Data8,DataF)
+	UI_DRAW(VALUE,FG_COLOR,10,50,DataF,4,0)
+	UI_DRAW(VALUE,FG_COLOR,10,70,Errors,4,0)
+  UI_DRAW(UPDATE)
+
+	ADD8(1,Data,Data)
+
+	JR(Loop)
+}
+*/

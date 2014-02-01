@@ -6,6 +6,49 @@
  *  This section describes the relative changes from previous version
  *
  *
+ *  \version lms2012_v104w_140110
+ *
+ *-# Test app "Sensors" changed to use "Modes" instead of "Views" in mode change limit        \n
+ *-# opINPUT SETUP - IIC third party sensor read/write issue fixed                            \n
+ *-# opINPUT READY_IIC implemented                                                            \n
+ *-# More documentation about sensor reading (see \ref thirdpartydevicedesign "Third Party Device Design Guidelines ") \n
+ *
+ *
+ *  \version lms2012_v104v_131205
+ *
+ *-# Release of version 104u for testing                                                      \n
+ *
+ *
+ *  \version lms2012_v104u_131205
+ *
+ *-# Corrected issue when connecting to several devices using bluetooth (c_bt.c)              \n
+ *-# opUI_DRAW VALUE bug fixed (negative figures)                                             \n
+ *-# opUI_DRAW VIEW_UBIT bug fixed (negative figures)                                         \n
+ *-# opINPUT_DEVICE INSERT_TYPE implemented                                                   \n
+ *-# opINPUT_DEVICE SET_TYPEMODE implemented                                                  \n
+ *-# Corrected issue if trying to search for BT devices and allready connected to 7 devices   \n
+ *-# Corrected issue if get remote bluetooth name fails in a bluetooth search                 \n
+ *-# Bluetooth connect is not called if create paired device fails                            \n
+ *-# Bluetooth connection attempt actively rejected if user presses X on the UI               \n
+ *
+ *
+ *  \version lms2012_v104t_131108
+ *
+ *-# Corrected remote bluetooth name issue                                                    \n
+ *-# Corrected brick crashing if number of motors diff from 2 in sync'ed motor cmds           \n
+ *-# Corrected filetransfer between SD cards in bricks - Folder type issue                    \n
+ *-# Corrected filetransfer between SD cards in bricks - Filehandle issue                     \n
+ *-# opFILE CLOSE_LOG changed to free up handle when logging in memory                        \n
+ *-# SD card back key bug fixed                                                               \n
+ *-# ISSUE 2636 - "Brick Program" app - test for attached sensor                              \n
+ *-# ISSUE 3226 - opMATH MOD8, MOD16, MOD32 zero bug fixed                                    \n
+ *-# ISSUE 3492 - opUI_DRAW LINE and RECT hang bug fixed                                      \n
+ *-# ISSUE 3565 - Brick Hang with 3rd party sensor bug fixed                                  \n
+ *-# Added TIInit_6.6.15.bts to the filesystem to support 1325A version bluetooth             \n
+ *-# Special exception text added to headers: "lmstypes.h", "lms2012.h" and "bytecodes.h"     \n
+ *-# opINPUT_DEVICE INSERT_TYPE implemented for test									                        \n
+ *-# IIC 3rd party hang and data instability issue fixed									                    \n
+ *
  *  \version lms2012_v104H_130531
  *
  *-# Bluetooth transfer folder error fixed in cComCreateBeginDL                               \n
@@ -1011,7 +1054,9 @@
  *****************************************************************************/
 /*! \mainpage Firmware Documentation
  *
- * \image html Lms2012.jpg
+    \htmlonly
+    <IMG src="Lms2012.jpg">
+    \endhtmlonly
  *
  *- \subpage intro
  *  -  \subpage hardware
@@ -1292,30 +1337,12 @@
  *\n
  *
  *- Device Design Guidelines (sensors and motors)
- *  - \subpage DeviceDesign \n
+ *  - \subpage legodevicedesign \n
+ *  - \subpage thirdpartydevicedesign \n
  *\n
  *
  *
  *
- *
- */
- 
-/******************************************************************************
- * DEVICE DESIGN GUIDELINES
- *****************************************************************************/
-/*! \page DeviceDesign Device Design Guidelines
- *
- *- Non Intelligent Input Devices (sensors) 
- *  - \subpage DcmDriver \n
- *
- *- Intelligent Input Devices (sensors) 
- *  - \subpage DcmDriver \n
- *
- *- Non Intelligent Output devices (motors) 
- *  - \subpage DcmDriver \n
- *
- *- Intelligent Output devices (motors) 
- *  - \subpage DcmDriver \n
  *
  */
  
@@ -1342,12 +1369,18 @@
  *  - \subpage  pccompileapps
  *  - \subpage  pcimage
  * 
- *- U-boot
+ *- U-Boot (need "USB to EV3 Port1" adapter)
  *  - \subpage configuboot
  *  - \subpage updateuboot
  *
- *- LINUX
+ *- LINUX (need WiFi Dongle or "USB to Ethernet" adapter)
  *  - \subpage linuxprompt
+ *  - \subpage linuxstartssh
+ *
+ *- LINUX NFS (need "USB to EV3 Port1" and "USB to Ethernet" adapters)
+ *  - \subpage linuxnfsinstall
+ *  - \subpage linuxnfs
+ *  - \subpage linuxnfsdebug
  *
  */
 
@@ -1771,11 +1804,17 @@
  *
  *  <hr size="1"/>
  *
- *  \image html generalnavigation.png
- *  \image html filenavigation.png
- *  \image html buttonlight.png
- *  \n
- *  \subpage uiappcode
+    \htmlonly
+    <IMG src="generalnavigation.png">
+    \endhtmlonly
+    \htmlonly
+    <IMG src="filenavigation.png">
+    \endhtmlonly
+    \htmlonly
+    <IMG src="buttonlight.png">
+    \endhtmlonly
+    \n
+    \subpage uiappcode
  */
 
  
@@ -1786,9 +1825,11 @@
  *
  *  <hr size="1"/>
  *
- *  \image html view.png
- *  \n
- *  \subpage portviewappcode
+    \htmlonly
+    <IMG src="view.png">
+    \endhtmlonly
+    \n
+    \subpage portviewappcode
  */
 
  
@@ -1799,9 +1840,11 @@
  *
  *  <hr size="1"/>
  *
- *  \image html motorcontrol.png
- *  \n
- *  \subpage motorcontrolappcode
+    \htmlonly
+    <IMG src="motorcontrol.png">
+    \endhtmlonly
+    \n
+    \subpage motorcontrolappcode
  */
  
  
@@ -1812,9 +1855,11 @@
  *
  *  <hr size="1"/>
  *
- *  \image html ircontrol.png
- *  \n
- *  \subpage ircontrolappcode
+    \htmlonly
+    <IMG src="ircontrol.png">
+    \endhtmlonly
+    \n
+    \subpage ircontrolappcode
  */
  
  
@@ -1825,11 +1870,13 @@
  *
  *  <hr size="1"/>
  *
- *  \image html program.png
- *  \n
- *  \subpage brickprogramapp
- *  \n
- *  \subpage brickprogramtemplateapp
+    \htmlonly
+    <IMG src="program.png">
+    \endhtmlonly
+    \n
+    \subpage brickprogramapp 
+    \n
+    \subpage brickprogramtemplateapp
  */
  
  
@@ -1840,9 +1887,11 @@
  *
  *  <hr size="1"/>
  *
- *  \image html datalog.png
- *  \n
- *  \subpage brickdatalogapp
+    \htmlonly
+    <IMG src="datalog.png">
+    \endhtmlonly
+    \n
+    \subpage brickdatalogapp
  */
 
  

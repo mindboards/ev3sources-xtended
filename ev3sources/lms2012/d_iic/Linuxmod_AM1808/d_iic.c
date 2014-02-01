@@ -361,6 +361,7 @@ void      InitGpio(void)
 
 typedef struct
 {
+  RESULT  Result;
   UWORD   Timer;
   UWORD   Time;
   UBYTE   Initialised;
@@ -387,6 +388,7 @@ IICPORT;
 
 IICPORT  IicPortDefault =
 {
+  STOP,                     // Result
   0,                        // Timer
   0,                        // Time
   0,                        // Initialised
@@ -994,6 +996,7 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
         }
         if (++(IicPort[Port].Timer) >= (500 / IIC_TIMER_RESOLUTION))
         {
+          IicPort[Port].Result      =  STOP;
           (*pIic).Status[Port]     &= ~IIC_WRITE_REQUEST;
           (*pIic).Status[Port]     &= ~IIC_DATA_READY;
           IicPort[Port].State       =  IIC_WAITING;
@@ -1003,12 +1006,15 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_WAITING :
       {
-        if ((*pIic).Status[Port] & IIC_WRITE_REQUEST)
+        if (++(IicPort[Port].Timer) >= ((MIN_IIC_REPEAT_TIME * 10) / IIC_TIMER_RESOLUTION))
         {
-          if (IicPortBusy(Port) == 0)
+          if (IicPort[Port].Result == BUSY)
           {
-            IicPort[Port].Timer       =  0;
-            IicPort[Port].State       =  IIC_WRITING;
+            if (IicPortBusy(Port) == 0)
+            {
+              IicPort[Port].Timer       =  0;
+              IicPort[Port].State       =  IIC_WRITING;
+            }
           }
         }
       }
@@ -1017,6 +1023,7 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
       case IIC_WRITING :
       {
         IicPortSend(Port);
+        ++(IicPort[Port].Timer);
         IicPort[Port].State       =  IIC_READING;
       }
       break;
@@ -1091,22 +1098,28 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 #endif
 
           (*pIic).Status[Port]     |=  IIC_DATA_READY;
-          IicPort[Port].State       =  IIC_REPEAT;
-
-          if (IicPort[Port].Repeat != 0)
-          {
-            IicPort[Port].Repeat--;
-            if (IicPort[Port].Repeat == 0)
-            {
-              IicPort[Port].State       =  IIC_WAITING;
-            }
-          }
+          IicPort[Port].Result      =  OK;
+          IicPort[Port].State       =  IIC_WAITING;
         }
         if (++(IicPort[Port].Timer) >= (5000 / IIC_TIMER_RESOLUTION))
         {
-          (*pIic).Status[Port]     &= ~IIC_WRITE_REQUEST;
-          (*pIic).Status[Port]     &= ~IIC_DATA_READY;
+          IicPort[Port].Result      =  FAIL;
           IicPort[Port].State       =  IIC_WAITING;
+        }
+        if (IicPort[Port].State == IIC_WAITING)
+        {
+          if (IicPort[Port].Repeat != 0)
+          {
+            IicPort[Port].Repeat--;
+            if (IicPort[Port].Repeat != 0)
+            {
+              IicPort[Port].State       =  IIC_REPEAT;
+            }
+          }
+          else
+          {
+            IicPort[Port].State       =  IIC_REPEAT;
+          }
         }
       }
       break;
@@ -1247,12 +1260,12 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
       pIicDat                     = (IICDAT*)Pointer;
 
       Port                        =  (*pIicDat).Port;
-      (*pIicDat).Result           =  BUSY;
 
-      printk("1\n");
-      if (!((*pIic).Status[Port] & IIC_WRITE_REQUEST))
+      if (IicPort[Port].Result != BUSY)
       {
-        printk("2\n");
+        if (IicPort[Port].Result == STOP)
+        { // Ready for transfer
+
         IicPort[Port].Repeat      =  (*pIicDat).Repeat;
         IicPort[Port].Time        =  (*pIicDat).Time;
         IicPort[Port].OutLength   =  (*pIicDat).WrLng;
@@ -1279,16 +1292,28 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
         memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
         memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
 
-        (*pIic).Status[Port]  =  IIC_WRITE_REQUEST;
-      }
+          IicPort[Port].Result        =  BUSY;
 
-      if (((*pIic).Status[Port] & IIC_DATA_READY))
-      {
-        printk("3\n");
-        memcpy((void*)&(*pIicDat).RdData[0],(void*)&IicPort[Port].InBuffer[0],IicPort[Port].InLength);
+        }
+        else
+        { // Data ready
 
-        (*pIicDat).Result         =  OK;
-        (*pIic).Status[Port]      =  0;
+          if (IicPort[Port].Result == OK)
+          { // Data ok
+
+            memcpy((void*)&(*pIicDat).RdData[0],(void*)&IicPort[Port].InBuffer[0],IicPort[Port].InLength);
+
+            (*pIicDat).Result         =  OK;
+          }
+          else
+          { // Data error
+
+            (*pIicDat).Result         =  FAIL;
+          }
+
+          IicPort[Port].Result        =  STOP;
+
+        }
       }
     }
     break;

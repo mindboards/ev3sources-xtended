@@ -925,7 +925,7 @@ void cDaisyCmd(RXBUF *pRxBuf, TXBUF *pTxBuf)
     		  	  	  	  	  	       memcpy(&(DataOut[0]), &((*pComCmd).CmdSize), 5);
 
     		  	  	  	  	  	       // Move Payload to "normal" position
-    		  	  	  	  	  	       memcpy(&(DataOut[5]), &((*pComCmd).PayLoad[2]), ((*pComCmd).CmdSize - 4));
+    		  	  	  	  	  	       memcpy(&(DataOut[5]), &((*pComCmd).PayLoad[2]), ((*pComCmd).CmdSize - 3));
     		  	  	  	  	  	     }
     		  	  	  	  	  	     else
     		  	  	  	  	  	     {

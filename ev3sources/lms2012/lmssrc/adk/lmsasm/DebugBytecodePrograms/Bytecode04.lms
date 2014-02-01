@@ -1,0 +1,96 @@
+vmthread  MAIN
+{             
+  DATAF   DataF
+  DATA8   Error
+  DATAS	  DataS 12
+
+//  			    Type  Mode  Name      DataSets  Format  Figures  Decimals  Views  Conn. Pins  RawMin   RawMax   PctMin  PctMax  SiMin    SiMax    Time  IdValue  Symbol
+//                          ----  ----  --------  --------  ------  -------  --------  -----  ----- ----  -------  -------  ------  ------  -------  -------  ----  -------  --------
+  INPUT_DEVICE(INSERT_TYPE,'61    0     TP-MOTOR      1       2     4        0         2      125   0x46   -180.0    180.0       0     100   -180.0    180.0     0        0  deg',1,Error)
+ 
+  INPUT_DEVICE(READY_SI,0,16,61,0,1,DataF)
+
+  OUTPUT_POWER(0,1,50)
+  OUTPUT_START(0,1)
+
+
+Loop:
+
+  // Read sensor
+  INPUT_DEVICE(GET_NAME,0,16,12,DataS)
+  INPUT_DEVICE(READY_SI,0,16,0,0,1,DataF)
+
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,LARGE_FONT)
+
+  UI_DRAW(TEXT,FG_COLOR,0,20,DataS)
+  UI_DRAW(VALUE,FG_COLOR,0,40,DataF,-8,0)
+
+  UI_DRAW(UPDATE)                                             
+
+  JR(Loop)
+}
+/*
+vmthread  MAIN
+{             
+  DATA32  Data32
+  DATAF   DataF
+  DATA8   Data8
+  DATA8   Error
+  DATAS	  DataS 12
+
+//  			    Type  Mode  Name      DataSets  Format  Figures  Decimals  Views  Conn. Pins  RawMin   RawMax   PctMin  PctMax  SiMin    SiMax    Time  IdValue  Symbol
+//                          ----  ----  --------  --------  ------  -------  --------  -----  ----- ----  -------  -------  ------  ------  -------  -------  ----  -------  --------
+  INPUT_DEVICE(INSERT_TYPE,'60    0     HT-FORCE      1       1     5        0         2      119   0x30   3411.0    633.0      20     100    200.0   1000.0    10        0  g',1,Error)
+  INPUT_DEVICE(INSERT_TYPE,'60    1     HT-FORCE      1       1     5        0         2      119   0x32   3411.0    633.0      20     100    200.0   1000.0    10        0  G',1,Error)
+//  INPUT_DEVICE(READY_SI,0,1,60,0,1,DataF)
+
+  INPUT_DEVICE(READY_SI,0,1,60,0,1,DataF)
+Loop:
+
+  // Read sensor
+  INPUT_DEVICE(GET_NAME,0,1,12,DataS)
+  INPUT_DEVICE(READY_PCT,0,1,0,-1,1,Data8)
+  MOVE8_F(Data8,DataF)
+//  INPUT_DEVICE(READY_RAW,0,1,0,-1,1,Data32)
+//  MOVE32_F(Data32,DataF)
+//  INPUT_DEVICE(READY_SI,0,1,0,0,1,DataF)
+
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,LARGE_FONT)
+
+  UI_DRAW(TEXT,FG_COLOR,0,20,DataS)
+  UI_DRAW(VALUE,FG_COLOR,0,40,DataF,-8,0)
+
+  UI_DRAW(UPDATE)                                             
+
+  JR(Loop)
+}
+*/
+/*
+vmthread  MAIN
+{             
+  DATA32  Data32
+  DATAF   DataF
+  DATAS	  DataS 12
+
+  INPUT_DEVICE(READY_SI,0,1,28,1,1,DataF)
+
+Loop:
+
+  // Read sensor
+  INPUT_DEVICE(GET_NAME,0,1,12,DataS)
+  INPUT_DEVICE(READY_RAW,0,1,0,-1,1,Data32)
+  MOVE32_F(Data32,DataF)
+
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,LARGE_FONT)
+
+  UI_DRAW(TEXT,FG_COLOR,0,20,DataS)
+  UI_DRAW(VALUE,FG_COLOR,0,40,DataF,-8,0)
+
+  UI_DRAW(UPDATE)                                             
+
+  JR(Loop)
+}
+*/

@@ -19,14 +19,14 @@
  */
 
 
-//  TCP 08.04.2013
+//  TCP 12.12.2013
 //! \page testsensorsappcode Sensors Application
 //!
 //! <hr size="1"/>
 //!
 //! \verbatim
 //**********************************************************************
-define appv 'Sensors V1.02'                                           //
+define appv 'Sensors V1.03'                                           //
 //**********************************************************************
                                                                       //
 /*
@@ -526,9 +526,9 @@ ModeOk:                                                               //      }
                                                                       //
 NotTooLowMode:                                                        //      }
                                                                       //
-  JR_LT8(SetMode,Views,NotTooHighMode)                                //      if (SetModes >= Views)
+  JR_LT8(SetMode,Modes,NotTooHighMode)                                //      if (SetModes >= Modes)
                                                                       //      {
-  MOVE8_8(Views,SetMode)                                              //        SetMode  =  Views
+  MOVE8_8(Modes,SetMode)                                              //        SetMode  =  Modes
   SUB8(SetMode,1,SetMode)                                             //        SetMode--
                                                                       //
 NotTooHighMode:                                                       //      }

@@ -16,6 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros or
+ * inline functions from this file, or you  compile this file and link it with
+ * other works to produce a work based on this file, this file does not by itself
+ * cause the resulting work to be covered by the GNU General Public License.
+ * However the source code for this file must still be made available in accordance
+ * with section (3) of the GNU General Public License.
+ *
  */
 
 
@@ -24,12 +32,7 @@
 
 #define   BYTECODE_VERSION              1.04
 
-/*! \page system System Configuration
- *
- *  <hr size="1"/>
- *
- *  Following defines sets the system configuration and limitations.\n
- *  Defines with preceding "vm" is visible for the byte code assembler\n
+/*! \page system
  *
  *  \verbatim
  */
@@ -129,8 +132,28 @@
 #define   vmCHARSET_WIFIPASSKEY         0x08                          //!< Character set allowed in WiFi pass key
 #define   vmCHARSET_WIFISSID            0x10                          //!< Character set allowed in WiFi ssid
 
+// NUMBER LIMITS
+
+#define   vmDATA8_MIN                   (-127)                        //!< DATA8  negative limit
+#define   vmDATA8_MAX                   (127)                         //!< DATA8  positive limit
+#define   vmDATA16_MIN                  (-32767)                      //!< DATA16 negative limit
+#define   vmDATA16_MAX                  (32767)                       //!< DATA16 positive limit
+#define   vmDATA32_MIN                  (-2147483647)                 //!< DATA32 negative limit
+#define   vmDATA32_MAX                  (2147483647)                  //!< DATA32 positive limit
+#define   vmDATAF_MIN                   (-2147483647)                 //!< DATAF  negative limit
+#define   vmDATAF_MAX                   (2147483647)                  //!< DATAF  positive limit
+
+#define   vmDATA8_NAN                   (0x80)
+#define   vmDATA16_NAN                  (0x8000)
+#define   vmDATA32_NAN                  (0x80000000)
+#define   vmDATAF_NAN                   (0x7FC00000)
 
 /* \endverbatim */
+
+#define   vmPULSE_GUI_BACKGROUND        0x01
+#define   vmPULSE_BROWSER               0x02
+#define   vmPULSE_KEY                   0x04
+
 
 
 /*! \page bytecodedef Byte Code Defines
@@ -522,6 +545,8 @@ typedef   enum
   CODE          = 14,
   DOWNLOAD_END  = 15,
   SCREEN_BLOCK  = 16,
+  ALLOW_PULSE   = 17,
+  SET_PULSE     = 18,
   TEXTBOX_APPEND = 21,
   SET_BUSY      = 22,
   SET_TESTPIN   = 24,
@@ -671,6 +696,7 @@ COM_SET_SUBCODE;
 
 typedef   enum
 {
+  INSERT_TYPE     = 1,
   GET_FORMAT      = 2,
   CAL_MINMAX      = 3,
   CAL_DEFAULT     = 4,
@@ -683,6 +709,8 @@ typedef   enum
   GET_RAW         = 11,
   GET_CONNECTION  = 12,
   STOP_ALL        = 13,
+  SET_TYPEMODE    = 14,
+  READY_IIC       = 15,
   GET_NAME        = 21,
   GET_MODENAME    = 22,
   SET_RAW         = 23,
@@ -947,6 +975,59 @@ typedef   enum
 STRING_SUBCODE;
 
 //! \endverbatim
+
+
+/*! \page types
+
+<hr size="1"/>
+
+TYPE VALUES FOR BYTE CODES:
+\n
+    \verbatim */
+
+typedef   enum
+{
+  MODE_KEEP                     =  -1,  //!< Mode value that won't change mode in byte codes (convenient place to define)
+  TYPE_KEEP                     =   0,  //!< Type value that won't change type in byte codes
+
+  // Types defined in "typedata.rcf"
+  TYPE_NXT_TOUCH                =   1,  //!< Device is NXT touch sensor
+  TYPE_NXT_LIGHT                =   2,  //!< Device is NXT light sensor
+  TYPE_NXT_SOUND                =   3,  //!< Device is NXT sound sensor
+  TYPE_NXT_COLOR                =   4,  //!< Device is NXT color sensor
+  TYPE_NXT_ULTRASONIC           =   5,  //!< Device is NXT ultra sonic sensor
+  TYPE_NXT_TEMPERATURE          =   6,  //!< Device is NXT temperature sensor
+  TYPE_TACHO                    =   7,  //!< Device is EV3/NXT tacho motor
+  TYPE_MINITACHO                =   8,  //!< Device is EV3 mini tacho motor
+  TYPE_NEWTACHO                 =   9,  //!< Device is EV3 new tacho motor
+
+  TYPE_TOUCH                    =  16,  //!< Device is EV3 touch sensor
+
+  // Types defined in known EV3 digital devices
+  TYPE_COLOR                    =  29,  //!< Device is EV3 color sensor
+  TYPE_ULTRASONIC               =  30,  //!< Device is EV3 ultra sonic sensor
+  TYPE_GYRO                     =  32,  //!< Device is EV3 gyro sensor
+  TYPE_IR                       =  33,  //!< Device is EV3 IR sensor
+
+  // Type range reserved for third party devices
+  TYPE_THIRD_PARTY_START        =  50,
+  TYPE_THIRD_PARTY_END          =  98,
+
+  // Special types
+  TYPE_ENERGYMETER              =  99,  //!< Device is energy meter
+  TYPE_IIC_UNKNOWN              = 100,  //!< Device type is not known yet
+  TYPE_NXT_TEST                 = 101,  //!< Device is a NXT ADC test sensor
+
+  TYPE_NXT_IIC                  = 123,  //!< Device is NXT IIC sensor
+  TYPE_TERMINAL                 = 124,  //!< Port is connected to a terminal
+  TYPE_UNKNOWN                  = 125,  //!< Port not empty but type has not been determined
+  TYPE_NONE                     = 126,  //!< Port empty or not available
+  TYPE_ERROR                    = 127,  //!< Port not empty and type is invalid
+}
+TYPE;
+
+
+/*  \endverbatim */
 
 
 /*! \page programid Program ID's (Slots)
@@ -1444,16 +1525,6 @@ ENCRYPT;
 
 typedef   enum
 {
-  MODE_KEEP     = -1,
-  TYPE_KEEP     =  0,
-
-  MIXS
-}
-MIX;
-
-
-typedef   enum
-{
   RED           =  0,
   GREEN         =  1,
   BLUE          =  2,
@@ -1477,6 +1548,10 @@ typedef   enum
 NXTCOLOR;
 
 
+/*! \page warnings WARNINGS
+
+    \verbatim */
+
 typedef   enum
 {
   WARNING_TEMP      = 0x01,
@@ -1484,7 +1559,7 @@ typedef   enum
   WARNING_VOLTAGE   = 0x04,
   WARNING_MEMORY    = 0x08,
   WARNING_DSPSTAT   = 0x10,
-
+  WARNING_RAM       = 0x20,
   WARNING_BATTLOW   = 0x40,
   WARNING_BUSY      = 0x80,
 
@@ -1492,20 +1567,22 @@ typedef   enum
 }
 WARNING;
 
+/*  \endverbatim */
+
 
 #define   DATA8_NAN     ((DATA8)(-128))
 #define   DATA16_NAN    ((DATA16)(-32768))
 #define   DATA32_NAN    ((DATA32)(0x80000000))
 #define   DATAF_NAN     ((float)0 / (float)0) //(0x7FC00000)
 
-#define   DATA8_MIN     (-127)
-#define   DATA8_MAX     (127)
-#define   DATA16_MIN    (-32767)
-#define   DATA16_MAX    (32767)
-#define   DATA32_MIN    (-2147483647)
-#define   DATA32_MAX    (2147483647)
-#define   DATAF_MIN     (-2147483647)
-#define   DATAF_MAX     (2147483647)
+#define   DATA8_MIN     vmDATA8_MIN
+#define   DATA8_MAX     vmDATA8_MAX
+#define   DATA16_MIN    vmDATA16_MIN
+#define   DATA16_MAX    vmDATA16_MAX
+#define   DATA32_MIN    vmDATA32_MIN
+#define   DATA32_MAX    vmDATA32_MAX
+#define   DATAF_MIN     vmDATAF_MIN
+#define   DATAF_MAX     vmDATAF_MAX
 
 
 
@@ -1620,19 +1697,16 @@ DEVCMD;
 #define   LC1(v)                        (PRIMPAR_LONG  | PRIMPAR_CONST | PRIMPAR_1_BYTE),(v & 0xFF)
 #define   LC2(v)                        (PRIMPAR_LONG  | PRIMPAR_CONST | PRIMPAR_2_BYTES),(v & 0xFF),((v >> 8) & 0xFF)
 #define   LC4(v)                        (PRIMPAR_LONG  | PRIMPAR_CONST | PRIMPAR_4_BYTES),((ULONG)v & 0xFF),(((ULONG)v >> (ULONG)8) & 0xFF),(((ULONG)v >> (ULONG)16) & 0xFF),(((ULONG)v >> (ULONG)24) & 0xFF)
-#define   LCA(h)                        (PRIMPAR_LONG  | PRIMPAR_CONST | PRIMPAR_1_BYTE | PRIMPAR_ARRAY),(i & 0xFF)
 
 #define   LV0(i)                        ((i & PRIMPAR_INDEX) | PRIMPAR_SHORT | PRIMPAR_VARIABEL | PRIMPAR_LOCAL)
 #define   LV1(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_1_BYTE),(i & 0xFF)
 #define   LV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_2_BYTES),(i & 0xFF),((i >> 8) & 0xFF)
 #define   LV4(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_4_BYTES),(i & 0xFF),((i >> 8) & 0xFF),((i >> 16) & 0xFF),((i >> 24) & 0xFF)
-#define   LVA(h)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_1_BYTE | PRIMPAR_ARRAY),(i & 0xFF)
 
 #define   GV0(i)                        ((i & PRIMPAR_INDEX) | PRIMPAR_SHORT | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL)
 #define   GV1(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_1_BYTE),(i & 0xFF)
 #define   GV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_2_BYTES),(i & 0xFF),((i >> 8) & 0xFF)
 #define   GV4(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_4_BYTES),(i & 0xFF),((i >> 8) & 0xFF),((i >> 16) & 0xFF),((i >> 24) & 0xFF)
-#define   GVA(h)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_1_BYTE | PRIMPAR_ARRAY),(i & 0xFF)
 
 //        MACROS FOR SUB CALLS
 
@@ -1664,5 +1738,10 @@ DEVCMD;
 #define   IO_F                          IN_F  | OUT_F
 #define   IO_S                          IN_S  | OUT_S
 
+#define   IN_OUT_8                      IO_8
+#define   IN_OUT_16                     IO_16
+#define   IN_OUT_32                     IO_32
+#define   IN_OUT_F                      IO_F
+#define   IN_OUT_S                      IO_S
 
 #endif /* BYTECODES_H_ */

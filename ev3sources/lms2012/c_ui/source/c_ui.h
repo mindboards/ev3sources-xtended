@@ -34,11 +34,6 @@
 #define   MAX_NOTIFY_LINES              8
 #define   MAX_NOTIFY_LINE_CHARS         32
 
-
-void      cUiSetLed(DATA8 State);
-void      cUiUpdateLcd(void);
-DATA8     cUiGetPress(DATA8 Button);
-
 RESULT    cUiInit(void);
 
 RESULT    cUiOpen(void);

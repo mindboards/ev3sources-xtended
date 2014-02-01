@@ -17,4 +17,3 @@ sync
 rmmod d_ui
 rmmod d_power
 
-poweroff -f

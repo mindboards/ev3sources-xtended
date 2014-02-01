@@ -36,6 +36,8 @@ void      dLcdScroll(UBYTE *pImage,DATA16 Y0);
 
 void      dLcdDrawPixel(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0);
 
+void      dLcdInversePixel(UBYTE *pImage,DATA16 X0,DATA16 Y0);
+
 void      dLcdDrawLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X1,DATA16 Y1);
 
 void      dLcdDrawDotLine(UBYTE *pImage,DATA8 Color,DATA16 X0,DATA16 Y0,DATA16 X1,DATA16 Y1,DATA16 On,DATA16 Off);

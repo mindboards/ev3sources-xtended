@@ -61,9 +61,7 @@
   - \subpage directcommands
 \n
 \n
-\n
-\n
-\n
+  - \subpage commandflow
 \n
   - \subpage testcases
  */
@@ -90,8 +88,8 @@
                                                     /*
   Byte 5:     System Command. see following defines */
 
-  #define     BEGIN_DOWNLOAD                0x92    //  Begin file down load
-  #define     CONTINUE_DOWNLOAD             0x93    //  Continue file down load
+  #define     BEGIN_DOWNLOAD                0x92    //  Begin file download
+  #define     CONTINUE_DOWNLOAD             0x93    //  Continue file download
   #define     BEGIN_UPLOAD                  0x94    //  Begin file upload
   #define     CONTINUE_UPLOAD               0x95    //  Continue file upload
   #define     BEGIN_GETFILE                 0x96    //  Begin get bytes from a file (while writing to the file)
@@ -105,8 +103,8 @@
   #define     WRITEMAILBOX                  0x9E    //  Write to mailbox
   #define     BLUETOOTHPIN                  0x9F    //  Transfer trusted pin code to brick
   #define     ENTERFWUPDATE                 0xA0    //  Restart the brick in Firmware update mode
-  #define     SETBUNDLEID                   0xA1    //  Set Bundle ID for mode 2
-  #define     SETBUNDLESEEDID               0xA2    //  Set bundle seed ID for mode 2
+  #define     SETBUNDLEID                   0xA1    //  Set Bundle ID for mode2
+  #define     SETBUNDLESEEDID               0xA2    //  Set bundle seed ID for mode2
 
 /*
 
@@ -151,32 +149,24 @@
 /*
   Byte 7 - n: Response dependent on System Command
 
-
   The example below is build around the host application (X3 software) that wants to send a file to a P-
-  Brick where the VM, Green layer and Black layer reference to the firmware architecture. The
-  architecture document below on the host side only consists of our current understanding of the
-  implementation. At this point we have chosen to reference to the firmware architecture instead of the 7
-  layer OSI model.
+  Brick.
 
 
-  ,---------------------,                                                 ,---------------------,
-  |   Host Application  |                                                 |         VM          |
-  '----------,----------'                                    ,--------->  '---------------------'  -----------,
-             v                                               |                                                |
-   Filename, Destination                             New file coming i                                        v
-             |                                               ^                                        Accept or decline
-             v                                               |                                                |
-  ,---------------------,                                    '----------  ,---------------------,  <----------'
-  |   Brick Server      |                                                 |   Green Layer       |
-  '----------,----------'                                    ,--------->  '---------------------'  -----------,
-             v                                               |                                                |
-   Begin File D/L,                   Command size, Command type, Begin D/L, File size, Filename               v
-   File size, Filename                                       ^                                      Accept or decline, Handle
-             v                                               |                                                |
-  ,---------------------,                                    '----------  ,---------------------,  <----------'
-  |   USB Driver        |                                                 |   Black Layer       |
-  '----------,----------'                                                 '---------------------'
-             v                                                                       ^
+                                             ,---------------------,
+                                             |        c_com        |
+                                ,--------->  '---------------------' ------------
+                                |                                                |
+                                |                                                |
+    Command size, Command type, Begin/Continue D/L, File size, Filename          v
+                                ^                                      Accept or decline, Handle
+                                |                                                |
+                                |                                                |
+                                 ---- ,---------,  ,---------,  ,---------, <----
+                                      |   USB   |  |Bluetooth|  |  WIFI   |
+                                      '---------'  '---------'  '---------'
+
+
   Command size, Command type, Begin D/L, File size, Filename    ------>
                                                                 <------   Command size, Command type, Handle
   Command size, Command type, Continue D/L, Handle, Pay load    ------>
@@ -186,55 +176,34 @@
   Command size, Command type, Continue D/L, Handle, Pay load    ------>
 
 
-  Our current thoughts are as follows:
-    1.  The host application initiates the communication by sending a request to the BrickServer that
-        the application wants to send a file. The parameters within this call will include: File name for
-        the file that should be send, and some description for the destination.
-    2.  The brick server processes the request by sending a request to the USB driver which includes the
-        following parameter: Specific command (Begin down load), File size and file name.
-    3.  The USB driver will send out a command including: Command size, Command byte (Begin
-        down load), File size and file name.
-    4.  The P-bricks black layer with receive and validate the USB packages. It will transfer the
-        received packages up to the green layer.
-    5.  The green layer will evaluate the packages and as it is a begin down load ask the VM if it is
-        okay to receive a packages now.
-    6.  When the VM has replied OK to the green layer the green layer will ask the USB driver to
-        reply OK and include a handle number to use within next packages for this communication.
-    7.  When the OK signal is received with the USB driver (On the host side) the host will start
-        transmitting additional data which include the follow parameters: Command size, Command
-        type, Command byte (Continue D/L), Handle, Pay load data.
+  Download strategy
+  -----------------
 
-        Command size: 2 bytes (Tells the amount of bytes which belongs to this specific command).
-        Command type: 1 byte
-        File size: 4 Bytes
-        Handle: 1 Byte
+  Downloading large files take time, so how to download files can be approached in 2 ways.
 
+    1) Downloading in largest possible messages i.e. using the largest command size as
+       possible (65534 bytes). if message size can be keept below 65534 bytes then all
+       data could fit into the begin download command and that would be the fastest way
+       to download that file. This is the fastest way to download but time is consumed
+       in big chunks.
 
-  Additional consideration
-  Above scenario allows for having multiple file action running at the same time as we have a handle
-  which identifies which process new data relates to. It also allows for interleaved communication
-  during a potential long down load process. But our current knowledge and considerations are also that
-  interleaved commands and splitting up larger data chunks slows down Bluetooth communication a lot.
-  Bluetooth communication requires large data chunks to be pushed through the channel all the time
-  with as less packages division as possible. Therefore the command size parameter is also included to
-  enable sending larger data packages as one call.
-  Above protocol architecture enables implementing the following two different scenarios which
-  performs the same functionality (Sending a 60 Kbyte file to the brick):
+    2) Splitting up the file download into several messages i.e. one begin download and
+       several continue download commands. This will increase the download time, however
+       if other commands with higher priority is needed during the download these can be
+       interleaved between each continue download command.
+       This is the slowest way to download files, but leaves the possibility of interleave
+       other commands in between the continue download messages.
 
-  Scenario 1: (It is not possible to interleave during file down load) (60 K bytes data package):
-  1.  Command size (0x06,0x00), Command type, Begin D/L, File size (0x60,0xEA,0x00,0x00), File Name (0x30)
-  2.  Command size (0x62,0xEA), Command type, Continue D/L, Handle (0x01), Data ............
-
-  Scenario 2 (This enables the host to interleave during file down load) (500 bytes data packages):
-  1.  Command size (0x06,0x00),Command Type, Begin D/L, File size (0x60,0xEA,0x00,0x00), File Name (0x30)
-  2.  Command size (0xF6,0x01), Command type, Continue D/L, Handle (0x01), Data ............
-  3.  ..
-  4.  ..
-  5.  Command size (0xF6,0x01), Command type ,Continue D/L, Handle (0x01), Data ............
+    It is essential that a full message is not interrupted by other messages, that is when
+    the brick has received the command size (2 first bytes of a message) ALL remaining bytes
+    must be received as the following bytes, and the reply (from the brick) for that message
+    has to be received before a new message can be sent and processed in the brick.
 
 
+  Other download information
+  --------------------------
 
-  - File Down Load
+  - File DownLoad
     - Destination filename path is relative from "lms2012/sys"
     - Destination folders are automatically created from filename path
     - First folder name must be: "apps", "prjs" or "tools" (see \ref UIdesign)
@@ -256,7 +225,7 @@
     Examples:
 *********************************************************************************************************
 
-  File down load:
+  File download:
   ---------------
 
     Download file "../apps/tst/tst.rbf"
@@ -594,7 +563,7 @@
   SETBUNDLEID
   -------------
 
-    Sets the default Bundle ID for mode 2. Default bundle ID is "com.lego.lms".
+    Sets the default Bundle ID for mode2. Default bundle ID is "com.lego.lms".
 
 
     xxxxxxxx01A1xxxxxx....
@@ -607,7 +576,7 @@
   SETBUNDLESEEDID
   ------------------
 
-    Sets the default Bundle seed ID for mode 2. Default bundle seed ID is "9RNK8ZF528".
+    Sets the default Bundle seed ID for mode2. Default bundle seed ID is "9RNK8ZF528".
 
     xxxxxxxx01A1xxxxxx....
     bbbbmmmmttsspppppp....
@@ -990,7 +959,7 @@ typedef   struct                        //!< Direct command struct
 DIRCMD;
 
 
-typedef   struct                        //!< System command begin down load command
+typedef   struct                        //!< System command begin download command
 {
   UBYTE   Sys;
   UBYTE   LengthLsb;
@@ -1020,7 +989,7 @@ typedef   struct                        //!< System command Continue Upload comm
 }
 SYSCMDCUPL;
 
-typedef   struct                        //!< System command continue down load command
+typedef   struct                        //!< System command continue download command
 {
   UBYTE   Sys;
   UBYTE   Handle;
@@ -1507,7 +1476,7 @@ typedef   struct
   ULONG   Size;                         //!< File size
   int     File;
 
-  ULONG   Length;                       //!< Total down load length
+  ULONG   Length;                       //!< Total download length
   ULONG   Pointer;                      //!<
   UWORD   State;
 }FIL;

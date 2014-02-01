@@ -1,10 +1,10 @@
 //! \page formatsd Format System SD Card for Rudolf
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        Make a plain text file "fdisk.cmd" containing:        
+    SETUP:            PC running linux with SD cardreader
+    ------            Make a plain text file "fdisk.cmd" containing:        
 p
 d
 1
@@ -26,30 +26,30 @@ p
 p
 w    
  
-    CHECK:        Open Linux console and type:
+    CHECK:            Open Linux terminal and type:
     ------
 
 cat /proc/partitions
             
-                  Insert SD card in reader and type again:
+                      Insert SD card in reader and type again:
 
 cat /proc/partitions
 
-                  Check the difference to see the name of the SD card - assumed "sdx"
-                  CARE MUST BE TAKEN TO USE THE RIGHT NAME !!
+                      Check the difference to see the name of the SD card - assumed "sdx"
+                      CARE MUST BE TAKEN TO USE THE RIGHT NAME !!
               
-    UNMOUNT:      all partitions by typing (substitute "sdx" with the right name):
+    UNMOUNT:          all partitions by typing (substitute "sdx" with the right name):
     --------
 
 sudo umount /dev/sdx1
 sudo umount /dev/sdx2
 
-    PARTITIONING: Type following (substitute "sdx" with the right name):              
+    PARTITIONING:     Type following (substitute "sdx" with the right name):              
     -------------
 
 sudo fdisk /dev/sdx < fdisk.cmd
 
-    FORMATTING:   Type (substitute "sdx" with the right name):
+    FORMATTING:       Type (substitute "sdx" with the right name):
     -----------
 
 sudo mkfs.msdos -n LMS2012 /dev/sdx1
@@ -61,37 +61,43 @@ sudo mkfs.ext3 -L LMS2012_EXT /dev/sdx2
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page formatdatasd Format Data SD Card for Rudolf
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux with SD cardreader
     ------        
     
  
-    CHECK:        Open Linux console and type:
+    CHECK:            Open Linux terminal and type:
     ------
 
 cat /proc/partitions
             
-                  Insert SD card in reader and type again:
+                      Insert SD card in reader and type again:
 
 cat /proc/partitions
 
-                  Check the difference to see the name of the SD card - assumed "sdb"
-                  CARE MUST BE TAKEN TO USE THE RIGHT NAME !!
+                      Check the difference to see the name of the SD card - assumed "sdb"
+                      CARE MUST BE TAKEN TO USE THE RIGHT NAME !!
               
-    UNMOUNT:      all partitions by typing (substitute "sdx" with the right name):
+    UNMOUNT:          all partitions by typing (substitute "sdx" with the right name):
     --------
 
 sudo umount /dev/sdx1
 sudo umount /dev/sdx2
 
-    PARTITIONING: Type following (substitute "sdb" with the right name):              
+    PARTITIONING:     Type following (substitute "sdb" with the right name):              
     -------------
 
 sudo fdisk /dev/sdx
@@ -110,7 +116,7 @@ b
 p
 w    
 
-    FORMATTING:   Type (substitute "sdx" with the right name):
+    FORMATTING:       Type (substitute "sdx" with the right name):
     -----------
 
 sudo mkfs.msdos -n EV3_DATA /dev/sdx1
@@ -121,51 +127,63 @@ sudo mkfs.msdos -n EV3_DATA /dev/sdx1
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page copysd Copy SD Card
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        Formatted SD card
-                  Master SD card        
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
 
-    COPY TO PC:   Insert master SD card in reader
-    -----------   Copy master SD card to PC folder by typing:
+    SETUP:            PC running Linux terminal with SD cardreader
+    ------            Formatted SD card
+                      Master SD card        
+
+    COPY TO PC:       Insert master SD card in reader
+    -----------       Copy master SD card to PC folder by typing:
 
 sudo rm -r -f ~/sdcard
 mkdir ~/sdcard
 cp /media/LMS2012/uImage ~/sdcard/uImage
 sudo tar -jcvf ~/sdcard/lmsfs.tar.bz2 /media/LMS2012_EXT/*
 
-    REMOVE:       Use the "Safely Remove Drive" and remove master SD card
-    -------       or type:
+    REMOVE:           Use the "Safely Remove Drive" and remove master SD card
+    -------           or type:
 
 sync
 
-    COPY TO SD:   Insert formatted SD card in reader
-    -----------   Copy PC folder to SD card by typing:
+    COPY TO SD:       Insert formatted SD card in reader
+    -----------       Copy PC folder to SD card by typing:
 
 sudo cp ~/sdcard/uImage /media/LMS2012/uImage
 sudo tar -jxvf ~/sdcard/lmsfs.tar.bz2 -C /
 
-    REMOVE:       Use the "Safely Remove Drive" and remove SD card
-    -------       or type:
+    REMOVE:           Use the "Safely Remove Drive" and remove SD card
+    -------           or type:
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page makefspk    Make File System Package (Needs BSP installed)
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:            PC running Linux console
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running Linux terminal
     ------            
 
     MAKE PACKAGE:     Make a tarball containing file system
@@ -186,15 +204,20 @@ mv ~/lmsfs.tar.bz2 ./
 cd ~
 
 
-//! \endverbatim
+
+\endverbatim
+
 
 
 //! \page readfssd    Make File System Package From SDCARD
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:            PC running Linux console with SD cardreader
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    -----
+
+    SETUP:            PC running Linux terminal with SD cardreader
     ------            SD card with kernel, filesystem and application
                   
 
@@ -214,15 +237,21 @@ cd ~
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page writefssd   Write File System Package to SDcard
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:            PC running Linux console with SD cardreader
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running Linux terminal with SD cardreader
     ------            SD card containing old file system
                       New file system package "lmsfs.tar.bz2"        
 
@@ -246,20 +275,26 @@ cd ~
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page updatesd Update SD Card Application
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        SD card with kernel, filesystem and application
-                  Update package located at ~
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running Linux terminal with SD cardreader
+    ------            SD card with kernel, filesystem and application
+                      Update package located at ~
                   
-    UPDATE:       This assumes update package is named "Linux_AM1808_v021_110201_LE.tar.gz"                 
-    -------       Insert SD card to update and type:
+    UPDATE:           This assumes update package is named "Linux_AM1808_v021_110201_LE.tar.gz"                 
+    -------           Insert SD card to update and type:
     
 sudo rm -r /media/LMS2012_EXT/home/root/lms2012    
 
@@ -272,21 +307,27 @@ sudo mv /media/LMS2012_EXT/home/root/Linux_AM1808 /media/LMS2012_EXT/home/root/l
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page kernelsd Copy Kernel to SD Card (Needs project installed)
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        Formatted SD card        
-                  Kernel is located at ~/projects/lms2012/open_first/
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running Linux terminal with SD cardreader
+    ------            Formatted SD card        
+                      Kernel is located at ~/projects/lms2012/open_first/
 
 
-    COPY:         Insert SD card in reader
-    -----         Open Linux console and type:
+    COPY:             Insert SD card in reader
+    -----             
 
 sudo cp ~/projects/lms2012/open_first/uImage /media/LMS2012/uImage
 
@@ -295,24 +336,30 @@ sudo cp ~/projects/lms2012/open_first/uImage /media/LMS2012/uImage
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page filesyssd Copy FileSystem to SD Card (Needs BSP installed)
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        Formatted SD card        
-                  Filesystem is located at ~/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
 
-    DELETE:       Insert SD card in reader
-    -------       Open Linux console and type:
+    SETUP:            PC running Linux terminal with SD cardreader
+    ------            Formatted SD card        
+                      Filesystem is located at ~/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys
+
+    DELETE:           Insert SD card in reader
+    -------           
     
 sudo rm -r /media/LMS2012_EXT/*
 
-    COPY:         Type:
+    COPY:             Type:
     -----         
     
 sudo cp -r ~/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/* /media/LMS2012_EXT/
@@ -322,24 +369,30 @@ sudo cp -r ~/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/* /media/LMS2012_EXT/
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page applicationsd Copy Application to SD Card (Needs project installed)
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running Linux console with SD cardreader
-    ------        Formatted SD card        
-                  Application is located at ~/projects/lms2012/lms2012/Linux_AM1808
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
 
-    DELETE:       Insert SD card in reader
-    -------       Open Linux console and type:
+    SETUP:            PC running Linux terminal with SD cardreader
+    ------            Formatted SD card        
+                      Application is located at ~/projects/lms2012/lms2012/Linux_AM1808
+
+    DELETE:           Insert SD card in reader
+    -------           
     
 sudo rm -r /media/LMS2012_EXT/home/root/lms2012/*
 
-    COPY:         Type:
+    COPY:             Type:
     -----         
     
 sudo cp -r ~/projects/lms2012/lms2012/Linux_AM1808/* /media/LMS2012_EXT/home/root/lms2012/
@@ -349,22 +402,27 @@ sudo cp -r ~/projects/lms2012/lms2012/Linux_AM1808/* /media/LMS2012_EXT/home/roo
 
 sync
 
-//! \endverbatim
+
+
+\endverbatim
 
 
 
 //! \page pclinux Install Development Tools
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        Active internet connection
-                  Get and save following packages in personal folder "~"
-                  "arm-2009q1-203-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2"
-                  "eclipse-cpp-helios-SR1-linux-gtk.tar.gz"
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
 
-    CODESOURCERY: Install CodeSourcery (gcc compiler for kernel and application)       
+    SETUP:            PC running linux terminal
+    ------            Active internet connection
+                      Get and save following packages in personal folder "~"
+                      "arm-2009q1-203-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2"
+                      "eclipse-cpp-helios-SR1-linux-gtk.tar.gz"
+
+    CODESOURCERY:     Install CodeSourcery (gcc compiler for kernel and application)       
     -------------
     
 cd ~
@@ -376,19 +434,19 @@ mv ~/.bashrc ~/.bashold
 mv ~/.bashrcnew ~/.bashrc
 source ~/.bashrc
     
-    ECLIPSE:      Install Eclipse (Development environment)
+    ECLIPSE:          Install Eclipse (Development environment)
     --------     
                  
 cd ~
 tar xvfz ~/eclipse-cpp-helios-SR1-linux-gtk.tar.gz -C ~/
     
-    JAVA:         Install Java (Runtime for Eclipse)
+    JAVA:             Install Java (Runtime for Eclipse)
     -----
     
 cd ~
 sudo apt-get install openjdk-6-jre
 
-    MKIMAGE:      Install mkimage (used to compress kernel image)
+    MKIMAGE:          Install mkimage (used in the "build_kernel" script to compress kernel image)
     --------
     
 sudo apt-get install u-boot-tools
@@ -397,17 +455,17 @@ sudo apt-get install u-boot-tools
 
     Next packages are not needed for compilation to target:
         
-    DOXYGEN:      Install Doxygen (Documentation generator)
+    DOXYGEN:          Install Doxygen (Documentation generator)
     --------
     
 sudo apt-get install doxygen
 
-    IMAGEMAGICK:  Install ImageMagick (Bitmap convertion)
+    IMAGEMAGICK:      Install ImageMagick (Bitmap convertion)
     ------------
     
 sudo apt-get install imagemagick libmagickcore-dev
 
-    X11:          Install X11 (PC simulator graphic interface library)
+    X11:              Install X11 (PC simulator graphic interface library)
     ----
 
 sudo apt-get install libx11-xcb-dev
@@ -416,18 +474,22 @@ sudo apt-get install libx11-dev
 
 
 
-//! \endverbatim
+\endverbatim
+
 
 
 //! \page pcfilesystem Install Filesystem
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        Application source installed
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            Application source installed
     
-    SOURCE:       Install file system
+    SOURCE:           Install file system
     -------
     
 cd ~
@@ -448,28 +510,31 @@ sudo chmod 777 lms2012
                 
     
 
+\endverbatim
 
-//! \endverbatim
 
 
 //! \page pckernel Install uBoot and Kernel Source 
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        CodeSourcery installed
-                  VM application source installed
-                  File system installed
-                  "EV3os.tar.bz2" in personal folder "~"
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    -----
 
-    UNPACK:       Unpack "EV3os" folder
+    SETUP:            PC running linux terminal
+    ------            CodeSourcery installed
+                      VM application source installed
+                      File system installed
+                      "EV3os.tar.bz2" in personal folder "~"
+
+    UNPACK:           Unpack "EV3os" folder
     -------
 
 cd ~
 tar -jxf EV3os.tar.bz2
     
-    SOURCE:       Install u-boot source
+    SOURCE:           Install u-boot source
     -------
     
 cd ~
@@ -482,14 +547,14 @@ cp ~/uboot-03.20.00.13_*.tar.bz2 ./
 tar -jxf uboot-03.20.00.13_*.tar.bz2
 rm uboot-03.20.00.13_*.tar.bz2
 
-    BUILD:        u-boot
+    BUILD:            u-boot
     ------     
                  
 cd ~
 cd projects/lms2012/open_first
 ./uboot_build.sh
 
-    SOURCE:       Install kernel source
+    SOURCE:           Install kernel source
     -------
 
 cd ~
@@ -506,28 +571,31 @@ cp ~/linux-devkit.tar.gz ./
 tar zxvf linux-devkit.tar.gz
 rm linux-devkit.tar.gz
     
-    BUILD:       Kernel
+    BUILD:          Kernel
     ------     
                  
 cd ~
 cd projects/lms2012/open_first
 ./build_kernel.sh
-
     
 
 
-//! \endverbatim
+\endverbatim
+
 
 
 //! \page pcvm Install EV3 Application
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        "lms2012_vxxx_XXXXXX.tar.bz2" VM application source package in personal folder "~"
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            "lms2012_vxxx_XXXXXX.tar.bz2" VM application source package in personal folder "~"
     
-    SOURCE:       If not done earlier (readme.txt) - install VM application source         
+    SOURCE:           If not done earlier (readme.txt) - install VM application source         
     -------
     
 cd ~
@@ -537,84 +605,103 @@ cp ~/lms2012_v*.tar.bz2 ./
 tar -jxf lms2012_v*.tar.bz2
 rm lms2012_v*.tar.bz2
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 //! \page pccompile Compile EV3 Application
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        Tools, filesystem, uBoot, kernel and application source installed
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            Tools, filesystem, uBoot, kernel and application source installed
     
-    ECLIPSE:      Start eclipse and select default workspace 
+    ECLIPSE:          Start eclipse and select default workspace 
     --------    
                  
 cd ~
 eclipse/eclipse
 
-                  Inside eclipse:
-                  Uncheck "Project/Build Automatically"   
-                  Select project "File/Switch Workspace = ~/projects/lms2012"    
+                      Inside eclipse:
+                      Uncheck "Project/Build Automatically"   
+                      Select project "File/Switch Workspace = ~/projects/lms2012"    
     
-    BUILD:        Use Eclipse to build the application
+    BUILD:            Use Eclipse to build the application
     ------     
-                  Inside eclipse    
-                  "Project/Clean/  (build the entire workspace) OK"    
+                      Inside eclipse    
+                      "Project/Clean/  (build the entire workspace) OK"    
     
-    OUTPUT:       Application is placed in "~/projects/lms2012/lms2012/Linux_AM1808" folder
+    OUTPUT:           Application is placed in "~/projects/lms2012/lms2012/Linux_AM1808" folder
     -------
     
 
-//! \endverbatim
+
+\endverbatim
+
 
 
 //! \page pccompileapps Build EV3 Apps
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        Application source installed
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            Application source installed
     
-    BUILD:        Build all apps 
+    BUILD:            Build all apps 
     ------    
                  
 cd ~
 cd projects/lms2012/lmssrc
 ./update_all
 
-    OUTPUT:       Apps are copied to the right folder by the script and made ready for the make_image script
+    OUTPUT:           Apps are copied to the right folder by the script and made ready for the make_image script
     -------
     
 
-//! \endverbatim
+
+\endverbatim
+
 
 
 //! \page pcimage Make Image for EV3 Download
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running linux terminal
-    ------        Application source compiled
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            Application source compiled
     
-    MAKE IMAGE:   Run script to make image for download 
+    MAKE IMAGE:       Run script to make image for download 
     -----------    
                  
 cd ~
 cd projects/lms2012/open_first
 sudo ./make_image.sh
     
-    OUTPUT:       Image is "~/projects/lms2012/open_first/EV3-image.xxxxxxxxxx.bin"
+    OUTPUT:           Image is "~/projects/lms2012/open_first/EV3-image.xxxxxxxxxx.bin"
     -------
     
     
-    DOWNLOAD:     Use the EV3 PC software to download the image to EV3
+    DOWNLOAD:         Use the EV3 PC software to download the image to EV3
     ---------
 
-//! \endverbatim
+
+
+\endverbatim
+
 
 
 /*! \page configuboot Configure where to Boot from
@@ -630,128 +717,145 @@ sudo ./make_image.sh
 
 //! \page bootsd Boot From SDcard
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running serial terminal
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running serial terminal
     ------        
     
-    UBOOT:        U-Boot MUST be active see below:         
-    ------        Connect the PC running terminal to the brick (input port 1)
-                  Boot the brick by turning it on
-                  When U-Boot writes "Hit spacebar to stop autoboot:  #" press space bar
+    UBOOT:            U-Boot MUST be active see below:         
+    ------            Connect the PC running terminal to the brick (input port 1)
+                      Boot the brick by turning it on
+                      When U-Boot writes "Hit 'l' to stop autoboot:  #" press 'l'
     
-    SDCARD:       To boot from SD card type: 
+    SDCARD:           To boot from SD card type: 
     -------
         
-setenv bootargs mem=32M console=ttyS1,115200n8 noinitrd root=/dev/mmcblk0p2 rootwait rw ip=off    
+setenv bootargs mem=64M console=ttyS1,115200n8 noinitrd root=/dev/mmcblk0p2 rootwait rw ip=off    
     
-    SAVE:         Save the boot argument by typing:
+    SAVE:             Save the boot argument by typing:
     -----       
     
 saveenv
 
-    BOOT:         Boot again by typing :
+    BOOT:             Boot again by typing :
     -----    
 
 reset    
 
 
-//! \endverbatim
+
+\endverbatim
+
 
 
 //! \page bootsde Boot From SDcard With Ethernet Telnet support
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running serial terminal
-    ------        PC also connected via USB to Ethernet adaptor 
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running serial terminal
+    ------            PC also connected via USB to Ethernet adaptor 
     
-    UBOOT:        U-Boot MUST be active see below:         
-    ------        Connect the PC running terminal to the brick (input port 1)
-                  Boot the brick by turning it on
-                  When U-Boot writes "Hit spacebar to stop autoboot:  #" press space bar
+    UBOOT:            U-Boot MUST be active see below:         
+    ------            Connect the PC running terminal to the brick (input port 1)
+                      Boot the brick by turning it on
+                      When U-Boot writes "Hit 'l' to stop autoboot:  #" press 'l'
     
-    SDCARD:       To boot from SD card with ethernet telnet support 
-    -------       (asuming Brick will get ip = 10.131.145.223) type:  
+    SDCARD:           To boot from SD card with ethernet telnet support 
+    -------           (asuming Brick will get ip = 10.131.145.223) type:  
         
-setenv bootargs mem=32M console=ttyS1,115200n8 noinitrd root=/dev/mmcblk0p2 rootwait rw ip=10.131.145.223    
+setenv bootargs mem=64M console=ttyS1,115200n8 noinitrd root=/dev/mmcblk0p2 rootwait rw ip=10.131.145.223    
 
-    SAVE:         Save the boot argument by typing:
+    SAVE:             Save the boot argument by typing:
     -----       
     
 saveenv
 
-    BOOT:         Boot again by typing :
+    BOOT:             Boot again by typing :
     -----    
 
 reset    
 
 
-//! \endverbatim
+
+\endverbatim
+
 
 
 //! \page bootnfse Boot From NFS With Ethernet Telnet support
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running serial terminal
-    ------        PC nfs server setup with filesystem and connected via USB to Ethernet adaptor 
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running serial terminal
+    ------            PC nfs server setup with filesystem and connected via USB to Ethernet adaptor 
     
-    UBOOT:        U-Boot MUST be active see below:         
-    ------        Connect the PC running terminal to the brick (input port 1)
-                  Boot the brick by turning it on
-                  When U-Boot writes "Hit spacebar to stop autoboot:  #" press space bar
+    UBOOT:            U-Boot MUST be active see below:         
+    ------            Connect the PC running terminal to the brick (input port 1)
+                      Boot the brick by turning it on
+                      When U-Boot writes "Hit 'l' to stop autoboot:  #" press 'l'
     
-    NFS:          To boot from NFS with ethernet telnet support 
-    ----          (asuming Brick will get ip = 10.131.145.223) 
-                  (asuming PC has ip = 10.131.145.222) type:  
+    NFS:              To boot from NFS with ethernet telnet support 
+    ----              (asuming Brick will get ip = 10.131.145.223) 
+                      (asuming PC has ip = 10.131.145.222) type:  
         
-setenv bootargs console=ttyS1,115200n8 noinitrd rw ip=10.131.145.223 root=/dev/nfs nfsroot=10.131.145.222:/home/tcp/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys,nolock,rsize=1024 mem=32M    
+setenv bootargs console=ttyS1,115200n8 noinitrd rw ip=10.131.145.223 root=/dev/nfs nfsroot=10.131.145.222:/home/tcp/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys,nolock,rsize=1024 mem=64M    
 
-    SAVE:         Save the boot argument by typing:
+    SAVE:             Save the boot argument by typing:
     -----       
     
 saveenv
 
-    BOOT:         Boot again by typing :
+    BOOT:             Boot again by typing :
     -----    
 
 reset    
 
 
-//! \endverbatim
+
+\endverbatim
 
 
 
 //! \page updateuboot Update uboot on LEGO Board
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC running serial terminal
-    ------        Formatted SD card        
-                  uBoot is located at ~/projects/lms2012/open_first/
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running serial terminal
+    ------            Formatted SD card        
+                      uBoot is located at ~/projects/lms2012/open_first/
             
-    COPY:         Insert SD card in reader
-    -----         Open Linux console and type:
+    COPY:             Insert SD card in reader
+    -----             
 
 sudo cp ~/projects/lms2012/open_first/uBoot /media/LMS2012/uBoot
 
-    REMOVE:       Use the "Safely Remove Drive" and remove SD card
-    -------       or type:
+    REMOVE:           Use the "Safely Remove Drive" and remove SD card
+    -------           or type:
 
 sync
 
-    UBOOT:        U-Boot MUST be active see below:         
-    ------        Connect the PC running terminal to the brick (input port 1)
-                  Insert SD card with uBoot in brick
-                  Boot the brick by turning it on
-                  When U-Boot writes "Hit spacebar to stop autoboot:  #" press space bar
+    UBOOT:            U-Boot MUST be active see below:         
+    ------            Connect the PC running terminal to the brick (input port 1)
+                      Insert SD card with uBoot in brick
+                      Boot the brick by turning it on
+                      When U-Boot writes "Hit 'l' to stop autoboot:  #" press 'l'
     
-    UPDATE:       To update uBoot type:
+    UPDATE:           To update uBoot type:
     -------
     
 mmcinfo
@@ -763,30 +867,209 @@ sf erase 0 0x40000
 sf write 0xC0700000 0 0x40000
 
 reset    
+
+
                   
-//! \endverbatim
+\endverbatim
+
 
 
 //! \page linuxprompt Get LINUX prompt
 //!
+//! <hr size="1">
 //! \verbatim
-//!
 
-    SETUP:        PC on net running serial terminal
-    ------        EV3 running on net with WiFi dongle        
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
 
-    GET IP:       Get EV3 IP address (xxx.xxx.xxx.xxx) from the bottom of "Brick Info"
+    SETUP:            PC on network running a terminal
+    ------            EV3 running on network with WiFi dongle        
+
+    GET IP:           Get EV3 IP address (X.X.X.X) from the bottom of "Brick Info"
     -------
 
-    OPEN TELNET:  Open a telnet connection on a PC console to the EV3 IP address (xxx.xxx.xxx.xxx)
+    OPEN TELNET:      Open a telnet connection on the PC terminal to the EV3 IP address (X.X.X.X)
     ------------
 
-telnet xxx.xxx.xxx.xxx
+telnet X.X.X.X
 
-    GET PROMPT:   EV3 will asks for login
-                  Type "root" as login and the EV3 should give a prompt like:
-                  root@EV3:~#
+    GET PROMPT:       EV3 will asks for login
+    -----------       Type "root" as login and the EV3 should give a prompt like:
+                      root@EV3:~#
+
+
     
-//! \endverbatim
+\endverbatim
 
 
+
+//! \page linuxstartssh Start EV3 SSH Server
+//!
+//! <hr size="1">
+//! \verbatim
+
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC on network running a terminal
+    ------            EV3 running on network with WiFi dongle or wired ethernet       
+
+    GET IP:           Get EV3 IP address (X.X.X.X) from the bottom of "Brick Info"
+    -------
+
+    OPEN TELNET:      Open a telnet connection on a PC terminal to the EV3 IP address (X.X.X.X)
+    ------------
+
+telnet X.X.X.X
+
+    GET PROMPT:       EV3 will asks for login
+    -----------       Type "root" as login and the EV3 should give a prompt like:
+                      root@EV3:~#
+                  
+    START SSH SERVER:
+    -----------------
+    
+/etc/init.d/dropbear start
+
+    TERMINATE TELNET:
+    -----------------
+    
+exit
+
+
+
+\endverbatim
+
+    
+
+//! \page linuxnfsinstall Install NFS server on Linux PC
+//!
+//! \anchor nfsinstall
+//!
+//! <hr size="1">
+//! \verbatim
+
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            Active internet connection
+
+    INSTALL:          Install NFS server from the internet
+    --------
+    
+sudo apt-get --force-yes install nfs-kernel-server
+sudo chmod 777 /etc/exports
+echo "${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
+
+    RESTART:          Restart NFS server with new permissions
+    --------
+
+sudo /etc/init.d/nfs-kernel-server restart
+
+
+
+\endverbatim
+
+    
+
+//! \page linuxnfs Running EV3 from NFS
+//!
+//! <hr size="1">
+//! \verbatim
+
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            Linux PC on network running a serial terminal connected to EV3 port 1 via "USB to EV3 port adapter"
+    ------            EV3 running on same network with "USB Ethernet adapter"
+                      EV3 filesystem installed on PC (see "Install Filesystem")
+                      NFS server installed (see "Install NFS server on Linux PC")
+
+    GET IP:           Get EV3 IP address (X.X.X.X) from the bottom of "Brick Info"
+    -------           Get PC  IP address (Y.Y.Y.Y) from Linux terminal (type: ifconfig)
+                      Get PC  user path  (ZZZZ) 
+
+    UBOOT:            Restart EV3 and be prepared to hit "l" key on the serial terminal to activate uBoot
+    ------            When uBoot writes "U-Boot > " type commands below:
+    
+setenv bootcmd 'sf probe 0;sf read 0xC0700000 0x50000 0x220000;bootm 0xC0700000'
+
+                      REPLACE X,Y and Z               =======                       =======       ====
+                                                   
+setenv bootargs console=ttyS1,115200n8 noinitrd rw ip=X.X.X.X root=/dev/nfs nfsroot=Y.Y.Y.Y:/home/ZZZZ/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys,nolock,rsize=1024 mem=64M
+
+    PERMANENT NFS:    If NFS should be used until EV3 is "firmware updated" again use command below:
+    --------------
+
+saveenv
+
+    RUN NFS:          After boot command EV3 should run on the NFS
+    --------
+
+boot
+
+
+
+\endverbatim
+
+
+
+//! \page linuxnfsdebug Starting and Stopping EV3 VM Application Running from NFS
+//!
+//! <hr size="1">
+//! \verbatim
+
+    WARNING:          The commands shown are for reference only. Modify IPs and pathes to match your own environment
+    --------
+
+    SETUP:            PC running linux terminal
+    ------            EV3 running NFS (see "Running EV3 from NFS")
+
+
+    INSTALL DEBUG:    Install "Debug" app in NFS 
+    --------------    
+    
+mkdir ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/home/root/lms2012/prjs/Debug
+cp ${HOME}/projects/lms2012/lmssrc/TEST/TEST/Debug.rbf ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/home/root/lms2012/prjs/Debug/Debug.rbf
+
+    OPEN TELNET:      Open a telnet connection to the EV3 IP address (X.X.X.X)
+    ------------
+
+telnet X.X.X.X
+
+    GET PROMPT:       EV3 will asks for login
+    -----------       Type "root" as login and the EV3 should give a prompt like:
+                      root@EV3:~#
+
+    STOP VM:          Stop running VM process: Type command below and WAIT until EV3 leds goes out
+    --------                                                          ----------------------------
+
+killall -9 lms2012
+
+    START VM AGAIN:   Start a new VM process with telnet connection:
+    ---------------
+    
+./lms2012/sys/run
+
+    STOP VM AGAIN:    Run "Debug" app on EV3 - type "q" in the telnet terminal and WAIT until EV3 leds goes out
+    --------------
+
+    DEBUG:            Change application code and goto "START VM AGAIN"
+    ------
+
+    
+
+    DON'T SAVE:       Here is a quick and dirty way to not waste time on EV3 saving stuff (remember to reenable)
+    -----------       In a Linux terminal type:
+    
+sudo mv ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/etc/init.d/store.sh ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/etc/init.d/store_save.sh
+
+    SAVE AGAIN:       To repair above dirty trick use and reenable saving stuff again:
+    -----------       In a Linux terminal type:
+
+sudo mv ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/etc/init.d/store_save.sh ${HOME}/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/etc/init.d/store.sh
+    
+
+
+\endverbatim

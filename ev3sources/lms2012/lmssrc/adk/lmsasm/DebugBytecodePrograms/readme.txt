@@ -11,7 +11,7 @@ GET THE LINUX PROMPT ON THE EV3
 
 5.  Get EV3 IP address (xxx.xxx.xxx.xxx) from the bottom of "Brick Info"
 
-6.  Open a telnet connection on a PC console to the EV3 IP address (xxx.xxx.xxx.xxx)
+6.  Open a telnet connection on a PC terminal to the EV3 IP address (xxx.xxx.xxx.xxx)
 
 7.  EV3 will asks for login
 

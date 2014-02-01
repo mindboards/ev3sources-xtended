@@ -1,0 +1,80 @@
+vmthread  MAIN
+{             
+  DATAF   Angle
+  DATAF   AccAngle
+  DATAF	  Speed
+
+  DATAF   MinAngle
+  DATAF   MaxAngle
+
+  DATA32  Timer
+
+  DATA32  Data32
+  DATA16  Data16
+  DATA16  Tmp16
+
+  DATA16  Cmd
+  DATA16  hData
+
+  OUTPUT_RESET(0,15)
+  INPUT_DEVICE(CLR_ALL,-1)
+  UI_DRAW(TOPLINE,0)
+
+  MOVEF_F(DATAF_MAX,MinAngle)
+  MOVEF_F(DATAF_MIN,MaxAngle)
+
+  ARRAY(CREATE16,0,hData)
+
+Loop:
+
+  // Read sensor
+  MOVE16_16(0x4201,Cmd)
+  INPUT_DEVICE(SETUP,0,1,1,0,2,Cmd,8,@hData)
+
+  // Process angle
+  ARRAY_READ(hData,3,Data16)
+  DIV16(Data16,128,Tmp16)
+  AND16(Tmp16,0x01FE,Tmp16)
+  AND16(Data16,1,Data16)
+  ADD16(Tmp16,Data16,Tmp16)
+  MOVE16_F(Tmp16,Angle)
+
+  // Process accumulated angle
+  ARRAY_READ(hData,2,Data32)
+  RL32(Data32,16,Data32)
+  ARRAY_READ(hData,1,Data32)
+  MOVE32_F(Data32,AccAngle)
+
+  // Process speed
+  ARRAY_READ(hData,0,Data16)
+  MOVE16_F(Data16,Speed)
+
+  JR_GTF(Angle,MinAngle,NotLesser)
+
+  MOVEF_F((Angle,MinAngle)
+
+NotLesser:
+
+  JR_LTF(Angle,MaxAngle,NotGreater)
+
+  MOVEF_F((Angle,MaxAngle)
+
+NotGreater:
+
+  // Readout all values
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,LARGE_FONT)
+  UI_DRAW(VALUE,FG_COLOR,0,0,Angle,-8,0)
+  UI_DRAW(VALUE,FG_COLOR,0,20,AccAngle,-8,0)
+  UI_DRAW(VALUE,FG_COLOR,0,40,Speed,-8,0)
+
+  UI_DRAW(VALUE,FG_COLOR,0,80,MinAngle,-8,0)
+  UI_DRAW(VALUE,FG_COLOR,0,100,MaxAngle,-8,0)
+
+  UI_DRAW(UPDATE)                                             
+
+//  TIMER_WAIT(50,Timer)
+//  TIMER_READY(Timer)
+  JR(Loop)
+}
+

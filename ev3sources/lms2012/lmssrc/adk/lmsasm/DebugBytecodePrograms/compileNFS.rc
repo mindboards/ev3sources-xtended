@@ -1,0 +1,8 @@
+#!/bin/bash
+
+src=$(pwd)
+cd ..
+java -jar assembler.jar "$src"/$1
+cd "$src"
+cp $1.rbf "$HOME/am1808/DaVinci-PSP-SDK-03.20.00.13/filesys/home/root/lms2012/prjs/BrkProg_SAVE"/"$1".rbf
+

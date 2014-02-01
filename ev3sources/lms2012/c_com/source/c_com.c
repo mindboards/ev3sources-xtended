@@ -22,18 +22,21 @@
 /*! \page CommunicationLibrary Communication Library
  *
  *- \subpage  CommunicationLibraryDescription
- *- \subpage  CommunicationLibraryCodes
  */
 
 
 /*! \page CommunicationLibraryDescription Description
  *
+ *  <hr size="1"/>
  *
- */
-
-
-/*! \page CommunicationLibraryCodes Byte Code Summary
+ *  This library takes care of communication:
  *
+ *  - Receiving and transmitting by USB, Bluetooth and WIFI
+ *  - Interprets incoming commands and executes system commands or relay direct commands to the VM
+ *  - Serves as upper layer for:
+ *    - \subpage BluetoothPart
+ *    - WIFI
+ *    - USB
  *
  */
 
@@ -161,14 +164,11 @@ RESULT    cComInit(void)
 
   for(Cnt = 0; Cnt < NO_OF_MAILBOXES; Cnt++)
   {
+    ComInstance.MailBox[Cnt].Status   =  FAIL;
     ComInstance.MailBox[Cnt].DataSize =  0;
     ComInstance.MailBox[Cnt].ReadCnt  =  0;
     ComInstance.MailBox[Cnt].WriteCnt =  0;
-
-    snprintf((char*)(&(ComInstance.MailBox[Cnt].Name[0])), 50,"%d", Cnt);
-    memset(ComInstance.MailBox[Cnt].Content, 0, MAILBOX_CONTENT_SIZE);
-    ComInstance.MailBox[Cnt].Type      =  DATA_8;
-    ComInstance.MailBox[Cnt].Status    =  OK;
+    ComInstance.MailBox[Cnt].Name[0]  =  0;
   }
 
   ComInstance.ComResult = OK;
@@ -524,19 +524,15 @@ void      cComCloseFileHandle(SLONG *pHandle)
 
 UBYTE     cComFreeHandle(DATA8 Handle)
 {
-  UBYTE   RtnVal = TRUE;
+  UBYTE   RtnVal = FALSE;
 
   if (0 != ComInstance.Files[Handle].Name[0])
   {
     if ((Handle >= 0) && (Handle < MAX_FILE_HANDLES))
     {
       ComInstance.Files[Handle].Name[0]  =  0;
+      RtnVal = TRUE;
     }
-  }
-  else
-  {
-    // Handle is unused
-    RtnVal = FALSE;
   }
   return(RtnVal);
 }
@@ -595,7 +591,7 @@ UBYTE     cComGetNxtFile(DIR *pDir, UBYTE *pName)
 }
 
 
-void      cComCreateBeginDl( TXBUF *pTxBuf, UBYTE *pName)
+void      cComCreateBeginDl(TXBUF *pTxBuf, UBYTE *pName)
 {
   UWORD     Index;
   UWORD     ReadBytes;
@@ -619,6 +615,7 @@ void      cComCreateBeginDl( TXBUF *pTxBuf, UBYTE *pName)
 
     pTxBuf->pFile        =  (FIL*)&(ComInstance.Files[FileHandle]);
     pTxBuf->pFile->File  =  open(pTxBuf->pFile->Name,O_RDONLY,0x444);
+    pTxBuf->FileHandle   =  FileHandle;
 
     // Get file length
     pTxBuf->pFile->Size = lseek(pTxBuf->pFile->File, 0L, SEEK_END);
@@ -675,7 +672,7 @@ void      cComCreateBeginDl( TXBUF *pTxBuf, UBYTE *pName)
 
         // Close handles
         cComCloseFileHandle(&(pTxBuf->pFile->File));
-        cComFreeHandle(FileHandle);
+        cComFreeHandle(pTxBuf->FileHandle);
       }
 
       pTxBuf->SubState        =  FILE_COMPLETE_WAIT_FOR_REPLY;
@@ -686,6 +683,7 @@ void      cComCreateBeginDl( TXBUF *pTxBuf, UBYTE *pName)
     }
   }
 }
+
 
 void      cComCreateContinueDl(RXBUF *pRxBuf, TXBUF *pTxBuf)
 {
@@ -863,6 +861,35 @@ void      cComSystemReply(RXBUF *pRxBuf, TXBUF *pTxBuf)
 }
 
 
+void      cComSystemReplyError(RXBUF *pRxBuf, TXBUF *pTxBuf)
+{
+  COMCMD   *pComCmd;
+  SYSCMDC  *pSysCmdC;
+  CMDSIZE   CmdSize;
+
+  pComCmd   =  (COMCMD*)pRxBuf->Buf;
+  pSysCmdC  =  (SYSCMDC*)(*pComCmd).PayLoad;
+  CmdSize   =  (*pComCmd).CmdSize;
+
+  switch ((*pSysCmdC).Sys)
+  {
+    case BEGIN_DOWNLOAD:
+    {
+      if (FILE_IN_PROGRESS_WAIT_FOR_REPLY == pTxBuf->SubState)
+      {
+        //FileHandles still open
+        cComCloseFileHandle(&(pTxBuf->pFile->File));
+        cComFreeHandle(pTxBuf->FileHandle);
+      }
+      pTxBuf->State         =  TXIDLE;
+      pTxBuf->SubState      =  SUBSTATE_IDLE;
+      ComInstance.ComResult =  FAIL;
+    }
+    break;
+  }
+}
+
+
 void      cComGetNameFromScandirList(struct  dirent *NameList, char *pBuffer, ULONG *pNameLen, UBYTE *pFolder)
 {
   char    FileName[MD5LEN + 1 + FILENAMESIZE];
@@ -895,7 +922,7 @@ void      cComGetNameFromScandirList(struct  dirent *NameList, char *pBuffer, UL
       strcat(FileName,NameList->d_name);
 
       /* Get the MD5sum and put in the buffer */
-      // md5_file(FileName, 0, (unsigned char *)Md5Sum);
+      md5_file(FileName, 0, (unsigned char *)Md5Sum);
       *pNameLen  = sprintf(pBuffer, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X ",
                           ((UBYTE*)Md5Sum)[0] , ((UBYTE*)Md5Sum)[1] , ((UBYTE*)Md5Sum)[2] , ((UBYTE*)Md5Sum)[3] ,
                           ((UBYTE*)Md5Sum)[4] , ((UBYTE*)Md5Sum)[5] , ((UBYTE*)Md5Sum)[6] , ((UBYTE*)Md5Sum)[7] ,
@@ -962,7 +989,7 @@ UBYTE     cComCheckForSpace(char *pFullName, ULONG Size)
     else
     {
       cMemoryGetUsage(&TotalSize, &FreeSize, 1);
-      if (FreeSize >= Size + 300)
+      if (FreeSize >= Size)
       {
         RtnVal = OK;
       }
@@ -972,71 +999,6 @@ UBYTE     cComCheckForSpace(char *pFullName, ULONG Size)
 }
 
 
-/*! \page ComModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- */
-/*! \brief    cSystemCommand
- *
- *
- *  cComSystemCommand
- *  -----------------
- *
- *
- *
- *    One message at a time principles
- *    --------------------------------
- *
- *     - The system is only able to process one command at a time (both SYS and DIR commands).
- *     - ComInstance.ReplyStatus holds the information about command processing.
- *     - Writing flag indicated that the reply is ready to be transmitted
- *     - Direct commands are commands to be interpreted by VM - Direct commands are not interpreted until process is
- *       returned to the VM
- *     - System commands are usually processed when received except for large messages (messages larger that buffersize)
- *
- *    Direct command              -> When received     ->  if reply required        ->  ComInstance.ReplyStatus = DIR_CMD_REPLY
- *                                         |
- *                                          ------------>  if no reply required     ->  ComInstance.ReplyStatus = DIR_CMD_NOREPLY
- *
- *    VM reply to direct command  -> if (ComInstance.ReplyStatus = DIR_CMD_REPLY)   ->  pTxBuf->Writing         = 1
- *    (VM always replies, after interp.)                                                ComInstance.ReplyStatus = 0
- *               |
- *                -----------------> if (ComInstance.ReplyStatus = DIR_CMD_NOREPLY) ->  pTxBuf->Writing         = 0
- *                                                                                      ComInstance.ReplyStatus = 0
- *
- *
- *    System command              -> if reply required ->  ComInstance.ReplyStatus = SYS_CMD_REPLY   -> if (pRxBuf->State  =  RXFILEDL) -> Do nothing
- *         |                                                                 |
- *         |                                                                  ------------------------> if (pRxBuf->State  != RXFILEDL) -> pTxBuf->Writing         = 1
- *         |                                                                                                                               ComInstance.ReplyStatus = 0
- *         |
- *          -----------------------> If reply not req. ->  ComInstance.ReplyStatus = SYS_CMD_NOREPLY -> if (pRxBuf->State  =  RXFILEDL) -> Do nothing
- *                                                                           |
- *                                                                            ------------------------> if (pRxBuf->State  != RXFILEDL) -> ComInstance.ReplyStatus = 0
- *
- *
- *
- *    File Download - Large messages
- *    ------------------------------
- *
- *    CONTINUE_DOWNLOAD
- *    BEGIN_DOWNLOAD    --->   (Message size <= Buffer size)  -->  Write bytes to file
- *         |                                                  -->  pRxBuf->State  =  RXIDLE
- *         |
- *         |
- *          --------------->   (Message size  > Buffer Size)  -->  Write bytes from buffer
- *                                                            -->  pRxBuf->State  =  RXFILEDL
- *
- *          Buffer full --->   if pRxBuf->State  =  RXFILEDL  -->  Yes -> write into buffer
- *                                           |                                   |
- *                                           |                                    ------------------> if Remainig msg = 0  ->  pRxBuf->State  =  RXIDLE
- *                                           |
- *                                            ------------------>  No  ->  Interprete as new command
- *
- *
- *
- */
 void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
 {
   COMCMD   *pComCmd;
@@ -1084,7 +1046,6 @@ void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
 
         if (OK == cComCheckForSpace(&(ComInstance.Files[FileHandle].Name[0]), pRxBuf->pFile->Size))
         {
-
           pRxBuf->pFile->Length   =  (ULONG)0;
           pRxBuf->pFile->Pointer  =  (ULONG)0;
 
@@ -1095,7 +1056,7 @@ void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
             if (Folder[Tmp] == '/')
             {
               Folder[Tmp + 1]  =  0;
-              if (strcmp("~/",Folder) != 0)
+              if ((strcmp("~/",Folder) != 0) && (strcmp("../",Folder) != 0))
               {
                 if (mkdir(Folder,S_IRWXU | S_IRWXG | S_IRWXO) == 0)
                 {
@@ -2196,7 +2157,7 @@ void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
     {
       MAKE_DIR        *pMakeDir;
       RPLY_MAKE_DIR   *pReplyMakeDir;
-      char            Folder[sizeof(ComInstance.Files[FileHandle].Name)];
+      char            Folder[60];
 
       //Setup pointers
       pMakeDir        =  (MAKE_DIR*)pRxBuf->Buf;
@@ -2208,7 +2169,7 @@ void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
       pReplyMakeDir->Cmd      =  CREATE_DIR;
       pReplyMakeDir->Status   =  SUCCESS;
 
-      snprintf(Folder,sizeof(Folder),"%s",(char*)(pMakeDir->Dir));
+      snprintf(Folder,sizeof(ComInstance.Files[FileHandle].Name),"%s",(char*)(pMakeDir->Dir));
 
       if (0 == mkdir(Folder,S_IRWXU | S_IRWXG | S_IRWXO))
       {
@@ -2448,6 +2409,71 @@ void      cComSystemCommand(RXBUF *pRxBuf, TXBUF *pTxBuf)
 }
 
 
+/*! \page commandflow Command Flow
+  \verbatim
+
+  Keywords
+  --------
+
+    - The system is only able to process one command at a time (both SYS and DIR commands).
+    - ComInstance.ReplyStatus holds the information about command processing.
+    - Writing flag indicated that the reply is ready to be transmitted
+    - Direct commands are commands to be interpreted by VM - Direct commands are not interpreted until process is
+      returned to the VM
+    - System commands are usually processed when received except for large messages (messages larger that buffersize)
+    - Brick responds on the same channel as a message is received - ComInstance.ActiveComCh = received channel
+
+    Message flow
+    ------------
+
+    Direct command --------------> When received  ---->  if reply required     ---->  ComInstance.ReplyStatus = DIR_CMD_REPLY
+                                         |
+                                         '------------>  if no reply required  ---->  ComInstance.ReplyStatus = DIR_CMD_NOREPLY
+
+    VM reply to direct command  -> if (ComInstance.ReplyStatus = DIR_CMD_REPLY)---->  pTxBuf->Writing         = 1
+    (VM always replies, after interpretation)                                         ComInstance.ReplyStatus = 0
+               |
+               '-----------------> if (ComInstance.ReplyStatus = DIR_CMD_NOREPLY)-->  pTxBuf->Writing         = 0
+                                                                                      ComInstance.ReplyStatus = 0
+
+
+    System command --------------> if reply required ->  ComInstance.ReplyStatus = SYS_CMD_REPLY  --> if (pRxBuf->State  =  RXFILEDL) -> Do nothing
+         |                                                                 |
+         |                                                                 '------------------------> if (pRxBuf->State  != RXFILEDL) -> pTxBuf->Writing         = 1
+         |                                                                                                                               ComInstance.ReplyStatus = 0
+         |
+         '-----------------------> If reply not req. ->  ComInstance.ReplyStatus = SYS_CMD_NOREPLY -> if (pRxBuf->State  =  RXFILEDL) -> Do nothing
+                                                                           |
+                                                                           '------------------------> if (pRxBuf->State  != RXFILEDL) -> ComInstance.ReplyStatus = 0
+
+
+    Large messages - Massages larger than buffer size (1024 bytes):
+
+      Potential large message commands:
+      - BEGIN_DOWNLOAD
+      - CONTINUE_DOWNLOAD
+      - BEGIN_UPLOAD
+      - CONTINUE_UPLOAD
+      - BEGIN_GETFILE
+      - CONTINUE_GETFILE
+      - LIST_FILES
+      - CONTINUE_LIST_FILES
+
+
+    Large files --------->   (Message size <= Buffer size)  -->  Write bytes to file
+         |                                                  -->  pRxBuf->State  =  RXIDLE
+         |
+         |
+         '--------------->   (Message size  > Buffer Size)  -->  Write bytes from buffer
+                                                            -->  pRxBuf->State  =  RXFILEDL
+
+          Buffer full --->   if pRxBuf->State  =  RXFILEDL  -->  Yes -> write into buffer
+                                           |                                   |
+                                           |                                   '------------------> if Remainig msg = 0 -->  pRxBuf->State  =  RXIDLE
+                                           |
+                                           '------------------>  No --> Interprete as new command
+  \endverbatim
+ */
 void      cComUpdate(void)
 {
   COMCMD  *pComCmd;
@@ -2704,6 +2730,7 @@ void      cComUpdate(void)
                 #ifdef DEBUG
                   printf("\r\nsystem reply error\r\n");
                 #endif
+                cComSystemReplyError(pRxBuf, pTxBuf);
               }
               break;
 
@@ -3268,7 +3295,7 @@ UBYTE     cComFindMailbox(UBYTE *pName, UBYTE *pNo)
 
 /*! \page cCom Communication
  *  <hr size="1"/>
- *  <b>     opCOM_READY     </b>
+ *  <b>     opCOM_READY (HARDWARE, *pNAME)    </b>
  *
  *- Test if communication is busy                                     \n
  *- Dispatch status may be set to BUSYBREAK                           \n
@@ -3336,15 +3363,15 @@ void      cComReady(void)
 
 /*! \page cCom Communication
  *  <hr size="1"/>
- *  <b>     opCOM_TEST     </b>
+ *  <b>     opCOM_TEST (HARDWARE, *pName, BUSY)    </b>
  *
  *- Test if communication is busy                                     \n
  *- Dispatch status is set to NOBREAK                                 \n
  *- If name is 0 then own adapter busy status is returned
  *
  *  \param  (DATA8)  HARDWARE  - \ref transportlayers                 \n
- *  \param  (DATA8*) *pNAME    - Name of the remote/own device        \n
- *  \return (DATA8)  Busy      - busy flag (0 = Ready, 1 = Busy)      \n
+ *  \param  (DATA8*) *pNAME    - NAME of the remote/own device        \n
+ *  \return (DATA8)  BUSY      - BUSY flag (0 = Ready, 1 = Busy)      \n
  *
  */
 /*! \brief  opCOM_TEST byte code
@@ -3399,18 +3426,16 @@ void      cComTest(void)
 
 /*! \page cCom Communication
  *  <hr size="1"/>
- *  <b>     opCOM_READ (CMD, ....)  </b>
+ *  <b>     opCOM_READ (CMD, DUMMY, *IMAGE, *GLOBAL, FLAG)  </b>
  *
  *- Communication read                                                \n
  *- Dispatch status unchanged
  *
  *  \param  (DATA8)   CMD     - Specific command \ref comreadsubcode  \n
- *
- *  - CMD = COMMAND
- *  \param  (DATA32)  LENGTH   - Maximal code stream length           \n
- *  \return (DATA32)  *IMAGE   - Address of image                     \n
- *  \return (DATA32)  *GLOBAL  - Address of global variables          \n
- *  \return (DATA8)   FLAG     - Flag that tells if image is ready    \n
+ *  \param  (DATA32)  DUMMY   - Unused                               \n
+ *  \return (DATA32)  *IMAGE  - Address of image                     \n
+ *  \return (DATA32)  *GLOBAL - Address of global variables          \n
+ *  \return (DATA8)   FLAG    - Flag that tells if image is ready    \n
  *
  */
 /*! \brief  opCOM_READ byte code
@@ -3423,13 +3448,7 @@ void      cComRead(void)
   DATA32  pGlobal;
   DATA8   Flag;
 
-  if (ComInstance.Cmdfd >= 0)
-  {
-    // Moved To lms2012.c
-        //cComUpdate();
-  }
-
-  Cmd     =  *(DATA8*)PrimParPointer();
+  Cmd = *(DATA8*)PrimParPointer();
 
   switch (Cmd)
   { // Function
@@ -3457,16 +3476,15 @@ void      cComRead(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opCOM_WRITE (CMD, ....)  </b>
+ *  <b>     opCOM_WRITE (CMD, *IMAGE, *GLOBAL, STATUS)  </b>
  *
  *- Communication write\n
  *- Dispatch status unchanged
  *
- *  \param  (DATA8)   CMD     - Specific command \ref comwritesubcode  \n
- *
- *  - CMD = REPLY
- *  \return (DATA32)  *IMAGE   - Address of image                      \n
- *  \return (DATA32)  *GLOBAL  - Address of global variables           \n
+ *  \param  (DATA8)   CMD      - Specific command \ref comwritesubcode  \n
+ *  \return (DATA32)  *IMAGE   - Address of image                       \n
+ *  \return (DATA32)  *GLOBAL  - Address of global variables            \n
+ *  \return (DATA8)    STATUS  - Execution status of the direct command \n
  *
  */
 /*! \brief  opCOM_WRITE byte code
@@ -3521,7 +3539,7 @@ void      cComWrite(void)
   }
 }
 
-
+/* UNUSED function */
 void      cComReadData(void)
 {
   DATA8   Hardware;
@@ -3536,6 +3554,7 @@ void      cComReadData(void)
 }
 
 
+/* UNUSED function */
 void      cComWriteData(void)
 {
   DATA8   Hardware;
@@ -3552,7 +3571,7 @@ void      cComWriteData(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_OPEN   </b>
+ *  <b>     opMAILBOX_OPEN (NO, BOXNAME, TYPE, FIFOSIZE, VALUES)  </b>
  *
  *- Open a mail box on the brick                                                                        \n
  *- Dispatch status can return FAILBREAK
@@ -3604,7 +3623,7 @@ void      cComOpenMailBox(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_WRITE   </b>
+ *  <b>     opMAILBOX_WRITE (BRICKNAME, HARDWARE, BOXNAME, TYPE, VALUES, ..)  </b>
  *
  *- Write to mailbox in remote brick                                                      \n
  *- Dispatch status can return FAILBREAK
@@ -3617,6 +3636,9 @@ void      cComOpenMailBox(void)
  *  \param  (DATA8)    BOXNAME    - Zero terminated string name of the receiving mailbox  \n
  *  \param  (DATA8)    TYPE       - Data type of the values \ref formats "TYPE enum"      \n
  *  \param  (DATA8)    VALUES     - Number of values of the specified type to send        \n
+ *
+ *  if VALUES != 0 then
+ *  \param  (TYPE) x VALUES       - Data to be sent to the mailbox                        \n
  *
  *  If string type (DATA_S) data is to be transmitted then a zero terminated string is    \n
  *  expected.
@@ -3764,9 +3786,10 @@ void      cComWriteMailBox(void)
   SetDispatchStatus(DspStat);
 }
 
+
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_READ  </b>
+ *  <b>     opMAILBOX_READ (NO, LENGTH, VALUES) </b>
  *
  *- Read data from mailbox specified by NO                                           \n
  *- Dispatch status can return FAILBREAK
@@ -3880,7 +3903,7 @@ void      cComReadMailBox(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_TEST  </b>
+ *  <b>     opMAILBOX_TEST (NO, BUSY) </b>
  *
  *- Tests if new message has been read                                              \n
  *- Dispatch status can return FAILBREAK
@@ -3913,7 +3936,7 @@ void      cComTestMailBox(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_READY  </b>
+ *  <b>     opMAILBOX_READY (NO) </b>
  *
  *- Waiting from message to be read                            \n
  *- Dispatch status can return FAILBREAK
@@ -3948,16 +3971,16 @@ void      cComReadyMailBox(void)
 
 /*! \page cCom
  *  <hr size="1"/>
- *  <b>     opMAILBOX_CLOSE  </b>
+ *  <b>     opMAILBOX_CLOSE (NO) </b>
  *
  *- Closes mailbox indicated by NO                                  \n
  *- Dispatch status can return FAILBREAK
  *
- *    -  \param  (DATA8)    NO         - Reference ID mailbox number\n
+ *  \param  (DATA8)    NO         - Reference ID mailbox number     \n
  */
-/*! \brief  opMAILBOX_CLOSE byte code
-*
-*/
+ /*! \brief  opMAILBOX_CLOSE byte code
+ *
+ */
 void      cComCloseMailBox(void)
 {
   DSPSTAT DspStat = NOBREAK;
@@ -3970,7 +3993,23 @@ void      cComCloseMailBox(void)
 }
 
 
- void      cComWriteFile(void)
+/*! \page cCom
+ *  <hr size="1"/>
+ *  <b>     opCOM_WRITEFILE (HARDWARE, *REMOTE_NAME, *FILE_NAME, FILE_TYPE)   </b>
+ *
+ *- Sends a file or folder to remote brick                          \n
+ *- Remote brick is specified by remote brick name                  \n
+ *- Dispatch status can return FAILBREAK
+ *
+ *  \param  (DATA8)    HARDWARE      - \ref transportlayers         \n
+ *  \param  (DATA8)   *REMOTE_NAME   - Pointer to remote brick name \n
+ *  \param  (DATA8)   *FILE_NAME     - File/folder name to send     \n
+ *  \param  (DATA8)    FILE_TYPE     - File or folder type to send  \n
+ */
+/*! \brief  opCOM_WRITEFILE byte code
+*
+*/
+void      cComWriteFile(void)
 {
   TXBUF           *pTxBuf;
   DSPSTAT DspStat = FAILBREAK;
@@ -4008,7 +4047,7 @@ void      cComCloseMailBox(void)
       pTxBuf   =  &(ComInstance.TxBuf[ChNo[0]]);
       pDlMsg   =  (BEGIN_DL*)(&(pTxBuf->Buf[0]));
 
-      if (TYPE_FOLDER == FileType)
+      if (TYPE_FOLDER == (FileType & 0x0F))
       {
         // Sending folder
         pTxBuf->State  =  TXFOLDER;
@@ -4053,8 +4092,6 @@ void      cComCloseMailBox(void)
 }
 
 
-//static    DATA8 BtParred      =  0;
-
 /*! \page cCom
  *  <hr size="1"/>
  *  <b>     opCOM_GET (CMD, ....)  </b>
@@ -4062,21 +4099,21 @@ void      cComCloseMailBox(void)
  *- Communication get entry\n
  *- Dispatch status can return FAILBREAK
  *
- *  \param  (DATA8)   CMD               - \ref comgetsetsubcode
+ *  \param  (DATA8)   CMD               - \ref comgetsubcode
  *
  *\n
  *  - CMD = GET_ON_OFF
  *\n  Get active state                                                         \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \return (DATA8)    ACTIVE      - Active [0,1]                         \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \return (DATA8)    ACTIVE      - Active [0,1]                            \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_VISIBLE
  *\n  Get visibility state                                                     \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \return (DATA8)    VISIBLE     - Visible [0,1]                        \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \return (DATA8)    VISIBLE     - Visible [0,1]                           \n
  *
  *\n
  *
@@ -4085,19 +4122,19 @@ void      cComCloseMailBox(void)
  *\n  Get status. This command gets the result of the command that             \n
  *    is being executed. This could be a search or a connection                \n
  *    request.                                                                 \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Name index                           \n
- *    -  \return (DATA8)    RESULT      - \ref results                         \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Name index                              \n
+ *    \return (DATA8)    RESULT      - \ref results                            \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_PIN
  *\n  Get pin code. For now "1234" is returned                                 \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    NAME        - First character in character string  \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    PINCODE     - First character in character string  \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    NAME        - First character in character string     \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    PINCODE     - First character in character string     \n
  *
  *\n
  *
@@ -4105,8 +4142,8 @@ void      cComCloseMailBox(void)
  *  - CMD = SEARCH_ITEMS
  *\n  Get number of item from search. After a search has been completed,       \n
  *    SEARCH ITEMS will return the number of remote devices found.             \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \return (DATA8)    ITEMS       - No of items in seach list            \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \return (DATA8)    ITEMS       - No of items in seach list               \n
  *
  *\n
  *
@@ -4114,14 +4151,14 @@ void      cComCloseMailBox(void)
  *  - CMD = SEARCH_ITEM
  *\n  Get search item informations. Used to retrieve the item information      \n
  *    in the search list                                                       \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Item - index in search list          \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    NAME        - First character in character string  \n
- *    -  \return (DATA8)    PARRED      - Parred [0,1]                         \n
- *    -  \return (DATA8)    CONNECTED   - Connected [0,1]                      \n
- *    -  \return (DATA8)    TYPE        - \ref bttypes                         \n
- *    -  \return (DATA8)    VISIBLE     - Visible [0,1]                        \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Item - index in search list             \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    NAME        - First character in character string     \n
+ *    \return (DATA8)    PARRED      - Parred [0,1]                            \n
+ *    \return (DATA8)    CONNECTED   - Connected [0,1]                         \n
+ *    \return (DATA8)    TYPE        - \ref bttypes                            \n
+ *    \return (DATA8)    VISIBLE     - Visible [0,1]                           \n
  *
  *\n
  *
@@ -4129,8 +4166,8 @@ void      cComCloseMailBox(void)
  *  - CMD = FAVOUR_ITEMS
  *\n  Get no of item in favourite list. The number of paired devices, not      \n
  *    necessarily visible or present devices                                   \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \return (DATA8)    ITEMS       - No of items in list                  \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \return (DATA8)    ITEMS       - No of items in list                     \n
  *
  *\n
  *
@@ -4138,67 +4175,67 @@ void      cComCloseMailBox(void)
  *  - CMD = FAVOUR_ITEM
  *\n  Get favourite item informations. Used to retrieve the item information   \n
  *    in the favourite list. All items in the favourite list are paired devices\n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Item - index in favourite list       \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    NAME        - First character in character string  \n
- *    -  \return (DATA8)    PARRED      - Parred [0,1]                         \n
- *    -  \return (DATA8)    CONNECTED   - Connected [0,1]                      \n
- *    -  \return (DATA8)    TYPE        - \ref bttypes                         \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Item - index in favourite list          \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    NAME        - First character in character string     \n
+ *    \return (DATA8)    PARRED      - Parred [0,1]                            \n
+ *    \return (DATA8)    CONNECTED   - Connected [0,1]                         \n
+ *    \return (DATA8)    TYPE        - \ref bttypes                            \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_ID
  *\n  Get bluetooth address information                                        \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    STRING      - First character in BT adr string     \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    STRING      - First character in BT adr string        \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_BRICKNAME
  *\n  Gets the name of the brick                                               \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    NAME        - First character in brick name        \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    NAME        - First character in brick name           \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_NETWORK
  *\n  Gets the network information. WIFI only                                  \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \return (DATA8)    NAME        - First character in AP name           \n
- *    -  \return (DATA8)    MAC         - First character in MAC adr string    \n
- *    -  \return (DATA8)    IP          - First character in IP no string      \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \return (DATA8)    NAME        - First character in AP name              \n
+ *    \return (DATA8)    MAC         - First character in MAC adr string       \n
+ *    \return (DATA8)    IP          - First character in IP no string         \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_PRESENT
  *\n  Return if hardare is present. WIFI only                                  \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \return (DATA8)    OK          - Present [0,1]                        \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \return (DATA8)    OK          - Present [0,1]                           \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_ENCRYPT
  *\n  Returns the encryption mode of the hardware. WIFI only                   \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Item - index in favourite list       \n
- *    -  \param  (DATA8)    TYPE        - Encryption type                      \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Item - index in favourite list          \n
+ *    \param  (DATA8)    TYPE        - Encryption type                         \n
  *
  *\n
  *
  *\n
  *  - CMD = GET_INCOMMING
- *\n  Returns the encryption mode of the hardware. WIFI only                   \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    LENGTH      - Max length of returned string        \n
- *    -  \param  (DATA8)    NAME        - First character in name              \n
+ *\n  Returns the encryption mode of the hardware. Bluetooth only              \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    LENGTH      - Max length of returned string           \n
+ *    \param  (DATA8)    NAME        - First character in name                 \n
  *
  *\n
  *
@@ -4206,8 +4243,6 @@ void      cComCloseMailBox(void)
 /*! \brief  opCOM_GET byte code
  *
  */
-
-
 void      cComGet(void)
 {
   DSPSTAT DspStat = FAILBREAK;
@@ -4933,38 +4968,38 @@ void      cComGet(void)
  *- Communication set entry\n
  *- Dispatch status can return FAILBREAK
  *
- *  \param  (DATA8)   CMD               - \ref comgetsetsubcode
+ *  \param  (DATA8)   CMD               - \ref comsetsubcode
  *
  *
  *\n
  *  - CMD = SET_MODE2
  *\n  Set active mode state, either active or not\n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ACTIVE      - Active [0,1], 1 = on, 0 = off        \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ACTIVE      - Active [0,1], 1 = on, 0 = off           \n
  *
  *\n
  *
  *\n
  *  - CMD = SET_ON_OFF
  *\n  Set active state, either on or off\n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ACTIVE      - Active [0,1], 1 = on, 0 = off        \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ACTIVE      - Active [0,1], 1 = on, 0 = off           \n
  *
  *\n
  *
  *\n
  *  - CMD = SET_VISIBLE
  *\n  Set visibility state - Only available for bluetooth                      \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    VISIBLE     - Visible [0,1], 1 = visible, 0 = invisible\n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    VISIBLE     - Visible [0,1], 1 = visible, 0 = invisible\n
  *
  *\n
  *
  *\n
  *  - CMD = SET_SEARCH
  *\n  Control search. Starts or or stops the search for remote devices         \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    SEARCH      - Search [0,1] 0 = stop search, 1 = start search\n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    SEARCH      - Search [0,1] 0 = stop search, 1 = start search\n
  *
  *\n
  *
@@ -4973,9 +5008,9 @@ void      cComGet(void)
  *\n  Set pin code. Set the pincode for a remote device.                       \n
  *    Used when requested by bluetooth.                                        \n
  *    not at this point possible by user program                               \n
- *    -  \param  *(DATA8)   HARDWARE    - \ref transportlayers                 \n
- *    -  \param   (DATA8)   NAME        - First character in character string  \n
- *    -  \param   (DATA8)   PINCODE     - First character in character string  \n
+ *    \param  *(DATA8)   HARDWARE    - \ref transportlayers                    \n
+ *    \param   (DATA8)   NAME        - First character in character string     \n
+ *    \param   (DATA8)   PINCODE     - First character in character string     \n
  *
  *\n
  *
@@ -4984,8 +5019,8 @@ void      cComGet(void)
  *\n  Set pin code. Set the pincode for a remote device.                       \n
  *    Used when requested by bluetooth.                                        \n
  *    not at this point possible by user program                               \n
- *    -  \param  *(DATA8)   Hardware    - \ref transportlayers                 \n
- *    -  \param  *(DATA8)   ACCEPT      - Acceptance [0,1] 0 = reject 1 = accept \n
+ *    \param  *(DATA8)   Hardware    - \ref transportlayers                    \n
+ *    \param  *(DATA8)   ACCEPT      - Acceptance [0,1] 0 = reject 1 = accept  \n
  *
  *\n
  *
@@ -4993,16 +5028,16 @@ void      cComGet(void)
  *  - CMD = SET_CONNECTION
  *\n  Control connection. Initiate or closes the connection request to a       \n
  *    remote device by the specified name                                      \n
- *    -  \param  (DATA8)    Hardware    - \ref transportlayers                 \n
- *    -  \param *(DATA8)    NAME        - First character in Name              \n
- *    -  \param  (DATA8)    CONNECTION  - Connect [0,1], 1 = Connect, 0 = Disconnect\n
+ *    \param  (DATA8)    Hardware    - \ref transportlayers                    \n
+ *    \param *(DATA8)    NAME        - First character in Name                 \n
+ *    \param  (DATA8)    CONNECTION  - Connect [0,1], 1 = Connect, 0 = Disconnect\n
  *
  *\n
  *
  *\n
  *  - CMD = SET_BRICKNAME
  *\n  Sets the name of the brick\n
- *    -  \param  (DATA8)    NAME        - First character in character string  \n
+ *    \param  (DATA8)    NAME        - First character in character string     \n
  *
  *\n
  *
@@ -5010,8 +5045,8 @@ void      cComGet(void)
  *  - CMD = SET_MOVEUP
  *\n  Moves the index in list one step up. Used to re-arrange WIFI list        \n
  *    Only used for WIFI                                                       \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Index in table                       \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Index in table                          \n
  *
  *\n
  *
@@ -5019,25 +5054,25 @@ void      cComGet(void)
  *  - CMD = SET_MOVEDOWN
  *\n  Moves the index in list one step down. Used to re-arrange WIFI list      \n
  *    Only used for WIFI                                                       \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Index in table                       \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Index in table                          \n
  *
  *\n
  *
  *\n
  *  - CMD = SET_ENCRYPT
  *\n  Moves the index in list one step down. Only used for WIFI                \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param  (DATA8)    ITEM        - Index in table                       \n
- *    -  \param  (DATA8)    ENCRYPT     - Encryption type                      \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param  (DATA8)    ITEM        - Index in table                          \n
+ *    \param  (DATA8)    ENCRYPT     - Encryption type                         \n
  *
  *\n
  *
  *\n
  *  - CMD = SET_SSID
  *\n  Sets the SSID name. Only used for WIFI                                   \n
- *    -  \param  (DATA8)    HARDWARE    - \ref transportlayers                 \n
- *    -  \param *(DATA8)    NAME        - Index in table                       \n
+ *    \param  (DATA8)    HARDWARE    - \ref transportlayers                    \n
+ *    \param *(DATA8)    NAME        - Index in table                          \n
  *
  *\n
  *
@@ -5516,6 +5551,19 @@ void      cComSet(void)
 }
 
 
+ /*! \page cCom
+  *  <hr size="1"/>
+  *  <b>     opCOM_REMOVE (HARDWARE, *REMOTE_NAME)  </b>
+  *
+  *- Removes a know remote device from the brick                     \n
+  *- Dispatch status can return FAILBREAK                            \n
+  *
+  *  \param  (DATA8)    HARDWARE      - \ref transportlayers         \n
+  *  \param  (DATA8)   *REMOTE_NAME   - Pointer to remote brick name \n
+  */
+ /*! \brief  opCOM_REMOVE byte code
+ *
+ */
 void      cComRemove(void)
 {
   DSPSTAT DspStat = FAILBREAK;
@@ -5562,26 +5610,26 @@ UBYTE     cComGetBtStatus(void)
   return(cBtGetStatus());
 }
 
-
 UBYTE     cComGetWifiStatus(void)
 {
   UBYTE   Flags;
   UBYTE   Status;
+  char TempIp[16];              // TempStorage/Param
 
   Status = 0;
 
   if (OK == cWiFiGetOnStatus())
   {
-    Status |=  0x03;                 // Wifi on + visible (always visible if on)
+    Status |=  0x03;                  // Wifi on + visible (always visible if on)
     Flags   =  cWiFiGetFlags((int)0);
     if (CONNECTED & Flags)
     {
-      Status |= 0x04;                // Wifi connected to AP
+      if(cWiFiGetIpAddr(TempIp) == OK)
+        Status |= 0x04;               // Wifi connected to AP & Valid IP
     }
   }
   return(Status);
 }
-
 
 void      cComGetBrickName(DATA8 Length, DATA8 *pBrickName)
 {

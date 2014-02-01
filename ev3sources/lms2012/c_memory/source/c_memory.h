@@ -24,21 +24,6 @@
 
 #include  "lms2012.h"
 
-RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,const char *pDefaultExt);
-DSPSTAT   cMemoryOpenFile(PRGID PrgId,DATA8 Access,char *pFileName,HANDLER *pHandle,DATA32 *pSize);
-DSPSTAT   cMemoryReadFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pDestination);
-DSPSTAT   cMemoryWriteFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pSource);
-RESULT    cMemoryAlloc(PRGID PrgId,DATA8 Type,GBINDEX Size,void **pMemory,HANDLER *pHandle);
-void      cMemoryDeleteSubFolders(char *pFolderName);
-DSPSTAT   cMemoryGetFileHandle(PRGID PrgId,char *pFileName,HANDLER *pHandle,DATA8 *pOpenForWrite);
-enum
-{
-  OPEN_FOR_WRITE    = 1,
-  OPEN_FOR_APPEND   = 2,
-  OPEN_FOR_READ     = 3,
-  OPEN_FOR_LOG      = 4
-};
-
 RESULT    cMemoryInit(void);
 
 RESULT    cMemoryOpen(PRGID PrgId,GBINDEX Size,void **pMemory);
@@ -47,9 +32,9 @@ RESULT    cMemoryClose(PRGID PrgId);
 
 RESULT    cMemoryExit(void);
 
-RESULT    cMemoryMalloc(void **ppMemory,DATA32 Size);
-
 RESULT    cMemoryRealloc(void *pOldMemory,void **ppMemory,DATA32 Size);
+
+RESULT    cMemoryFree(void *pMemory);
 
 RESULT    cMemoryGetPointer(PRGID PrgId,HANDLER Handle,void **pMemory);
 
@@ -57,7 +42,7 @@ RESULT    cMemoryArraryPointer(PRGID PrgId,HANDLER Handle,void **pMemory);
 
 DATA8     cMemoryGetCacheFiles(void);
 
-DATA8     cMemoryGetCacheName(DATA8 Item,DATA8 MaxLength,char *pFileName,char *pName);
+RESULT    cMemoryGetCacheName(DATA8 Item,DATA8 MaxLength,char *pFileName,char *pName,DATA8 *pType);
 
 DATA8     cMemoryFindSubFolders(char *pFolderName);
 
@@ -159,7 +144,6 @@ typedef struct
   DATA32  SyncTime;
   DATA32  SyncTick;
 
-  //DATA32  BytesUsed;
   DATA8   PathList[MAX_PROGRAMS][vmPATHSIZE];
   POOL    pPoolList[MAX_PROGRAMS][MAX_HANDLES];
 

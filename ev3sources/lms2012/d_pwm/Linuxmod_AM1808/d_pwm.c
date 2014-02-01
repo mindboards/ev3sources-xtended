@@ -20,7 +20,161 @@
 
 /*! \page PwmModule PWM Module
  *
+ * - \subpage  speeddescription
+ * - \subpage  device1interface
+ * - \subpage  device2interface
+ *
  */
+
+/*! \page    speeddescription  Speed Calculation
+ *  \verbatim
+ *
+ *  - Time is sampled every edge on the tacho
+ *      - Timer used is 64bit timer plus (P3) module (dual 32bit un-chained mode)
+ *      - 64bit timer is running 33Mhz (24Mhz (Osc) * 22 (Multiplier) / 2 (Post divider) / 2 (DIV2)) / 4 (T64 prescaler)
+ *      - When reading the timer it is divided by 256 => timer is a factor 256 slower
+ *
+ *
+ *  - Tacho counter is updated on every edge of the tacho INTx pin signal
+ *  - Time capture is updated on every edge of the tacho INTx pin signal
+ *
+ *
+ *  - Speed is calculated from the following parameters
+ *
+ *      - Time is measured edge to edge of the tacho interrupt pin. Average of time is always minimum 2 pulses
+ *        (1 high + 1 low period or 1 low + 1 high period) because the duty of the high and low period of the
+ *        tacho pulses are not always 50%.
+ *        - Average of the large motor
+ *          - Above speed 80 it is:          64 samples
+ *          - Between speed 60 - 80 it is:   32 samples
+ *          - Between speed 40 - 60 it is:   16 samples
+ *          - below speed 40 it is:           4 samples
+ *        - Average of the medium motor
+ *          - Above speed 80 it is:          16 samples
+ *          - Between speed 60 - 80 it is:    8 samples
+ *          - Between speed 40 - 60 it is:    4 samples
+ *          - below speed 40 it is:           2 sample
+ *
+ *      - Number of samples is always determined based on 1 sample meaning 1 low period or 1 high period,
+ *        this is to enable fast adoption to changes in speed. Medium motor has the critical timing because
+ *        it can change speed and direction very fast.
+ *
+ *      - Large Motor
+ *        - Maximum speed of the Large motor is approximately 2mS per tacho pulse (low + high period)
+ *          resulting in minimum timer value of: 2mS / (1/(33MHz / 256)) = 256 T64 timer ticks.
+ *          Because 1 sample is based on only half a period minimum speed is 256/2 = 128.
+ *        - Minimum speed of the large motor is a factor of 100 less than max. speed
+ *          max. speed timer ticks * 100 => 256 * 100 = 25600 T64 timer ticks
+ *          Because 1 sample is based on only half a period minimum speed is 25600/2 = 12800.
+ *
+ *
+ *      - Medium Motor
+ *        - Maximum speed of the medium motor is approximately 1,25mS per tacho pulse (low + high period)
+ *          resulting in minimum timer value og: 1,25mS / (1/(33MHz / 256)) = 162 (approximately)
+ *          Because 1 sample is based on only half a period minimum speed is 162/2 = 81.
+ *        - Minimum speed of the medium motor is a factor of 100 less than max. speed
+ *          max. speed timer ticks * 100 => 162 * 100 = 16200 T64 timer ticks
+ *          Because 1 sample is based on only half a period minimum speed is 16200/2 = 8100.
+ *
+ *      - Actual speed is then calculated as:
+ *        - Medium motor:
+ *          8100 * number of samples / actual time elapsed for number of samples
+ *        - Large motor:
+ *          12800 * number of samples / actual time elapsed for number of samples
+ *
+ *
+ *
+ *
+ *  - Tacho pulse examples:
+ *
+ *
+ *    - Normal
+ *
+ *      ----,     ,------,     ,------,     ,------,
+ *          |     |      |     |      |     |      |
+ *          |     |      |     |      |     |      |
+ *          '-----'      '-----'      '-----'      '-- DIRx signal
+ *
+ *
+ *         ----,     ,------,     ,------,     ,------ INTx signal
+ *             |     |      |     |      |     |
+ *             |     |      |     |      |     |
+ *             '-----'      '-----'      '-----'
+ *
+ *             ^     ^      ^     ^      ^     ^
+ *             |     |      |     |      |     |
+ *             |   Timer    |   Timer    |   Timer
+ *             |     +      |     +      |     +
+ *             |  Counter   |  Counter   |  Counter
+ *             |            |            |
+ *           Timer        Timer        Timer
+ *             +            +            +
+ *          Counter      Counter      Counter
+ *
+ *
+ *
+ *    - Direction change
+ *
+ *      DirChgPtr variable is used to indicate how many timer samples have been sampled
+ *      since direction has been changed. DirChgPtr is set to 0 when tacho interrupt detects
+ *      direction change and then it is counted up for every timer sample. So when DirChgPtr
+ *      has the value of 2 then there must be 2 timer samples in the the same direction
+ *      available.
+ *
+ *      ----,     ,------,     ,------,     ,------,     ,---
+ *          |     |      |     |      |     |      |     |
+ *          |     |      |     |      |     |      |     |
+ *          '-----'      '-----'      '-----'      '-----'   DIRx signal
+ *
+ *
+ *       ------,     ,-------------,     ,------,     ,------INTx signal
+ *             |     |             |     |      |     |
+ *             |     |             |     |      |     |
+ *             '-----'             '-----'      '-----'
+ *
+ *             ^     ^             ^     ^      ^     ^
+ *             |     |             |     |      |     |
+ *           Timer   |           Timer   |    Timer   |
+ *             +     |             +     |      +     |
+ *          Counter  |          Counter  |   Counter  |
+ *             +     |             +     |      +     |
+ *       DirChgPtr++ |       DirChgPtr=0 |DirChgPtr++ |
+ *                 Timer               Timer        Timer
+ *                   +                   +            +
+ *                Counter             Counter      Counter
+ *                   +                   +            +
+ *               DirChgPtr++         DirChgPtr++  DirChgPtr++
+ *
+ *
+ *
+ *
+ *      ----,     ,------,           ,------,      ,----
+ *          |     |      |           |      |      |
+ *          |     |      |           |      |      |
+ *          '-----'      '-----------'      '------'          DIRx signal
+ *
+ *
+ *       ------,     ,------,     ,------,     ,------,       INTx signal
+ *             |     |      |     |      |     |      |
+ *             |     |      |     |      |     |      |
+ *             '-----'      '-----'      '-----'      '----
+ *
+ *             ^     ^      ^     ^      ^     ^      ^
+ *             |     |      |     |      |     |      |
+ *           Timer   |    Timer   |    Timer   |    Timer
+ *             +     |      +     |      +     |      +
+ *          Counter  |   Counter  |   Counter  |   Counter
+ *             +     |      +     |      +     |      +
+ *        DirChgPtr++| DirChgPtr++| DirChgPtr++| DirChgPtr++
+ *                 Timer        Timer        Timer
+ *                   +            +            +
+ *                Counter      Counter      Counter
+ *                   +            +            +
+ *               DirChgPtr++  DirChgPtr=0  DirChgPtr++
+ *
+ * \endverbatim
+ */
+
 
 #define   HW_ID_SUPPORT
 
@@ -49,9 +203,6 @@ int       HwInvBits  =  0;
 #define   SPEED_PWMCNT_REL              (100) //(MAX_PWM_CNT/MAX_SPEED)
 #define   RAMP_FACTOR                   (1000)
 #define   MAX_SYNC_MOTORS               (2)
-
-//#define   COUNTS_PER_PULSE_LM           25600L
-//#define   COUNTS_PER_PULSE_MM           16200L
 
 #define   COUNTS_PER_PULSE_LM           12800L
 #define   COUNTS_PER_PULSE_MM           8100L
@@ -516,32 +667,11 @@ static    ktime_t         Device1Time;
 
 static    UBYTE           PrgStopTimer[NO_OF_OUTPUT_PORTS];
 
+static    ULONG           CountsPerPulse[4] = {COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM};
 
-static    ULONG    CountsPerPulse[4]     = {COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM, COUNTS_PER_PULSE_LM};
-
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- *
- */
-/*! \brief    Number of average samples for each motor
- *
- *  - Medium motor = 1, 2,  4,  8
- *  - Large motor  = 2, 8, 16, 32
- *
- *  Medium motor has not the jitter on the tacho when as large motor because
- *  it has one gear wheel less that the large motor.
- *
- *  Medium motor reaction time is much faster than large motor due to smaller motor
- *  and smaller gearbox
- */
-static    UBYTE    SamplesMediumMotor[NO_OF_SAMPLE_STEPS] = {2, 4,  8,  16};
-static    UBYTE    SamplesLargeMotor[NO_OF_SAMPLE_STEPS]  = {4, 16, 32, 64};
-//static    UBYTE    SamplesMediumMotor[NO_OF_SAMPLE_STEPS] = {1, 2,  4,  8};
-//static    UBYTE    SamplesLargeMotor[NO_OF_SAMPLE_STEPS]  = {2, 8, 16, 32};
-static    UBYTE    *SamplesPerSpeed[NO_OF_OUTPUT_PORTS]   = {SamplesLargeMotor, SamplesLargeMotor, SamplesLargeMotor, SamplesLargeMotor};
+static    UBYTE           SamplesMediumMotor[NO_OF_SAMPLE_STEPS] = {2, 4,  8,  16};
+static    UBYTE           SamplesLargeMotor[NO_OF_SAMPLE_STEPS]  = {4, 16, 32, 64};
+static    UBYTE           *SamplesPerSpeed[NO_OF_OUTPUT_PORTS]   = {SamplesLargeMotor, SamplesLargeMotor, SamplesLargeMotor, SamplesLargeMotor};
 
 static    UBYTE    AVG_TACHO_COUNTS[NO_OF_OUTPUT_PORTS]   = {2,2,2,2};
 static    ULONG    AVG_COUNTS[NO_OF_OUTPUT_PORTS]         = {(2 * COUNTS_PER_PULSE_LM),(2 * COUNTS_PER_PULSE_LM),(2 * COUNTS_PER_PULSE_LM),(2 * COUNTS_PER_PULSE_LM)};
@@ -932,22 +1062,6 @@ void      ClearPIDParameters(UBYTE No)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepPowerStopMotor
- *
- *  Helper function
- *  Checks how the motor should stop
- *
- *  Parameters:
- *  No: The motor number
- *  AdjustTachoValue: The value that the tacho should be decremented
- *
- */
 void    StepPowerStopMotor(UBYTE No, SLONG AdjustTachoValue)
 {
   *StepPowerSteps[No] -= AdjustTachoValue;
@@ -982,21 +1096,6 @@ void    StepPowerStopMotor(UBYTE No, SLONG AdjustTachoValue)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepSpeedCheckTachoCntUp
- *
- *  Helper function
- *  Checks if step power should have a Count up sequence
- *
- *  Parameters:
- *  No: The motor number
- *
- */
 UBYTE    StepSpeedCheckTachoCntUp(UBYTE No)
 {
   UBYTE  Return;
@@ -1046,22 +1145,6 @@ UBYTE    StepSpeedCheckTachoCntUp(UBYTE No)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepPowerCheckTachoCntConst
- *
- *  Helper function
- *  Checks if step power should have a constant power sequence
- *
- *  Parameters:
- *  No: The motor number
- *  AdjustTachoValue: The value that the tacho should be decremented
- *
- */
 UBYTE   StepSpeedCheckTachoCntConst(UBYTE No, SLONG AdjustTachoValue)
 {
   UBYTE ReturnState;
@@ -1071,7 +1154,7 @@ UBYTE   StepSpeedCheckTachoCntConst(UBYTE No, SLONG AdjustTachoValue)
   if (Motor[No].TachoCntConst)
   {
     *StepPowerSteps[No]  -= AdjustTachoValue;
-    Motor[No].TargetSpeed = Motor[No].TargetPower; //(Motor[No].TargetPower / SPEED_PWMCNT_REL);
+    Motor[No].TargetSpeed = Motor[No].TargetPower;
     Motor[No].State       = LIMITED_REG_STEPCONST;
     ClearPIDParameters(No);
 
@@ -1090,22 +1173,6 @@ UBYTE   StepSpeedCheckTachoCntConst(UBYTE No, SLONG AdjustTachoValue)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepSpeedCheckTachoCntDown
- *
- *  Helper function
- *  Checks if step power should ramp down or stop
- *
- *  Parameters:
- *  No: The motor number
- *  AdjustTachoValue: The value that the tacho should be decremented
- *
- */
 void    StepSpeedCheckTachoCntDown(UBYTE No, SLONG AdjustTachoValue)
 {
   if (Motor[No].TachoCntDown)
@@ -1124,21 +1191,6 @@ void    StepSpeedCheckTachoCntDown(UBYTE No, SLONG AdjustTachoValue)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepPowerCheckTachoCntUp
- *
- *  Helper function
- *  Checks if step power should have a Count up sequence
- *
- *  Parameters:
- *  No: The motor number
- *
- */
 UBYTE    StepPowerCheckTachoCntUp(UBYTE No)
 {
   UBYTE Return;
@@ -1167,22 +1219,6 @@ UBYTE    StepPowerCheckTachoCntUp(UBYTE No)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepPowerCheckTachoCntConst
- *
- *  Helper function
- *  Checks if step power should have a constant power sequense
- *
- *  Parameters:
- *  No: The motor number
- *  AdjustTachoValue: The value that the tacho should be decremented
- *
- */
 UBYTE   StepPowerCheckTachoCntConst(UBYTE No, SLONG AdjustTachoValue)
 {
   UBYTE ReturnState;
@@ -1212,22 +1248,6 @@ UBYTE   StepPowerCheckTachoCntConst(UBYTE No, SLONG AdjustTachoValue)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    StepPowerCheckTachoCntDown
- *
- *  Helper function
- *  Checks if step power should ramp down or stop
- *
- *  Parameters:
- *  No: The motor number
- *  AdjustTachoValue: The value that the tacho should be decremented
- *
- */
 void    StepPowerCheckTachoCntDown(UBYTE No, SLONG AdjustTachoValue)
 {
   if (Motor[No].TachoCntDown)
@@ -1246,27 +1266,6 @@ void    StepPowerCheckTachoCntDown(UBYTE No, SLONG AdjustTachoValue)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- *
- */
-/*! \brief    dRegulateSpeed
- *
- *  - Calculates the new motor power value (duty cycle)
- *
- *  - Regulation method:
- *    To be defined
- *
- *  - Parameters:
- *    - Input:
- *      - No:       Motor output number
- *
- *    -Output:
- *      - None
- */
 void      dRegulateSpeed(UBYTE No)
 {
 
@@ -1346,7 +1345,6 @@ UBYTE      RampDownToBrake(UBYTE No, SLONG CurrentCnt, SLONG TargetCnt, SLONG Di
   if (TRUE == CheckLessThanSpecial(CurrentCnt, TargetCnt, Dir))
   {
 
-//    Motor[No].TargetSpeed = (SBYTE)((Motor[No].TachoCntConst - CurrentCnt));
     Motor[No].TargetSpeed = (SBYTE)(TargetCnt - CurrentCnt);
 
     if ((Motor[No].TargetSpeed > 5) || (Motor[No].TargetSpeed < -5))
@@ -1463,8 +1461,6 @@ void     FloatSyncedMotors(void)
 
 void      TestAndFloatSyncedMotors(UBYTE MotorBitField, UBYTE SyncCmd)
 {
-//  UBYTE   TmpNo0, TmpNo1;
-
   // Only if motors are already sync'ed
   if ((SyncMNos[0] != UNUSED_SYNC_MOTOR) && (SyncMNos[1] != UNUSED_SYNC_MOTOR))
   {
@@ -1489,54 +1485,10 @@ void      TestAndFloatSyncedMotors(UBYTE MotorBitField, UBYTE SyncCmd)
         FloatSyncedMotors();
       }
     }
-
-
-
-/*
-
-    // Check if new sync'ed motor command uses same motors as previous sync cmd
-    if ((MotorBitField & (0x01 << SyncMNos[0])) && (MotorBitField & (0x01 << SyncMNos[1])))
-    {
-      // Check if only one of the sync'ed motors are affected by the new motor cmd
-      if (((MotorBitField & (0x01 << SyncMNos[0])) || (MotorBitField & (0x01 << SyncMNos[1]))) || (TRUE == SyncCmd))
-      {
-        // The motor is in sync'ed mode -> float both sync'ed motors
-        TmpNo0 = SyncMNos[0];
-        TmpNo1 = SyncMNos[1];
-
-        Motor[TmpNo0].Mutex  =  TRUE;
-        Motor[TmpNo1].Mutex  =  TRUE;
-
-        StopAndFloatMotor(TmpNo0);
-        StopAndFloatMotor(TmpNo1);
-        SyncMNos[0] = UNUSED_SYNC_MOTOR;
-        SyncMNos[1] = UNUSED_SYNC_MOTOR;
-
-        MaxSyncSpeed              = 0;
-        Motor[TmpNo0].TargetSpeed = 0;
-        Motor[TmpNo1].TargetSpeed = 0;
-
-        Motor[TmpNo0].Mutex  =  FALSE;
-        Motor[TmpNo1].Mutex  =  FALSE;
-      }
-    }*/
   }
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    Device1TimerInterrupt1
- *
- *  Motor timer interrupt function
- *
- *  Handles all motor regulation and timing related functionality
- *
- */
 static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 {
   UBYTE No;
@@ -1715,7 +1667,6 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
         case LIMITED_UNREG_STEPUP:
         {
-
           UBYTE  Status;
           SLONG  StepCnt;
           SLONG  StepCntTst;
@@ -1863,7 +1814,6 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
         case LIMITED_STEP_SYNC:
         {
           // Here motor are syncronized and supposed to drive straight
-
           UBYTE   Cnt;
           UBYTE   Status;
           SLONG   StepCnt;
@@ -2188,40 +2138,30 @@ void      CheckforEndOfSync(void)
 }
 
 
-/*! \page PWMModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- *
- */
-/*! \brief    Device1Write
+/*! \page device1interface Device1 interface
+ *  \verbatim
  *
  *  VALID COMMANDS:
  *
- *  opOUTPUT_SET_TYPE:
- *  opOUTPUT_GET_TYPE
- *  opOUTPUT_SET_TYPE
+ *  opPROGRAM_STOP:       User program stopped -> either brake or float motors
+ *  opPROGRAM_START:      User program started -> reset motor parameters
+ *  opOUTPUT_SET_TYPE:    Set motor type, and reset all parameters upon motor type change
  *  opOUTPUT_RESET:       Resets the output tacho counters
- *  opOUTPUT_STOP:        Stops the motor - either Braked or coasted
- *  opOUTPUT_POWER:       Sets the power - Duty -                        Do not start the motor
- *  opOUTPUT_SPEED:       Sets the Speed - setpoint for regulation -     Do not start the motor
+ *  opOUTPUT_CLR_COUNT:   Resets the tacho count related to when motor is used as a sensor
+ *  opOUTPUT_STOP:        Stops the motors - either Braked or coasted
+ *  opOUTPUT_POWER:       Sets the power - this command so not start the motor
+ *  opOUTPUT_SPEED:       Sets the Speed - setpoint for regulation - this command do not start the motor
  *  opOUTPUT_START:       Starts the motor if not started
- *  opOUTPUT_POLARITY:    Sets the polarity of the motor -               Do not start the motor
- *  opOUTPUT_READ:
- *  opOUTPUT_TEST:
- *  opOUTPUT_READY:
- *  opOUTPUT_POSITION:    Runs the motor to the absolute tacho positon - Starts the motor
+ *  opOUTPUT_POLARITY:    Sets the polarity of the motor - this command do not start the motor
  *  opOUTPUT_STEP_POWER:  Runs the motor un-regulated with ramp up const and down according to the tacho
  *  opOUTPUT_TIME_POWER:  Runs the motor un-regulated with ramp up const and down according to time
  *  opOUTPUT_STEP_SPEED:  Runs the motor regulated with ramp up const and down according to the tacho
  *  opOUTPUT_TIME_SPEED:  Runs the motor regulated with ramp up const and down according to the time
  *  opOUTPUT_STEP_SYNC:   Runs two motors regulated and syncronized, duration as specified by tacho cnts
  *  opOUTPUT_TIME_SYNC:   Runs two motors regulated and syncronized, duration as specified by time
- *  opOUTPUT_CLR_COUNT:   Resets the tacho count related to when motor is used as a sensor
- *
- *
  *  Default state:        TBD
+ *
+ *  \endverbatim
  */
 static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,loff_t *Data)
 {
@@ -2486,11 +2426,6 @@ static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,lo
           Motor[Tmp].Mutex = FALSE;
         }
       }
-    }
-    break;
-
-    case opOUTPUT_POSITION:
-    {
     }
     break;
 
@@ -3126,17 +3061,6 @@ static    struct miscdevice Device1 =
 };
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    GetPeriphealBasePtr
- *
- *  Helper function for getting the peripheal HW base address
- *
- */
 void    GetPeriphealBasePtr(ULONG Address, ULONG Size, ULONG **Ptr)
 {
   /* eCAP0 pointer */
@@ -3163,15 +3087,6 @@ void    GetPeriphealBasePtr(ULONG Address, ULONG Size, ULONG **Ptr)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    Device1Init
- *
- */
 static int Device1Init(void)
 {
   int     Result = -1;
@@ -3355,26 +3270,6 @@ void    SetGpioRisingIrq(UBYTE PinNo, irqreturn_t (*IntFuncPtr)(int, void *))
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- *
- */
-/*! \brief    IntA
- *
- *  Tacho A interrupt function
- *
- *  Tacho count is incremented or decremented on both positive
- *  and negative edges of the INT signal.
- *
- *  For each positive and negative edge of the INT tacho signal
- *  a timer is sampled. this is used to calculate the speed later on.
- *
- *  DirChgPtr is implemented for ensuring that there is enough
- *  samples in the same direction to calculate a speed.
- *
- */
 static    irqreturn_t IntA (int irq, void * dev)
 {
   UBYTE   TmpPtr;
@@ -3810,171 +3705,6 @@ static    irqreturn_t IntD (int irq, void * dev)
 }
 
 
-/*! \page PwmModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- */
-/*! \brief    dCalculateSpeed
- *
- *  - Calculates the actual speed for a motor
- *
- *  - Returns TRUE when a new speed has been calculated, FALSE if otherwise
- *
- *  - Time is sampled every edge on the tacho
- *      - Timer used is 64bit timer plus (P3) module (dual 32bit un-chained mode)
- *      - 64bit timer is running 33Mhz (24Mhz (Osc) * 22 (Multiplier) / 2 (Post divider) / 2 (DIV2)) / 4 (T64 prescaler)
- *      - When reading the timer it is divided by 256 => timer is a factor 256 slower
- *
- *
- *  - Tacho counter is updated on every edge of the tacho INTx pin signal
- *  - Time capture is updated on every edge of the tacho INTx pin signal
- *
- *
- *  - Speed is calculated from the following parameters
- *
- *      - Time is measured edge to edge of the tacho interrupt pin. Average of time is always minimum 2 pulses
- *        (1 high + 1 low period or 1 low + 1 high period) because the duty of the high and low period of the
- *        tacho pulses are not always 50%.
- *        - Average of the large motor
- *          - Above speed 80 it is:          64 samples
- *          - Between speed 60 - 80 it is:   32 samples
- *          - Between speed 40 - 60 it is:   16 samples
- *          - below speed 40 it is:           4 samples
- *        - Average of the medium motor
- *          - Above speed 80 it is:          16 samples
- *          - Between speed 60 - 80 it is:    8 samples
- *          - Between speed 40 - 60 it is:    4 samples
- *          - below speed 40 it is:           2 sample
- *
- *      - Number of samples is always determined based on 1 sample meaning 1 low period nor 1 high period,
- *        this is to enable fast adoption to changes in speed. Medium motor has the critical timing because
- *        it can change speed and direction very fast.
- *
- *      - Large Motor
- *        - Maximum speed of the Large motor is approximately 2mS per tacho pulse (low + high period)
- *          resulting in minimum timer value of: 2mS / (1/(33MHz / 256)) = 256 T64 timer ticks.
- *          Because 1 sample is based on only half a period minimum speed is 256/2 = 128.
- *        - Minimum speed of the large motor is a factor of 100 less than max. speed
- *          max. speed timer ticks * 100 => 256 * 100 = 25600 T64 timer ticks
- *          Because 1 sample is based on only half a period minimum speed is 25600/2 = 12800.
- *
- *
- *      - Medium Motor
- *        - Maximum speed of the medium motor is approximately 1,25mS per tacho pulse (low + high period)
- *          resulting in minimum timer value og: 1,25mS / (1/(33MHz / 256)) = 162 (approximately)
- *          Because 1 sample is based on only half a period minimum speed is 162/2 = 81.
- *        - Minimum speed of the medium motor is a factor of 100 less than max. speed
- *          max. speed timer ticks * 100 => 162 * 100 = 16200 T64 timer ticks
- *          Because 1 sample is based on only half a period minimum speed is 16200/2 = 8100.
- *
- *      - Actual speed is then calculated as:
- *        - Medium motor:
- *          8100 * number of samples / actual time elapsed for number of samples
- *        - Large motor:
- *          12800 * number of samples / actual time elapsed for number of samples
- *
- *
- *  - Parameters:
- *    - Input:
- *      - No        : Motor output number
- *      - *pSpeed   : Pointer to the speed value
- *
- *    - Output:
- *      - Status    : Indication of new speed available or not
- *
- *
- *  - Tacho pulse examples:
- *
- *
- *    - Normal
- *
- *      ----       ------       ------       ------
- *          |     |      |     |      |     |      |
- *          |     |      |     |      |     |      |
- *          -------      -------      -------      --- DIRx signal
- *
- *
- *         ----       ------       ------       ------ INTx signal
- *             |     |      |     |      |     |
- *             |     |      |     |      |     |
- *             -------      -------      -------
- *
- *             ^     ^      ^     ^      ^     ^
- *             |     |      |     |      |     |
- *             |   Timer    |   Timer    |   Timer
- *             |     +      |     +      |     +
- *             |  Counter   |  Counter   |  Counter
- *             |            |            |
- *           Timer        Timer        Timer
- *             +            +            +
- *          Counter      Counter      Counter
- *
- *
- *
- *    - Direction change
- *
- *      DirChgPtr variable is used to indicate how many timer samples have been sampled
- *      since direction has been changed. DirChgPtr is set to 0 when tacho interrupt detects
- *      direction change and then it is counted up for every timer sample. So when DirChgPtr
- *      has the value of 2 then there must be 2 timer samples in the the same direction
- *      available.
- *
- *      ----       ------       ------       ------       ---
- *          |     |      |     |      |     |      |     |
- *          |     |      |     |      |     |      |     |
- *          -------      -------      -------      -------   DIRx signal
- *
- *
- *       ------       -------------       ------       ------INTx signal
- *             |     |             |     |      |     |
- *             |     |             |     |      |     |
- *             -------             -------      -------
- *
- *             ^     ^             ^     ^      ^     ^
- *             |     |             |     |      |     |
- *           Timer   |           Timer   |    Timer   |
- *             +     |             +     |      +     |
- *          Counter  |          Counter  |   Counter  |
- *             +     |             +     |      +     |
- *       DirChgPtr++ |       DirChgPtr=0 |DirChgPtr++ |
- *                 Timer               Timer        Timer
- *                   +                   +            +
- *                Counter             Counter      Counter
- *                   +                   +            +
- *               DirChgPtr++         DirChgPtr++  DirChgPtr++
- *
- *
- *
- *
- *      ----       ------             ------        ----
- *          |     |      |           |      |      |
- *          |     |      |           |      |      |
- *          -------      -------------       -------          DIRx signal
- *
- *
- *       ------       ------       ------       ------        INTx signal
- *             |     |      |     |      |     |      |
- *             |     |      |     |      |     |      |
- *             -------      -------      -------       ----
- *
- *             ^     ^      ^     ^      ^     ^      ^
- *             |     |      |     |      |     |      |
- *           Timer   |    Timer   |    Timer   |    Timer
- *             +     |      +     |      +     |      +
- *          Counter  |   Counter  |   Counter  |   Counter
- *             +     |      +     |      +     |      +
- *        DirChgPtr++| DirChgPtr++| DirChgPtr++| DirChgPtr++
- *                 Timer        Timer        Timer
- *                   +            +            +
- *                Counter      Counter      Counter
- *                   +            +            +
- *               DirChgPtr++  DirChgPtr=0  DirChgPtr++
- *
- *
- *
- */
-
 UBYTE     dCalculateSpeed(UBYTE No, SBYTE *pSpeed)
 {
 
@@ -4050,16 +3780,13 @@ UBYTE     dCalculateSpeed(UBYTE No, SBYTE *pSpeed)
 }
 
 
-/*! \page PWMModule
- *
- *  <hr size="1"/>
- *  <b>     write </b>
- */
- /*! \brief    Device2Write
+/*! \page device2interface Device2 interface
+ *  \verbatim
  *
  *  Only used for daisy chaining to ensure Busy flags being set from when message has been
  *  received until being executed by the VM
  *
+ * \endverbatim
  */
 static ssize_t Device2Write(struct file *File,const char *Buffer,size_t Count,loff_t *Data)
 {
@@ -4075,16 +3802,6 @@ static ssize_t Device2Write(struct file *File,const char *Buffer,size_t Count,lo
 }
 
 
-/*! \page PWMModule
- *
- *  <hr size="1"/>
- *  <b>     read </b>
- *
- *
- */
-/*! \brief    Device2Read
- *
- */
 static ssize_t Device2Read(struct file *File,char *Buffer,size_t Count,loff_t *Offset)
 {
   int     Lng     = 0;

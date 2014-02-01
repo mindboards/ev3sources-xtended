@@ -379,12 +379,16 @@ int cWiFiStoreKnownApList(void) // At exit of main application
   PersistentFile = fopen(FileName, "wb");
   if ( PersistentFile != NULL )
   {
-    for(ArrayIterator = 0; ArrayIterator < ApStoreTableSize; ArrayIterator++)
+    for(ArrayIterator = 0; ArrayIterator < ApTableSize; ArrayIterator++)
     {
 
-    	memcpy(&OneApRecord, &(ApStoreTable[ArrayIterator]), sizeof(aps));
+    // if(((ApStoreTable[ArrayIterator].ap_flags) & KNOWN) == KNOWN) NOT USED only HARD known ones
+      if(((ApTable[ArrayIterator].ap_flags) & KNOWN) == KNOWN)
+      {
+        //memcpy(&OneApRecord, &(ApStoreTable[ArrayIterator]), sizeof(aps)); NOT USED only HARD known ones
+        memcpy(&OneApRecord, &(ApTable[ArrayIterator]), sizeof(aps));
 
-    	OneApRecord.ap_flags &= AP_FLAG_ADJUST_FOR_STORAGE;
+        OneApRecord.ap_flags &= AP_FLAG_ADJUST_FOR_STORAGE;
 
     	//#define DEBUG
     	#undef DEBUG
@@ -393,7 +397,8 @@ int cWiFiStoreKnownApList(void) // At exit of main application
          printf("OneApRecord.ap_flags before: %X\n\r", OneApRecord.ap_flags);
        #endif
 
-    	fwrite(&OneApRecord, sizeof OneApRecord, 1, PersistentFile);
+         fwrite(&OneApRecord, sizeof OneApRecord, 1, PersistentFile);
+      }
 
 		  #undef DEBUG
     	//#define DEBUG
@@ -407,7 +412,8 @@ int cWiFiStoreKnownApList(void) // At exit of main application
         printf("\r\nApStoreTable[%d].ap_flags = %d\r\n", (ArrayIterator), ApStoreTable[ArrayIterator].ap_flags);
       #endif
     }
-    RetVal = ApStoreTableSize;
+    //RetVal = ApStoreTableSize;NOT USED only HARD known ones
+    RetVal = ApTableSize;
     fclose(PersistentFile);
 
   }
@@ -1728,13 +1734,13 @@ unsigned char cWiFiGetFlags(int Index)  // Get Flags owned by ApTable[Index]
     return ApTable[Index].ap_flags;
 }
 
-void cWiFiClearExceptZero()
+void cWiFiClearAll()
 {
   int j;
 
   if(ApTableSize > 1)
   {
-    for(j = 1; j < ApTableSize; j++)
+    for(j = 0; j < ApTableSize; j++)
       ApTable[j].ap_flags &= (UBYTE)(~CONNECTED);
   }
 }
@@ -2007,6 +2013,16 @@ RESULT cWiFiMakeConnectionToAp(int Index)
                     // IP address shows (some) valid connection :-)
 }
 
+void cWiFiClearConnectFlags(void)
+{
+  int j;
+
+    if(ApTableSize > 1)
+    {
+      for(j = 0; j < ApTableSize; j++)
+        ApTable[j].ap_flags &= (UBYTE)(~CONNECTED);
+    }
+}
 
 RESULT cWiFiConnectToAp(int Index)
 {
@@ -2021,6 +2037,9 @@ RESULT cWiFiConnectToAp(int Index)
   #ifdef DEBUG
     printf("\r\ncWiFiConnectToAp(int Index = %d)\r\n", Index);
   #endif
+
+  // Kill any connection info
+  cWiFiClearConnectFlags();
 
   if(cWiFiMakeConnectionToAp(Index) == OK)
   {
@@ -2050,9 +2069,6 @@ RESULT cWiFiConnectToAp(int Index)
 
     // Mark the ACTUAL as CONNECTED (i.e. set flag)
     ApTable[0].ap_flags |= CONNECTED;
-
-    // Remove any "already connected" - i.e. remove flag(s)
-    cWiFiClearExceptZero();
 
     // This VERY Ap should now be stored as MOST WANTED @ next WiFi session
     cWiFiAddToKnownApList(0);
@@ -2359,7 +2375,7 @@ RESULT cWiFiStoreActualApList()           // Store the latest SCAN result(s)
       {
         // Merge ACTUAL- and KNOWN LIST into a prioritized list
         cWiFiMergeActualAndKnownTable();
-        cWiFiClearExceptZero();   // Reset previous CONNECT-flags except current connected
+        cWiFiClearAll();   // Reset previous CONNECT-flag
       }
     }
   }
@@ -2488,6 +2504,7 @@ RESULT cWiFiScanForAPs()
   BeaconTx = NO_TX;
   cWiFiStartTimer();      // Start the Timer
 
+  cWiFiClearAll();        // Reset previous CONNECT-flag
   cWiFiCleanUpOldStuff(); // Kill OLD portion in the list etc.
 
   if(cWiFiGetOnStatus() == OK)

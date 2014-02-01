@@ -1028,6 +1028,13 @@ void      cUiUpdateButtons(DATA16 Time)
         UiInstance.ButtonState[Button]           |=  BUTTON_BUMBED;
       }
     }
+
+#ifdef ALLOW_DEBUG_PULSE
+    if ((UiInstance.ButtonState[Button] & (BUTTON_ACTIVATED | BUTTON_LONGPRESS)))
+    {
+      VMInstance.Pulse |=  vmPULSE_KEY;
+    }
+#endif
   }
 }
 
@@ -1860,6 +1867,43 @@ void      cUiUpdateTopline(void)
         dLcdFillRect((*UiInstance.pLcd).Lcd,FG_COLOR,X1 + (V * 6),2,5,6);
       }
     }
+#else
+#ifdef ALLOW_DEBUG_PULSE
+/*
+  GUI SLOT running                        1... ....
+  USER SLOT running                       .1.. ....
+  CMD SLOT running                        ..1. ....
+  TRM SLOT running                        ...1 ....
+  DEBUG SLOT running                      .... 1...
+  KEY active                              .... .1..
+  BROWSER running                         .... ..1.
+  UI running background                   .... ...1
+*/
+    if (VMInstance.PulseShow)
+    {
+      if (VMInstance.PulseShow == 1)
+      {
+        X1  =  100;
+        X2  =  102;
+        for (V = 0;V < 8;V++)
+        {
+          if ((VMInstance.Pulse & (0x80 >> V)))
+          {
+            dLcdFillRect((*UiInstance.pLcd).Lcd,FG_COLOR,X1 + (V * 5),2,5,6);
+          }
+
+          dLcdInversePixel((*UiInstance.pLcd).Lcd,X2 + (V * 5),5);
+          dLcdInversePixel((*UiInstance.pLcd).Lcd,X2 + (V * 5),4);
+        }
+        VMInstance.Pulse  =  0;
+        VMInstance.PulseShow  =  2;
+      }
+      else
+      {
+        VMInstance.PulseShow  =  1;
+      }
+    }
+#endif
 #endif
 
     // Calculate number of icons
@@ -2672,6 +2716,15 @@ void      cUiUpdate(UWORD Time)
                   }
                   else
                   {
+                    if (Tmp & WARNING_RAM)
+                    {
+                      dLcdDrawIcon((*UiInstance.pLcd).Lcd,FG_COLOR,vmPOP3_ABS_WARN_ICON_X,vmPOP3_ABS_WARN_ICON_Y,LARGE_ICON,WARNSIGN);
+                      dLcdDrawIcon((*UiInstance.pLcd).Lcd,FG_COLOR,vmPOP3_ABS_WARN_SPEC_ICON_X,vmPOP3_ABS_WARN_SPEC_ICON_Y,LARGE_ICON,WARN_MEMORY);
+                      UiInstance.WarningShowed |=  WARNING_RAM;
+                    }
+                    else
+                    {
+                    }
                   }
                 }
               }
@@ -2728,6 +2781,14 @@ void      cUiUpdate(UWORD Time)
                 }
                 else
                 {
+                  if (Tmp & WARNING_RAM)
+                  {
+                    UiInstance.WarningConfirmed |=  WARNING_RAM;
+                    UiInstance.Warning          &= ~WARNING_RAM;
+                  }
+                  else
+                  {
+                  }
                 }
               }
             }
@@ -3712,6 +3773,10 @@ RESULT    cUiBrowser(DATA8 Type,DATA16 X,DATA16 Y,DATA16 X1,DATA16 Y1,DATA8 Lng,
   RESULT  TmpResult;
   HANDLER TmpHandle;
 
+#ifdef ALLOW_DEBUG_PULSE
+  VMInstance.Pulse |=  vmPULSE_BROWSER;
+#endif
+
   PrgId   =  CurrentProgramId();
   ObjId   =  CallingObjectId();
   pB      =  &UiInstance.Browser;
@@ -4199,7 +4264,7 @@ RESULT    cUiBrowser(DATA8 Type,DATA16 X,DATA16 Y,DATA16 X1,DATA16 Y1,DATA8 Lng,
 
             Item    =  (*pB).ItemPointer;
 
-            *pType  =  cMemoryGetCacheName(Item,FOLDERNAME_SIZE + SUBFOLDERNAME_SIZE,(char*)(*pB).FullPath,(char*)(*pB).Filename);
+            cMemoryGetCacheName(Item,FOLDERNAME_SIZE + SUBFOLDERNAME_SIZE,(char*)(*pB).FullPath,(char*)(*pB).Filename,pType);
             snprintf((char*)pAnswer,Lng,"%s",(char*)(*pB).FullPath);
             Result  =  OK;
 #ifdef DEBUG
@@ -4253,6 +4318,15 @@ RESULT    cUiBrowser(DATA8 Type,DATA16 X,DATA16 Y,DATA16 X1,DATA16 Y1,DATA8 Lng,
       {
         (*pB).ItemStart       =  1;
         (*pB).ItemPointer     =  1;
+      }
+    }
+    else
+    {
+      if (TmpResult == FAIL)
+      {
+        (*pB).ItemPointer     =  TotalItems;
+        (*pB).ItemStart       =  (*pB).ItemPointer;
+        (*pB).NeedUpdate      =  1;
       }
     }
 
@@ -4477,7 +4551,7 @@ RESULT    cUiBrowser(DATA8 Type,DATA16 X,DATA16 Y,DATA16 X1,DATA16 Y1,DATA8 Lng,
 
               case BROWSE_CACHE :
               {
-                TmpType  =  cMemoryGetCacheName(Item,(*pB).Chars,(char*)(*pB).FullPath,(char*)(*pB).Filename);
+                cMemoryGetCacheName(Item,(*pB).Chars,(char*)(*pB).FullPath,(char*)(*pB).Filename,&TmpType);
                 dLcdDrawIcon((*UiInstance.pLcd).Lcd,Color,(*pB).IconStartX,(*pB).IconStartY + (Tmp * (*pB).LineHeight),NORMAL_ICON,FiletypeToNormalIcon[TmpType]);
               }
               break;
@@ -5537,6 +5611,18 @@ void      cUiGraphDraw(DATA8 View,DATAF *pActual,DATAF *pLowest,DATAF *pHighest,
  *    -  \param  (DATA8)   VIEW     - Dataset number to view (0=all)\n
  *
  *\n
+ *  - CMD = TEXTBOX
+ *\n  Draws and controls a text box (one long string containing characters and line delimiters) on the screen\n
+ *    -  \param  (DATA16)  X0       - X start cord [0..LCD_WIDTH]\n
+ *    -  \param  (DATA16)  Y0       - Y start cord [0..LCD_HEIGHT]\n
+ *    -  \param  (DATA16)  X1       - X size [0..LCD_WIDTH]\n
+ *    -  \param  (DATA16)  Y1       - Y size [0..LCD_HEIGHT]\n
+ *    -  \param  (DATA8)   TEXT     - First character in text box text (must be zero terminated)\n
+ *    -  \param  (DATA32)  SIZE     - Maximal text size (including zero termination)\n
+ *    -  \param  (DATA8)     \ref delimiters "DEL" - Delimiter code\n
+ *    -  \return (DATA16)  LINE     - Selected line number\n
+ *
+ *\n
  *
  */
 /*! \brief  opUI_DRAW byte code
@@ -5886,10 +5972,15 @@ void      cUiDraw(void)
 
       if (isnan(DataF))
       {
+        if (Figures < 0)
+        {
+          Figures  =  0 - Figures;
+        }
         for (Lng = 0;Lng < Figures;Lng++)
         {
           GBuffer[Lng]  =  '-';
         }
+        GBuffer[Lng]  =  0;
       }
       else
       {
@@ -5907,8 +5998,8 @@ void      cUiDraw(void)
 
           Figures++;
         }
+        GBuffer[Figures]  =  0;
       }
-      GBuffer[Figures]  =  0;
       pText     =  GBuffer;
       if (Blocked == 0)
       {
@@ -5929,6 +6020,10 @@ void      cUiDraw(void)
       if (Blocked == 0)
       {
 
+        if (Figures < 0)
+        {
+          Figures  =  0 - Figures;
+        }
         TmpColor    =  Color;
         CharWidth   =  dLcdGetFontWidth(UiInstance.Font);
         CharHeight  =  dLcdGetFontHeight(UiInstance.Font);
@@ -6033,6 +6128,10 @@ void      cUiDraw(void)
 
       if (Blocked == 0)
       {
+        if (Figures < 0)
+        {
+          Figures  =  0 - Figures;
+        }
         TmpColor    =  Color;
         CharWidth   =  dLcdGetFontWidth(LARGE_FONT);
         CharHeight  =  dLcdGetFontHeight(LARGE_FONT);
@@ -6517,18 +6616,21 @@ void      cUiFlush(void)
  *
  *\n
  *  - CMD = KEY
+ *\n  Get key from terminal (used for debugging)\n
  *    -  \return (DATA8)   VALUE    - Key value from lms_cmdin (0 = no key)\n
  *
  *\n
  *  - CMD = GET_ADDRESS
+ *\n  Get address from terminal (used for debugging)\n
  *    -  \return (DATA32)  VALUE    - Address from lms_cmdin\n
  *
  *\n
  *  - CMD = GET_CODE
+ *\n  Get code snippet from terminal (used for debugging)\n
  *    -  \param  (DATA32)  LENGTH   - Maximal code stream length\n
  *    -  \return (DATA32)  *IMAGE   - Address of image\n
  *    -  \return (DATA32)  *GLOBAL  - Address of global variables\n
- *    -  \return (DATA8)   FLAG     - Flag tells if image is ready\n
+ *    -  \return (DATA8)   FLAG     - Flag tells if image is ready to execute [1=ready]\n
  *
  *\n
  *  - CMD = GET_HW_VERS
@@ -6605,6 +6707,31 @@ void      cUiFlush(void)
  *  - CMD = GET_LBATT
  *\n  Get battery level in %\n
  *    -  \return (DATA8)    PCT      - Battery level [0..100]\n
+ *
+ *\n
+ *  - CMD = GET_EVENT
+ *\n  Get event (internal use)\n
+ *    -  \return (DATA8)    EVENT    - Event [1,2 = Bluetooth events]\n
+ *
+ *\n
+ *  - CMD = GET_SHUTDOWN
+ *\n  Get and clear shutdown flag (internal use)\n
+ *    -  \return (DATA8)    FLAG     - Flag [1=want to shutdown]\n
+ *
+ *\n
+ *  - CMD = GET_WARNING
+ *\n  Read warning bit field (internal use)\n
+ *    -  \return (DATA8) \ref warnings - Bit field containing various warnings\n
+ *
+ *\n
+ *  - CMD = TEXTBOX_READ
+ *\n  Read line from text box\n
+ *    -  \param  (DATA8)   TEXT        - First character in text box text (must be zero terminated)\n
+ *    -  \param  (DATA32)  SIZE        - Maximal text size (including zero termination)\n
+ *    -  \param  (DATA8)     \ref delimiters "DEL" - Delimiter code\n
+ *    -  \param  (DATA8)   LENGTH      - Maximal length of string returned (-1 = no check)\n
+ *    -  \param  (DATA16)  LINE        - Selected line number\n
+ *    -  \return (DATA8)   DESTINATION - String variable or handle to string\n
  *
  *\n
  */
@@ -7093,16 +7220,29 @@ void      cUiRead(void)
  *
  *\n
  *  - CMD = INIT_RUN
+ *\n  Start the "Mindstorms" "run" screen\n
  *
- *\n
- *  - CMD = UPDATE_RUN
  *
  *\n
  *  - CMD = GRAPH_SAMPLE
+ *\n  Update tick to scroll graph horizontally in memory when drawing graph in "scope" mode\n
  *
  *\n
  *  - CMD = DOWNLOAD_END
  *\n  Send to brick when file down load is completed (plays sound and updates the UI browser)\n
+ *
+ *\n
+ *  - CMD = SCREEN_BLOCK
+ *\n  Set or clear screen block status (if screen blocked - all graphical screen action are disabled)\n
+ *    -  \param  (DATA8)   STATUS   - Value [0 = normal,1 = blocked]\n
+ *
+ *\n
+ *  - CMD = TEXTBOX_APPEND
+ *\n  Append line of text at the bottom of a text box\n
+ *    -  \param  (DATA8)   TEXT        - First character in text box text (must be zero terminated)\n
+ *    -  \param  (DATA32)  SIZE        - Maximal text size (including zero termination)\n
+ *    -  \param  (DATA8)     \ref delimiters "DEL" - Delimiter code\n
+ *    -  \param  (DATA8)   SOURCE      - String variable or handle to string to append\n
  *
  *\n
  *
@@ -7386,6 +7526,26 @@ void      cUiWrite(void)
     }
     break;
 
+    case ALLOW_PULSE :
+    {
+      Data8  =  *(DATA8*)PrimParPointer();
+#ifdef ALLOW_DEBUG_PULSE
+      VMInstance.PulseShow  =  Data8;
+#endif
+      DspStat  =  NOBREAK;
+    }
+    break;
+
+    case SET_PULSE :
+    {
+      Data8  =  *(DATA8*)PrimParPointer();
+#ifdef ALLOW_DEBUG_PULSE
+      VMInstance.Pulse     |=  Data8;
+#endif
+      DspStat  =  NOBREAK;
+    }
+    break;
+
     default :
     {
       DspStat  =  FAILBREAK;
@@ -7431,7 +7591,6 @@ void      cUiWrite(void)
  *    -  \return (DATA8)   STATE    - Button has been pressed (0 = no, 1 = yes)\n
  *
  *\n
- *
  *  - CMD = GET_BUMBED
  *    -  \param  (DATA8)   BUTTON   - \ref buttons \n
  *    -  \return (DATA8)   STATE    - Button has been pressed (0 = no, 1 = yes)\n
@@ -7477,6 +7636,11 @@ void      cUiWrite(void)
  *  - CMD = TESTLONGPRESS
  *    -  \param  (DATA8)   BUTTON   - \ref buttons \n
  *    -  \return (DATA8)   STATE    - Button has been hold down(0 = no, 1 = yes)\n
+ *
+ *\n
+ *  - CMD = GET_CLICK
+ *\n  Get and clear click sound request (internal use only)\n
+ *    -  \return (DATA8)   CLICK    - Click sound request (0 = no, 1 = yes)\n
  *
  *\n
  *

@@ -517,6 +517,8 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   UI_WRITE_SUBP,          CODE,                   PAR8,PAR32,                                     0,0,0,0,0,0           ),
   SC(   UI_WRITE_SUBP,          DOWNLOAD_END,           0,                                              0,0,0,0,0,0,0         ),
   SC(   UI_WRITE_SUBP,          SCREEN_BLOCK,           PAR8,                                           0,0,0,0,0,0,0         ),
+  SC(   UI_WRITE_SUBP,          ALLOW_PULSE,            PAR8,                                           0,0,0,0,0,0,0         ),
+  SC(   UI_WRITE_SUBP,          SET_PULSE,              PAR8,                                           0,0,0,0,0,0,0         ),
   SC(   UI_WRITE_SUBP,          TEXTBOX_APPEND,         PAR8,PAR32,PAR8,PAR8,                           0,0,0,0               ),
   SC(   UI_WRITE_SUBP,          SET_BUSY,               PAR8,                                           0,0,0,0,0,0,0         ),
   SC(   UI_WRITE_SUBP,          VALUE8,                 PAR8,                                           0,0,0,0,0,0,0         ),
@@ -593,6 +595,8 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   SOUND_SUBP,             SERVICE,                0,                                              0,0,0,0,0,0,0         ),
 
   //    Input
+  SC(   INPUT_SUBP,             INSERT_TYPE,            PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
+  SC(   INPUT_SUBP,             SET_TYPEMODE,           PAR8,PAR8,PAR8,PAR8,PAR8,                       0,0,0                 ),
   SC(   INPUT_SUBP,             GET_TYPEMODE,           PAR8,PAR8,PAR8,PAR8,                            0,0,0,0               ),
   SC(   INPUT_SUBP,             GET_CONNECTION,         PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
   SC(   INPUT_SUBP,             GET_NAME,               PAR8,PAR8,PAR8,PAR8,                            0,0,0,0               ),
@@ -616,6 +620,7 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   INPUT_SUBP,             SETUP,                  PAR8,PAR8,PAR8,PAR16,PAR8,PAR8,PAR8,PAR8                              ),
   SC(   INPUT_SUBP,             CLR_ALL,                PAR8,                                           0,0,0,0,0,0,0         ),
   SC(   INPUT_SUBP,             STOP_ALL,               PAR8,                                           0,0,0,0,0,0,0         ),
+  SC(   INPUT_SUBP,             READY_IIC,              PAR8,PAR8,PAR8,PAR8,PAR8,PAR8,PAR8,             0                     ),
 
   //    Math
   SC(   MATH_SUBP,              EXP,                    PARF,PARF,                                      0,0,0,0,0,0           ),

@@ -1,0 +1,185 @@
+//
+define    COUNTS            1000                                      //
+define    SAMPLES           4                                         //
+define    SAMPLETIME        1                                         //
+                                                                      //
+DATA32    RunTime                                                     //
+DATA16    Counter                                                     //
+                                                                      //
+                                                                      //
+vmthread  MAIN                                                        //  void    MAIN(void)
+{                                                                     //  {
+  DATAF   Act                                                         //
+  DATAF   Min                                                         //
+  DATAF   Max                                                         //
+  DATA8   Stop                                                        //
+                                                                      //
+  // Reset min and max                                                //
+  MOVE32_F(COUNTS,Min)                                                //    Min       =  COUNTS
+  MOVE32_F(0,Max)                                                     //    Max       =  0
+                                                                      //
+  // Init screen                                                      //
+  UI_DRAW(TOPLINE,1)                                                  //    UI_DRAW(TOPLINE,1)
+  UI_BUTTON(SET_BACK_BLOCK,1)                                         //    UI_BUTTON(SET_BACK_BLOCK,1)
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)                                    //    UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,SMALL_FONT)                                     //    UI_DRAW(SELECT_FONT,SMALL_FONT)
+  UI_DRAW(TEXT,FG_COLOR,40,20,'Datalog Test')                         //    UI_DRAW(TEXT,FG_COLOR,40,20,'Datalog Test')
+  UI_DRAW(SELECT_FONT,NORMAL_FONT)                                    //    UI_DRAW(SELECT_FONT,NORMAL_FONT)
+  UI_DRAW(TEXT,FG_COLOR,0,40,'Time for ')                             //    UI_DRAW(TEXT,FG_COLOR,0,40,'Time for ')
+  UI_DRAW(VALUE,FG_COLOR,72,40,Min,5,0)                               //    UI_DRAW(VALUE,FG_COLOR,72,40,Min,5,0)
+  UI_DRAW(TEXT,FG_COLOR,112,40,' Samples')                            //    UI_DRAW(TEXT,FG_COLOR,112,40,' Samples')
+  UI_DRAW(TEXT,FG_COLOR,0,55,'----------------------')                //    UI_DRAW(TEXT,FG_COLOR,0,55,'----------------------')
+  UI_DRAW(TEXT,FG_COLOR,0,70,'Actual')                                //    UI_DRAW(TEXT,FG_COLOR,0,70,'Actual')
+  UI_DRAW(TEXT,FG_COLOR,120,70,'mS')                                  //    UI_DRAW(TEXT,FG_COLOR,120,70,'mS')
+  UI_DRAW(TEXT,FG_COLOR,0,90,'Minimum')                               //    UI_DRAW(TEXT,FG_COLOR,0,90,'Minimum')
+  UI_DRAW(TEXT,FG_COLOR,120,90,'mS')                                  //    UI_DRAW(TEXT,FG_COLOR,120,90,'mS')
+  UI_DRAW(TEXT,FG_COLOR,0,110,'Maximum')                              //    UI_DRAW(TEXT,FG_COLOR,0,110,'Maximum')
+  UI_DRAW(TEXT,FG_COLOR,120,110,'mS')                                 //    UI_DRAW(TEXT,FG_COLOR,120,110,'mS')
+  UI_DRAW(UPDATE)                                                     //    UI_DRAW(UPDATE)
+                                                                      //
+                                                                      //    do
+Loop:                                                                 //    {
+                                                                      //
+  // Reset counter                                                    //
+  MOVE16_16(0,Counter)                                                //      Counter =  0
+                                                                      //
+  // Run test datalog session                                         //
+  CALL(TestDatalog)                                                   //      TestDatalog()
+                                                                      //
+  // Save run time                                                    //
+  MOVE32_F(RunTime,Act)                                               //      Act     =  RunTime
+                                                                      //
+  // Find minimum run time                                            //
+  JR_GTEQF(Act,Min,TooHigh)                                           //      if (Act < Min)
+                                                                      //      {
+  MOVEF_F(Act,Min)                                                    //        Min   =  Act
+                                                                      //
+TooHigh:                                                              //      }
+                                                                      //
+  // Find maximum run time                                            //
+  JR_LTEQF(Act,Max,TooLow)                                            //      if (Act > Max)
+                                                                      //      {
+  MOVEF_F(Act,Max)                                                    //        Max   =  Act
+                                                                      //
+TooLow:                                                               //      }
+                                                                      //
+  // Update values on screen                                          //
+  UI_DRAW(VALUE,FG_COLOR,72,70,Act,5,0)                               //      UI_DRAW(VALUE,FG_COLOR,72,70,Act,5,0)
+  UI_DRAW(VALUE,FG_COLOR,72,90,Min,5,0)                               //      UI_DRAW(VALUE,FG_COLOR,72,90,Min,5,0)
+  UI_DRAW(VALUE,FG_COLOR,72,110,Max,5,0)                              //      UI_DRAW(VALUE,FG_COLOR,72,110,Max,5,0)
+  UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
+                                                                      //
+  // Check for stop                                                   //
+  UI_BUTTON(SHORTPRESS,ANY_BUTTON,Stop)                               //      UI_BUTTON(SHORTPRESS,ANY_BUTTON,Stop)
+                                                                      //    }
+  JR_FALSE(Stop,Loop)                                                 //    while (!Stop)  
+                                                                      //
+  UI_BUTTON(SET_BACK_BLOCK,0)                                         //    UI_BUTTON(SET_BACK_BLOCK,0)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+//! ******************************************************
+//! SAMPLE FROM MULTIPLE DEVICES
+//! ******************************************************
+
+subcall   TestDatalog
+{
+  DATA32  StartTime
+  DATA32  NewTime
+  DATA32  Time
+  DATA32  SyncTime                                                    
+  DATA32  SyncTick                                                    
+  DATA16  File
+  DATA16  hInits
+  DATA16  hValues
+  DATA16  hDevices
+  DATA16  hTypes
+  DATA16  hModes
+  DATA16  hDataSets
+  
+//--------------------------------------------------------
+// INITIALIZE
+//--------------------------------------------------------
+
+  // Init device settings
+  
+  ARRAY(CREATE16,SAMPLES,hInits)
+  ARRAY(FILL ,hInits,-1) 
+  ARRAY(CREATE8,SAMPLES,hDevices)
+  ARRAY(CREATE8,SAMPLES,hTypes)
+  ARRAY(FILL ,hTypes,0) 
+  ARRAY(CREATE8,SAMPLES,hModes)
+  ARRAY(FILL ,hModes,-1) 
+  ARRAY(CREATE8,SAMPLES,hDataSets)
+  ARRAY(FILL ,hDataSets,0) 
+  ARRAY(CREATEF,SAMPLES,hValues)
+  
+  // Select devices
+  ARRAY_WRITE(hDevices,0,0)
+  ARRAY_WRITE(hDevices,1,1)
+  ARRAY_WRITE(hDevices,2,2)
+  ARRAY_WRITE(hDevices,3,3)
+
+  // Open file
+  FILE(GET_LOG_SYNC_TIME,SyncTime,SyncTick)
+  FILE(OPEN_LOG,'logfile',SyncTime,SyncTick,0,SAMPLETIME,0,'Time\tDevice1\tDevice2\tDevice3\tDevice4\r\n',File)
+  
+  // Get Start time
+  TIMER_READ(StartTime)
+  SUB32(StartTime,SAMPLETIME,Time)
+
+//--------------------------------------------------------
+// LOG
+//--------------------------------------------------------
+Log:  
+
+  // Check time
+  TIMER_READ(NewTime)
+  SUB32(NewTime,Time,NewTime)
+  JR_LT32(NewTime,SAMPLETIME,NotTimeYet1) // Dummy jump
+
+NotTimeYet1: // Used when counting
+
+  // Calculate sample time
+  ADD32(Time,SAMPLETIME,Time)
+  
+  // Make samples
+  INPUT_SAMPLE(SAMPLETIME,SAMPLES,@hInits,@hDevices,@hTypes,@hModes,@hDataSets,@hValues)
+  
+  // Save samples
+  FILE(WRITE_LOG,File,Time,SAMPLES,@hValues)
+  
+  // Increment counter
+  ADD16(Counter,1,Counter)
+
+NotTimeYet2: // Used when timing
+
+  // Check counter for stop  
+  JR_LTEQ16(Counter,COUNTS,Log)
+  
+//--------------------------------------------------------
+// EXIT
+//--------------------------------------------------------
+
+  // Calculate time spend
+  TIMER_READ(NewTime)
+  SUB32(NewTime,StartTime,RunTime)
+
+  // Close file
+  FILE(CLOSE_LOG,File,'logfile')
+
+  // Delete file 
+  FILE(REMOVE,'logfile.rdf')
+
+  // Hack to satisfy FW < V1.04 not freeing memory handle
+  FILE(CLOSE,File)
+
+  // Delete arrayes  
+  ARRAY(DELETE,hValues)
+  ARRAY(DELETE,hDataSets)
+  ARRAY(DELETE,hModes)
+  ARRAY(DELETE,hTypes)
+  ARRAY(DELETE,hDevices)
+  ARRAY(DELETE,hInits)
+}
+

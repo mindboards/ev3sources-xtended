@@ -19,14 +19,14 @@
  */
 
 
-//  TCP 04.04.2013
+//  TCP 09.08.2013
 //! \page brickprogramapp Brick Program Source Code
 //!
 //! <hr size="1"/>
 //!
 //! \verbatim
 //**********************************************************************
-define appv 'Brick Program V1.02'                                     //
+define appv 'Brick Program V1.03'                                     //
 //**********************************************************************
                                                                       //
 define    MAX_NO_OF_BLOCKS    19                                      //  Max number of blocks (inc. File, Start and loop)

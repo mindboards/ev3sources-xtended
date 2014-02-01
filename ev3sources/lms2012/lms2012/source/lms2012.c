@@ -1371,6 +1371,37 @@ GBINDEX   GetAmountOfRamForImage(IP pI)
 }
 
 
+#ifdef DISABLE_UPDATE_DISASSEMBLY
+/*! \brief    Get checksum for program
+ *
+ *  \param    pI Pointer to image
+ *
+ */
+UWORD     GetChecksum(IP pI)
+{
+  IMINDEX Size;
+  IMINDEX Tmp;
+  UWORD   Chksum;
+
+  Size    =  (*(IMGHEAD*)pI).ImageSize;
+  Tmp     =  Size;
+  Chksum  =  0;
+
+  while (Tmp)
+  {
+    Chksum +=  (UWORD)*pI;
+
+    pI++;
+    Tmp--;
+  }
+
+//  printf("  GetChecksum %8lu %04X\r\n",(long unsigned int)Size,Chksum);
+
+  return (Chksum);
+}
+#endif
+
+
 /*! \brief    Initialise program for execution
  *
  *  \param    PrgId Program id (index)
@@ -1389,6 +1420,10 @@ RESULT    ProgramReset(PRGID PrgId,IP pI,GP pG,UBYTE Deb)
   VARDATA *pData;
   OBJID   ObjIndex;
   DATA8   No;
+  DATA8   Disassemble;
+#ifdef DISABLE_UPDATE_DISASSEMBLY
+  UWORD   Chks;
+#endif
 
   VMInstance.Program[PrgId].Status          =  STOPPED;
   VMInstance.Program[PrgId].StatusChange    =  STOPPED;
@@ -1415,7 +1450,25 @@ RESULT    ProgramReset(PRGID PrgId,IP pI,GP pG,UBYTE Deb)
       }
       VMInstance.Program[PrgId].pImage       =  pI;
 
-      if (cValidateProgram(PrgId,pI,VMInstance.Program[PrgId].Label,VMInstance.TerminalEnabled) != OK)
+      Disassemble  =  VMInstance.TerminalEnabled;
+
+#ifdef DISABLE_UPDATE_DISASSEMBLY
+      if (PrgId == CMD_SLOT)
+      {
+        Chks  =  GetChecksum(pI);
+
+        if (Chks == 0x0524)
+        {
+          Disassemble  =  0;
+        }
+        if (Chks == 0x93A0)
+        {
+          Disassemble  =  0;
+        }
+      }
+#endif
+
+      if (cValidateProgram(PrgId,pI,VMInstance.Program[PrgId].Label,Disassemble) != OK)
       {
         if (PrgId != CMD_SLOT)
         {
@@ -1424,7 +1477,6 @@ RESULT    ProgramReset(PRGID PrgId,IP pI,GP pG,UBYTE Deb)
       }
       else
       {
-
         // Clear memory
 
         for (Index = 0;Index < RamSize;Index++)
@@ -2084,6 +2136,11 @@ RESULT    mSchedInit(int argc,char *argv[])
   VMInstance.Status  =  0x00;
 #endif
 
+#ifdef ALLOW_DEBUG_PULSE
+  VMInstance.PulseShow  =  0;
+  VMInstance.Pulse      =  0x00;
+#endif
+
 #ifndef DISABLE_PREEMPTED_VM
   ANALOG  *pAdcTmp;
 
@@ -2337,6 +2394,10 @@ RESULT    mSchedCtrl(UBYTE *pRestart)
   VMInstance.InstrCnt  =  0;
 #endif
 
+#ifdef ALLOW_DEBUG_PULSE
+  VMInstance.Pulse |=  0x80 >> VMInstance.ProgramId;
+#endif
+
 #ifndef DISABLE_PREEMPTED_VM
   (*VMInstance.pAnalog).PreemptMilliSeconds  =  0;
 
@@ -2507,7 +2568,7 @@ RESULT    mSchedCtrl(UBYTE *pRestart)
 #ifdef Linux_X86
   usleep(1);
 #endif
-
+  
   return (Result);
 }
 
@@ -3053,19 +3114,17 @@ void      ObjectTrig(void)
     ((*VMInstance.pObjList[TmpId]).u.TriggerCount)--;
     if ((*VMInstance.pObjList[TmpId]).u.TriggerCount == 0)
     {
+#ifndef DISABLE_BLOCK_ALIAS_LOCALS
+      if (VMInstance.ObjectId != VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId)
+      { // if calling id != mother id -> alias
+#ifdef DEBUG
+        printf("\r\n  %d  %2d %2d",VMInstance.ProgramId,VMInstance.ObjectId,VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId);
+#endif
+        (*VMInstance.Program[VMInstance.ProgramId].pObjList[TmpId]).pLocal  =  (*VMInstance.Program[VMInstance.ProgramId].pObjList[VMInstance.ObjectId]).Local;
+      }
+#endif
       ObjectReset(TmpId);
       ObjectEnQueue(TmpId);
-/*
-  #ifdef OLDCALL
-      ObjectEnQueue(TmpId);
-  #else
-      (*VMInstance.pObjList[VMInstance.ObjectId]).Ip      =  VMInstance.ObjectIp;
-      VMInstance.ObjectId                                 =  TmpId;
-      (*VMInstance.pObjList[VMInstance.ObjectId]).ObjStatus  =  RUNNING;
-      VMInstance.ObjectIp        =  (*VMInstance.pObjList[VMInstance.ObjectId]).Ip;
-      VMInstance.ObjectLocal     =  (*VMInstance.pObjList[VMInstance.ObjectId]).pLocal;
-  #endif
-*/
     }
   }
 }
