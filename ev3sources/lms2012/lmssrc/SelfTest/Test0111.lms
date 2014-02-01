@@ -1,0 +1,351 @@
+//! \page test0111app Test 0111 Application
+//!
+//! <hr size="1"/>
+//!
+//! \verbatim
+// 
+//
+//
+//**********************************************************************
+//        TEST0111 
+//**********************************************************************
+                                                                      //
+define    TESTREPORT  'TestReport'                                    //
+define    LINE        64                                              //
+                                                                      //
+define    SAMPLETIME  1                                               //
+define    SAMPLES     4                                               //
+define    COUNTS      10000                                           //
+                                                                      //
+/*
+//
+//
+//
+//  SAMPLES   0 devices   1 device    2 devices   3 devices   4 devices
+//  
+//
+//      1       1640        2290
+//      2       1770        2470        2800
+//      3       1860        2570        2930        3190
+//      4       1960        2650        3010        3310        3570
+//
+//    1600 + (150 * SAMPLES) + (800 * Devices)
+                                                                      //
+define    TIME1       1600                                         //
+define    TIME2       150                                             //
+define    TIME3       800                                             //
+                                                                      //
+*/
+//
+//
+//
+//  SAMPLES   0 devices   1 device    2 devices   3 devices   4 devices
+//  
+//
+//      1       
+//      2       
+//      3       
+//      4       6374        7400        8230        8830        9320
+//
+//    1600 + (150 * SAMPLES) + (800 * Devices)
+                                                                      //
+define    TIME1       7000                                            //
+define    TIME2       0                                               //
+define    TIME3       750                                             //
+                                                                      //
+                                                                      //
+vmthread  MAIN                                                        //  void    MAIN(void)
+{                                                                     //  {
+  CALL(Test0111)                                                      //    Test0111()
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   Test0111                                                    //  void Test0111(void)
+{                                                                     //  {
+  DATAF   Data
+  DATAF   Min
+  DATAF   Max
+  DATA32  StartTime
+  DATA32  NewTime
+  DATA32  Time
+  DATA32  SyncTime                                                    
+  DATA32  SyncTick                                                    
+  DATA32  Index
+  DATA32  Devices
+  DATA32  Tmp1
+  DATA32  Tmp2
+  DATA16  File
+  DATA16  Counter                                                     //
+  DATA16  hInits
+  DATA16  hValues
+  DATA16  hDevices
+  DATA16  hTypes
+  DATA16  hModes
+  DATA16  hDataSets
+  DATA16  Tmp
+  DATA8   Device
+  DATA8   Type
+  DATA8   Mode
+
+  DATAS   String1 LINE
+  DATAS   String2 LINE
+  
+  // Set success as default                                           //
+	MEMORY_WRITE(GUI_SLOT,4,0,1,0)                                      //    MEMORY_WRITE(GUI_SLOT,4,0,1,0)
+                                                                      //
+  CALL(TestOpen)                                                      //
+                                                                      //
+  CALL(TestWrite,' PERFORMANCE')                                      //
+                                                                      //
+//--------------------------------------------------------
+// INITIALIZE
+//--------------------------------------------------------
+
+  // Init device settings
+  
+  ARRAY(CREATE16,SAMPLES,hInits)
+  ARRAY(FILL ,hInits,-1) 
+  ARRAY(CREATE8,SAMPLES,hDevices)
+  ARRAY(CREATE8,SAMPLES,hTypes)
+  ARRAY(FILL ,hTypes,0) 
+  ARRAY(CREATE8,SAMPLES,hModes)
+  ARRAY(FILL ,hModes,-1) 
+  ARRAY(CREATE8,SAMPLES,hDataSets)
+  ARRAY(FILL ,hDataSets,0) 
+  ARRAY(CREATEF,SAMPLES,hValues)
+  
+  // Select devices                                                   //
+  MOVE8_32(0,Devices)
+  MOVE8_8(0,Device)                                                   //    Device  =  0
+                                                                      //
+SelectDevices:                                                        //    while (Device < SAMPLES)
+  JR_GTEQ8(Device,SAMPLES,SelectDevicesEnd)                           //    {
+                                                                      //
+  MOVE8_32(Device,Index)                                              //      Index             =  Device
+  ARRAY_WRITE(hDevices,Index,Device)                                  //      hDevices[Index]   =  Device
+                                                                      //
+  INPUT_DEVICE(GET_TYPEMODE,0,Device,Type,Mode)
+
+  JR_GT8(Type,MAX_VALID_TYPE,NoSensor)
+
+  ADD32(Devices,1,Devices)
+
+NoSensor:
+  ADD8(Device,1,Device)                                               //      Device++
+  JR(SelectDevices)                                                   //    }
+SelectDevicesEnd:                                                     //
+
+  // Reset counter
+  MOVE8_16(0,Counter)
+  
+  // Open file
+  FILE(GET_LOG_SYNC_TIME,SyncTime,SyncTick)
+  FILE(OPEN_LOG,'logfile',SyncTime,SyncTick,0,SAMPLETIME,0,'Time\tDevice1\tDevice2\tDevice3\tDevice4\r\n',File)
+
+  // Get Start time
+  TIMER_READ(StartTime)
+  SUB32(StartTime,SAMPLETIME,Time)
+
+//--------------------------------------------------------
+// LOG
+//--------------------------------------------------------
+
+Log:  
+  // Check time
+  TIMER_READ(NewTime)
+  SUB32(NewTime,Time,NewTime)
+  JR_LT32(NewTime,SAMPLETIME,NotTimeYet1) // Dummy jump
+
+NotTimeYet1: // Used when counting
+
+  // Calculate sample time
+  ADD32(Time,SAMPLETIME,Time)
+  
+  // Make samples
+  INPUT_SAMPLE(SAMPLETIME,SAMPLES,@hInits,@hDevices,@hTypes,@hModes,@hDataSets,@hValues)
+  
+  // Save samples
+  FILE(WRITE_LOG,File,Time,SAMPLES,@hValues)
+  
+  // Increment counter
+  ADD16(Counter,1,Counter)
+
+NotTimeYet2: // Used when timing
+
+  // Check counter for stop  
+  JR_LTEQ16(Counter,COUNTS,Log)
+  
+//--------------------------------------------------------
+// EXIT
+//--------------------------------------------------------
+
+  // Calculate time spend
+  TIMER_READ(NewTime)
+  SUB32(NewTime,StartTime,Time)
+
+  // Close file
+  FILE(CLOSE_LOG,File,'logfile')
+
+  // Delete file
+  FILE(REMOVE,'logfile.rdf')
+
+  // Delete arrayes  
+  ARRAY(DELETE,hValues)
+  ARRAY(DELETE,hDataSets)
+  ARRAY(DELETE,hModes)
+  ARRAY(DELETE,hTypes)
+  ARRAY(DELETE,hDevices)
+  ARRAY(DELETE,hInits)
+  
+                                                                      //
+  MOVE32_F(Time,Data)
+  MOVE32_F(500,Min)
+  MUL32(SAMPLES,TIME2,Tmp1)
+  MUL32(Devices,TIME3,Tmp2)
+  ADD32(Tmp1,TIME1,Tmp1)
+  ADD32(Tmp2,Tmp1,Tmp1)
+  MOVE32_F(Tmp1,Max)
+
+  MOVE32_16(Devices,Tmp)
+  STRINGS(NUMBER_TO_STRING,Tmp,1,String1)
+  STRINGS(ADD,'Runtime ',String1,String2)
+  STRINGS(ADD,String2,' devices  ',String1)
+  CALL(TestRange,String1,Data,Min,Max)
+
+  CALL(TestClose)                                                     //
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestText                                                    //  void TestText(Text)
+{                                                                     //  {
+  IN_S    Text LINE                                                   //
+  IN_S    IstWert LINE                                                //
+                                                                      //
+  DATAS   String LINE                                                 //
+                                                                      //
+  STRINGS(ADD,'  ',Text,String)                                       //    STRINGS(ADD,' ',Text,String)
+  STRINGS(ADD,String,' = [',String)                                   //    STRINGS(ADD,String,' = [',String)
+  STRINGS(ADD,String,IstWert,String)                                  //    STRINGS(ADD,String,IstWert,String)
+  STRINGS(ADD,String,']',String)                                      //    STRINGS(ADD,String,']',String)
+                                                                      //
+  CALL(TestWrite,String)                                              //    CALL(TestWrite,String)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestRange                                                   //  void TestRange(Text,IstWert,Min,Max)
+{                                                                     //  {
+  IN_S    Text LINE                                                   //
+  IN_F    IstWert                                                     //
+  IN_F    Min                                                         //
+  IN_F    Max                                                         //
+                                                                      //
+  DATAS   String LINE                                                 //
+  DATAS   Result LINE                                                 //
+                                                                      //
+  JR_LT32(IstWert,Min,Error)                                          //    if ((IstWert >= Min) &&
+  JR_GT32(IstWert,Max,Error)                                          //        (IstWert <= Max))
+                                                                      //    {
+  STRINGS(ADD,'  ',Text,String)                                       //      STRINGS(ADD,'  ',Text,String)
+  STRINGS(ADD,String,' = [',String)                                   //      STRINGS(ADD,String,' = [',String)
+  STRINGS(VALUE_TO_STRING,IstWert,-13,6,Result)                       //      STRINGS(VALUE_TO_STRING,IstWert,-13,6,Result)
+  STRINGS(ADD,String,Result,String)                                   //      STRINGS(ADD,String,Result,String)
+  STRINGS(ADD,String,']',String)                                      //      STRINGS(ADD,String,']',String)
+                                                                      //
+  JR(EndError)                                                        //    }
+                                                                      //    else
+Error:                                                                //    {
+  STRINGS(ADD,'# ',Text,String)                                       //      STRINGS(ADD,'# ',Text,String)
+  STRINGS(ADD,String,' = [',String)                                   //      STRINGS(ADD,String,' = [',String)
+  STRINGS(VALUE_TO_STRING,IstWert,-13,6,Result)                       //      STRINGS(VALUE_TO_STRING,IstWert,-13,6,Result)
+  STRINGS(ADD,String,Result,String)                                   //      STRINGS(ADD,String,Result,String)
+  STRINGS(ADD,String,'] (',String)                                    //      STRINGS(ADD,String,'] (',String)
+  STRINGS(VALUE_TO_STRING,Min,-13,6,Result)                           //      STRINGS(VALUE_TO_STRING,Min,-13,6,Result)
+  STRINGS(ADD,String,Result,String)                                   //      STRINGS(ADD,String,Result,String)
+  STRINGS(ADD,String,'<=X<=',String)                                  //      STRINGS(ADD,String,'<=X<=',String)
+  STRINGS(VALUE_TO_STRING,Max,-13,6,Result)                           //      STRINGS(VALUE_TO_STRING,Max,-13,6,Result)
+  STRINGS(ADD,String,Result,String)                                   //      STRINGS(ADD,String,Result,String)
+  STRINGS(ADD,String,')',String)                                      //      STRINGS(ADD,String,')',String)
+                                                                      //
+  // Set failed                                                       //
+	MEMORY_WRITE(GUI_SLOT,4,0,1,1)                                      //      MEMORY_WRITE(GUI_SLOT,4,0,1,1)
+                                                                      //
+EndError:                                                             //    }
+                                                                      //
+  CALL(TestWrite,String)                                              //    CALL(TestWrite,String)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestCheck                                                   //  void TestCheck(Text,IstWert,SollWert)
+{                                                                     //  {
+  IN_S    Text LINE                                                   //
+  IN_S    IstWert LINE                                                //
+  IN_S    SollWert LINE                                               //
+                                                                      //
+  DATA8   Result                                                      //
+  DATAS   String LINE                                                 //
+                                                                      //
+  STRINGS(COMPARE,IstWert,SollWert,Result)                            //    STRINGS(COMPARE,IstWert,SollWert,Result)
+  JR_FALSE(Result,Error)                                              //    if (Result)
+                                                                      //    {
+  STRINGS(ADD,'  ',Text,String)                                       //      STRINGS(ADD,' ',Text,String)
+  STRINGS(ADD,String,' = [',String)                                   //      STRINGS(ADD,String,' = [',String)
+  STRINGS(ADD,String,IstWert,String)                                  //      STRINGS(ADD,String,IstWert,String)
+  STRINGS(ADD,String,']',String)                                      //      STRINGS(ADD,String,']',String)
+                                                                      //
+  JR(EndError)                                                        //    }
+                                                                      //    else
+Error:                                                                //    {
+                                                                      //
+  STRINGS(ADD,'# ',Text,String)                                       //      STRINGS(ADD,' ',Text,String) 
+  STRINGS(ADD,String,' = [',String)                                   //      STRINGS(ADD,String,' = [',String)
+  STRINGS(ADD,String,IstWert,String)                                  //      STRINGS(ADD,String,IstWert,String)
+  STRINGS(ADD,String,'] (',String)                                    //      STRINGS(ADD,String,'] (',String)
+  STRINGS(ADD,String,SollWert,String)                                 //      STRINGS(ADD,String,SollWert,String)
+  STRINGS(ADD,String,')',String)                                      //      STRINGS(ADD,String,')',String)
+                                                                      //
+  // Set failed                                                       //
+	MEMORY_WRITE(GUI_SLOT,4,0,1,1)                                      //      MEMORY_WRITE(GUI_SLOT,4,0,1,1)
+                                                                      //
+EndError:                                                             //    }
+                                                                      //
+  CALL(TestWrite,String)                                              //    CALL(TestWrite,String)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+DATA16    hFile                                                       //
+                                                                      //
+subcall   TestClear                                                   //  void TestClear(void)
+{                                                                     //  {
+  DATAS   TestReport FILENAMESIZE                                     //
+                                                                      //
+  STRINGS(ADD,TESTREPORT,EXT_TEXT,TestReport)                         //    STRINGS(ADD,TESTREPORT,EXT_TEXT,TestReport)
+  FILE(OPEN_WRITE,TestReport,hFile)                                   //    FILE(OPEN_WRITE,TestReport,hFile)
+  FILE(CLOSE,hFile)                                                   //    FILE(CLOSE,hFile)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestOpen                                                    //  void TestOpen(void)
+{                                                                     //  {
+  DATAS   TestReport FILENAMESIZE                                     //
+                                                                      //
+  STRINGS(ADD,TESTREPORT,EXT_TEXT,TestReport)                         //    STRINGS(ADD,TESTREPORT,EXT_TEXT,TestReport)
+  FILE(OPEN_APPEND,TestReport,hFile)                                  //    FILE(OPEN_APPEND,TestReport,hFile)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestWrite                                                   //  void TestWrite(Text)
+{                                                                     //  {
+  IN_S    Text LINE                                                   //
+                                                                      //
+  FILE(WRITE_TEXT,hFile,DEL_CRLF,Text)                                //    FILE(WRITE_TEXT,hFile,DEL_CRLF,Text)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+subcall   TestClose                                                   //  void TestClose(void)
+{                                                                     //  {
+  FILE(CLOSE,hFile)                                                   //    FILE(CLOSE,hFile)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+//! \endverbatim
+

@@ -1,0 +1,127 @@
+//
+                                                                      //
+                                                                      //
+vmthread  MAIN                                                        //  void    MAIN(void)
+{                                                                     //  {
+  DATAF   DataF
+  DATA32  Timer
+  DATA16  Data16
+  DATA16  PosY
+  DATA8	  Stop                                                        
+  DATA8   Key
+                                                                      //
+  // Init screen                                                      //
+  UI_DRAW(TOPLINE,1)                                                  //    UI_DRAW(TOPLINE,1)
+  UI_BUTTON(SET_BACK_BLOCK,1)                                         //    UI_BUTTON(SET_BACK_BLOCK,1)
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)                                    //    UI_DRAW(FILLWINDOW,BG_COLOR,0,0)
+  UI_DRAW(SELECT_FONT,SMALL_FONT)                                     //    UI_DRAW(SELECT_FONT,SMALL_FONT)
+  UI_DRAW(TEXT,FG_COLOR,32,20,'Transistor Test')                      //    UI_DRAW(TEXT,FG_COLOR,32,20,'Transistor Test')
+  UI_DRAW(SELECT_FONT,NORMAL_FONT)                                    //    UI_DRAW(SELECT_FONT,NORMAL_FONT)
+
+  UI_DRAW(TEXT,FG_COLOR,0,34,'----------------------')
+  UI_DRAW(TEXT,FG_COLOR,0,44,'Transistor')
+  UI_DRAW(TEXT,FG_COLOR,88,44,'OFF')
+  UI_DRAW(TEXT,FG_COLOR,0,55,'----------------------')
+
+  MOVE16_16(68,PosY)
+  UI_DRAW(TEXT,FG_COLOR,0,PosY,'ADCMA')
+  UI_DRAW(TEXT,FG_COLOR,120,PosY,'mV')
+  ADD16(PosY,16,PosY)
+  UI_DRAW(TEXT,FG_COLOR,0,PosY,'ADCMB')
+  UI_DRAW(TEXT,FG_COLOR,120,PosY,'mV')
+  ADD16(PosY,16,PosY)
+  UI_DRAW(TEXT,FG_COLOR,0,PosY,'ADCMC')
+  UI_DRAW(TEXT,FG_COLOR,120,PosY,'mV')
+  ADD16(PosY,16,PosY)
+  UI_DRAW(TEXT,FG_COLOR,0,PosY,'ADCMD')
+  UI_DRAW(TEXT,FG_COLOR,120,PosY,'mV')
+  ADD16(PosY,16,PosY)
+  UI_DRAW(UPDATE)                                                     //    UI_DRAW(UPDATE)
+                                                                      //
+  TST(TST_OPEN)
+
+                                                                      //    do
+Loop:                                                                 //    {
+
+
+  UI_BUTTON(SHORTPRESS,UP_BUTTON,Key)
+
+  JR_FALSE(Key,NotUp)
+
+  // Set pin 5 high
+  TST(TST_WRITE_PINS,16,5,'--1--')
+  TST(TST_WRITE_PINS,17,5,'--1--')
+  TST(TST_WRITE_PINS,18,5,'--1--')
+  TST(TST_WRITE_PINS,19,5,'--1--')
+  UI_DRAW(TEXT,FG_COLOR,88,44,'ON ')
+
+NotUp:
+
+  UI_BUTTON(SHORTPRESS,DOWN_BUTTON,Key)
+
+  JR_FALSE(Key,NotDown)
+
+  // Set pin 5 float
+  TST(TST_WRITE_PINS,16,5,'--X--')
+  TST(TST_WRITE_PINS,17,5,'--X--')
+  TST(TST_WRITE_PINS,18,5,'--X--')
+  TST(TST_WRITE_PINS,19,5,'--X--')
+  UI_DRAW(TEXT,FG_COLOR,88,44,'OFF')
+
+NotDown:
+
+
+  MOVE16_16(68,PosY)
+
+  // Read Value5Float
+  TST(TST_READ_ADC,8,Data16)
+  MOVE16_F(Data16,DataF)
+  MULF(DataF,5.0F,DataF)
+  DIVF(DataF,4.095F,DataF)
+  UI_DRAW(VALUE,FG_COLOR,72,PosY,DataF,5,0)
+  ADD16(PosY,16,PosY)
+
+  TST(TST_READ_ADC,9,Data16)
+  MOVE16_F(Data16,DataF)
+  MULF(DataF,5.0F,DataF)
+  DIVF(DataF,4.095F,DataF)
+  UI_DRAW(VALUE,FG_COLOR,72,PosY,DataF,5,0)
+  ADD16(PosY,16,PosY)
+
+  TST(TST_READ_ADC,10,Data16)
+  MOVE16_F(Data16,DataF)
+  MULF(DataF,5.0F,DataF)
+  DIVF(DataF,4.095F,DataF)
+  UI_DRAW(VALUE,FG_COLOR,72,PosY,DataF,5,0)
+  ADD16(PosY,16,PosY)
+
+  TST(TST_READ_ADC,11,Data16)
+  MOVE16_F(Data16,DataF)
+  MULF(DataF,5.0F,DataF)
+  DIVF(DataF,4.095F,DataF)
+  UI_DRAW(VALUE,FG_COLOR,72,PosY,DataF,5,0)
+  ADD16(PosY,16,PosY)
+
+
+
+
+
+
+  UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
+                                                                      //
+  // Wait
+  TIMER_WAIT(200,Timer)
+  TIMER_READY(Timer)
+
+  // Check for stop                                                   //
+  UI_BUTTON(SHORTPRESS,ENTER_BUTTON,Stop)
+                                                                      //    }
+  JR_FALSE(Stop,Loop)                                                 //    while (!Stop)  
+                                                                      //
+  TST(TST_CLOSE)
+
+  UI_BUTTON(SET_BACK_BLOCK,0)                                         //    UI_BUTTON(SET_BACK_BLOCK,0)
+}                                                                     //  }
+                                                                      //
+                                                                      //
+

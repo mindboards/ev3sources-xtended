@@ -1,0 +1,726 @@
+/******************************************************************************
+ * LEGO DEVICE DESIGN GUIDELINES
+ *****************************************************************************/
+/*! \page legodevicedesign LEGO Device Design Guidelines
+ *
+ *  <hr size="1">
+ *  <b>Device Type and Mode statements:</b>\n
+ *  <hr size="1">
+ *  
+ *- A device can be an input (sensor) or an output (motor) device.
+ *- A devices caracteristics are defined by one or more entries in the "TypeData" table.
+ *- Each entry contains a device "Type", a device "Mode" and various data representing this device Type/Mode.
+ *- Known device Type/Mode's are read from files at startup time.
+ *- The "sys/settings" folder is scanned for "typedataXX.rcf" files at startup and the found Type/Mode data is stored (XX = 50 -> XX = 98) 
+ *- New UART sensors applies the Type/Mode data when plugged in.
+ *- Unknown device Type/Mode's can be inserted by byte codes at runtime (only V1.05 and newer).
+ *
+ *
+ *  <hr size="1">
+ *  <b>LEGO Device Connection Matrix:</b>\n
+ *  <hr size="1">
+ *\n\n  
+ *  <table border="" width="900">
+ *  <tr>
+ *      <td width="15%"><b>INPUT DEVICES</b></td>
+ *      <td width="10%"></td>
+ *      <td width="25%"><b>DUMB</b></td>
+ *      <td width="25%"><b>IIC</b></td>
+ *      <td width="25%"><b>UART</b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>NXT</b></td>
+ *      <td><b>\ref LegoNxtDumbInputDevice "NXT DUMB"</b></td>
+ *      <td><b>\ref LegoNxtIicInputDevice "NXT IIC"</b></td>
+ *      <td><b>-</b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>EV3</b></td>
+ *      <td><b>\ref LegoEv3DumbInputDevice "EV3 DUMB"</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b>\ref LegoEv3UartInputDevice "EV3 UART"</b></td>
+ *  </tr>
+ *  </table>
+ *\n\n  
+ *  <table border="" width="900">
+ *  <tr>
+ *      <td width="15%"><b>OUTPUT DEVICES</b></td>
+ *      <td width="10%"></td>
+ *      <td width="25%"><b>DUMB</b></td>
+ *      <td width="25%"><b>TACHO</b></td>
+ *      <td width="25%"><b></b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>NXT</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b>\ref LegoNxtTachoOutputDevice "NXT TACHO"</b></td>
+ *      <td><b></b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>EV3</b></td>
+ *      <td><b>\ref LegoEv3DumbOutputDevice "EV3 DUMB"</b></td>
+ *      <td><b>\ref LegoEv3TachoOutputDevice "EV3 TACHO"</b></td>
+ *      <td><b></b></td>
+ *  </tr>
+ *  </table>
+ *\n\n  
+*/
+
+
+/******************************************************************************
+ * LEGO NXT DUMB INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoNxtDumbInputDevice LEGO NXT Dumb Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The NXT dumb input device is as an example the "NXT-TOUCH" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 1").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref ReadLegoNxtDumbInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "Analog Value" is the analog level that represents the data from the device.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_dumb_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO NXT IIC INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoNxtIicInputDevice LEGO NXT IIC Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The NXT IIC input device is as an example the "NXT-US-CM" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 5").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref ReadLegoIicInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "DATA" and "CLK" is the IIC digital signals that communicates the data.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_iic_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO EV3 DUMB INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoEv3DumbInputDevice LEGO EV3 Dumb Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 dumb input device is as an example the "TOUCH" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 16").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref ReadLegoEv3DumbInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "Analog Value" is the analog level that represents the data from the device.\n
+ *- "R1" value defines the "Type" (see \ref inputdeviceresistor "EV3 Dumb Input ID's").\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_dumb_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO EV3 UART INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoEv3UartInputDevice LEGO EV3 UART Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 UART input device is as an example the "GYRO-ANG" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is applies when sensor is plugged in.\n
+ *  \ref UartProtocol
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref ReadLegoEv3UartInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "RXD" and "TXD" is the digital signals that communicates the data.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_uart_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO NXT DUMB OUTPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoNxtDumbOutputDevice LEGO NXT Dumb Output Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The NXT dumb output device is as an example the "L-MOTOR-DEG" motor.\n
+ *  Connection type of the motor is defined as shown in tabel \ref outputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 7").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref ReadLegoNxtDumbOutputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "Analog Value" is the analog level that represents the data from the device.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_dumb_output.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO NXT TACHO OUTPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoNxtTachoOutputDevice LEGO NXT Tacho Output Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The NXT tacho output device is as an example the "L-MOTOR-DEG" motor.\n
+ *  This device has the same type and caracteristics as the EV3 large motor.\n
+ *  Connection type of the motor is defined as shown in tabel \ref outputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 7").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   opOUTPUT_POWER
+ *\n
+ *   opOUTPUT_START
+ *\n
+ *   opOUTPUT_STOP
+ *\n
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref WriteLegoNxtTachoOutputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- Q1 and Q2 controls the 2 tacho phases.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_tacho_output.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO EV3 DUMB OUTPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoEv3DumbOutputDevice LEGO EV3 Dumb Output Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 dumb output device is as an example the "O-#01" motor (future).\n
+ *  Connection type of the motor is defined as shown in tabel \ref outputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 10").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   opOUTPUT_POWER
+ *\n
+ *   opOUTPUT_START
+ *\n
+ *   opOUTPUT_STOP
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref WriteLegoEv3DumbOutputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "R1" value defines the "Type" (see \ref outputdeviceresistor "EV3 Dumb Output ID's").\n
+ *- "R2" is 22K and only needed if the imperdance of M1 is greater than 1000 Ohms.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_dumb_output.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * LEGO EV3 TACHO OUTPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page LegoEv3TachoOutputDevice LEGO EV3 Tacho Output Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 tacho output device is as an example the "M-MOTOR-DEG" motor.\n
+ *  Connection type of the motor is defined as shown in tabel \ref outputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 8").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   opOUTPUT_POWER
+ *\n
+ *   opOUTPUT_START
+ *\n
+ *   opOUTPUT_STOP
+ *\n
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref WriteLegoEv3TachoOutputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "R1" value defines the "Type" (see \ref tachodeviceresistor "EV3 Tacho Input ID's").\n
+ *- T1 and T2 is the 2 tacho phases.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_tacho_output.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * THIRD PARTY DEVICE DESIGN GUIDELINES
+ *****************************************************************************/
+/*! \page thirdpartydevicedesign Third Party Device Design Guidelines
+ *
+ *  <hr size="1">
+ *  <b>Device Type and Mode statements:</b>\n
+ *  <hr size="1">
+ *  
+ *- A device can be an input (sensor) or an output (motor) device.
+ *- A devices caracteristics are defined by one or more entries in the "TypeData" table.
+ *- Each entry contains a device "Type", a device "Mode" and various data representing this device Type/Mode.
+ *- Known device Type/Mode's are read from files at startup time.
+ *- The "sys/settings" folder is scanned for "typedataXX.rcf" files at startup and the found Type/Mode data is stored (XX = 50 -> XX = 98) 
+ *- New UART sensors applies the Type/Mode data when plugged in.
+ *- Unknown device Type/Mode's can be inserted by byte codes at runtime (only V1.05 and newer).
+ *
+ *
+ *  <hr size="1">
+ *  <b>Third Party Device Connection Matrix:</b>\n
+ *  <hr size="1">
+ *\n\n  
+ *  <table border="" width="900">
+ *  <tr>
+ *      <td width="15%"><b>INPUT DEVICES</b></td>
+ *      <td width="10%"></td>
+ *      <td width="25%"><b>DUMB</b></td>
+ *      <td width="25%"><b>IIC</b></td>
+ *      <td width="25%"><b>UART</b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>NXT</b></td>
+ *      <td><b>\ref TPartyNxtDumbInputDevice "NXT 3P DUMB"</b></td>
+ *      <td><b>\ref TPartyIicInputDevice "NXT 3P IIC"</b></td>
+ *      <td><b>-</b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>EV3</b></td>
+ *      <td><b>\ref TPartyEv3DumbInputDevice "EV3 3P DUMB"</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b>\ref TPartyEv3UartInputDevice "EV3 3P UART"</b></td>
+ *  </tr>
+ *  </table>
+ *\n\n  
+ *  <table border="" width="900">
+ *  <tr>
+ *      <td width="15%"><b>OUTPUT DEVICES</b></td>
+ *      <td width="10%"></td>
+ *      <td width="25%"><b>DUMB</b></td>
+ *      <td width="25%"><b>TACHO</b></td>
+ *      <td width="25%"><b></b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>NXT</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b></b></td>
+ *  </tr>
+ *  <tr>
+ *      <td></td>
+ *      <td><b>EV3</b></td>
+ *      <td><b>\ref TPartyEv3DumbOutputDevice "EV3 3P DUMB"</b></td>
+ *      <td><b>-</b></td>
+ *      <td><b></b></td>
+ *  </tr>
+ *  </table>
+ *\n\n  
+ *  
+*/
+
+/******************************************************************************
+ * THIRD PARTY NXT DUMB INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page TPartyNxtDumbInputDevice Third Party NXT Dumb Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The NXT dumb input device is as an example the "HT Force Sensor".\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data could be read at startup from the "typedataXX.rcf" file.
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_RAW
+ *\n
+ *   \ref opINPUT_DEVICE_READY_SI (with "typedataXX.rcf") 
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref Read3PNxtDumbInputDeviceX
+ *\n
+ *   \ref Read3PNxtDumbInputDeviceX2
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "Analog Value" is the analog level that represents the data from the device.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_dumb_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * THIRD PARTY IIC INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page TPartyIicInputDevice Third Party IIC Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The third party IIC input device is as an example the "HT-ANG-DEG" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data could be read at startup from the "typedataXX.rcf" file (see \ref types "Type 55").
+ *\n\n
+ *  V1.05 and newer:
+ *\n\n
+ *  "Type/Mode" data can be inserted in the "TypeData" table at run time using a byte code.\n
+ *  Once inserted the "Type/Mode" data is held until power off and is active also in "On Brick Apps" as "Port View".\n
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_SETUP
+ *\n\n
+ *  V1.05 and newer:
+ *\n\n
+ *   \ref opINPUT_DEVICE_SET_TYPEMODE (Check if Type/Mode is in the "TypeData" table)
+ *\n
+ *   \ref opINPUT_DEVICE_INSERT_TYPE (Insert Type/Mode in the "TypeData" table)
+ *\n
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref Read3PIicInputDeviceX
+ *\n\n
+ *  V1.05 and newer:
+ *\n\n
+ *   \ref Read3PIicInputDeviceX2
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "DATA" and "CLK" is the IIC digital signals that communicates the data.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="nxt_iic_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * THIRD PARTY EV3 DUMB INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page TPartyEv3DumbInputDevice Third Party EV3 Dumb Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 dumb input device is a posibility to make a cheap analog sensor for the EV3.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 28").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref Read3PEv3DumbInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "Analog Value" is the analog level that represents the data from the device.\n
+ *- "R1" is 13K and defines the "Type" equal to 28 (see \ref inputdeviceresistor "EV3 Dumb Input ID's").\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_dumb_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * THIRD PARTY EV3 UART INPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page TPartyEv3UartInputDevice Third Party EV3 UART Input Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 UART input device is as an example the "GYRO-ANG" sensor.\n
+ *  Connection type of the sensor is defined as shown in tabel \ref inputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is applies when sensor is plugged in.\n
+ *  \ref UartProtocol
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   \ref opINPUT_DEVICE_READY_SI
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref Read3PEv3UartInputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "RXD" and "TXD" is the digital signals that communicates the data.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_uart_input.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/
+
+
+/******************************************************************************
+ * THIRD PARTY EV3 DUMB OUTPUT DEVICE DESIGN GUIDELINE
+ *****************************************************************************/
+/*! \page TPartyEv3DumbOutputDevice Third Party EV3 Dumb Output Device
+ *
+ *  <hr size="1">
+ *  <b>Description</b>\n
+ *
+ *  The EV3 dumb output device is as an example the "3th.party-O" motor.\n
+ *  Connection type of the motor is defined as shown in tabel \ref outputdevicerules "Detection Rules".\n
+ *
+ *\n\n  
+ *  <b>Type/Mode</b>\n
+ *
+ *  "Type/Mode" data is read at startup from the "typedata.rcf" file (see \ref types "Type 14").
+ *
+ *\n\n  
+ *  <b>Byte Code Support</b>\n
+ *
+ *   opOUTPUT_POWER
+ *\n
+ *   opOUTPUT_START
+ *\n
+ *   opOUTPUT_STOP
+ *
+ *\n\n  
+ *  <b>Byte Code Example</b>\n
+ *
+ *   \ref Write3PEv3DumbOutputDeviceX
+ *
+ *\n\n  
+ *  <hr size="1">
+ *  <b>Schematics</b>\n
+ *
+ *- "R1" is 390K and defines the "Type" equal to "3th.party-O" (see \ref outputdeviceresistor "EV3 Dumb Output ID's").\n
+ *- "R2" is 22K  and only needed if the imperdance of M1 is greater than 1000 Ohms.\n
+ *
+ *\n\n  
+ *  \htmlonly
+ *  <IMG src="ev3_dumb_output.png">
+ *  \endhtmlonly
+ *\n\n  
+ *  
+*/

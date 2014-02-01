@@ -1,0 +1,442 @@
+//! \page ReadInputDeviceX Read Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+vmthread  MAIN                                                        //
+{                                                                     //
+  DATAF   DataF                                                       //
+  DATA16  hName                                                       //
+  DATA8   Layer                                                       //
+  DATA8   Port                                                        //
+  DATAS   DataS 12                                                    //
+                                                                      //
+  ARRAY(CREATE8,0,hName)                                              //
+  MOVE8_8(0,Layer)                                                    //
+  MOVE8_8(1,Port)                                                     //
+                                                                      //
+Loop:                                                                 //
+                                                                      //
+//  CALL(ReadLegoNxtDumbInputDevice,DataF,hName,Layer,Port)             //
+//  CALL(ReadLegoNxtIicInputDevice,DataF,hName,Layer,Port)              //
+//  CALL(ReadLegoEv3DumbInputDevice,DataF,hName,Layer,Port)             //
+//  CALL(ReadLegoEv3UartInputDevice,DataF,hName,Layer,Port)             //
+  CALL(WriteLegoNxtTachoOutputDevice,DataF,hName,Layer,Port,50)          //
+//  CALL(WriteLegoEv3DumbOutputDevice,DataF,hName,Layer,Port,50)          //
+//  CALL(WriteLegoEv3TachoOutputDevice,DataF,hName,Layer,Port,50)          //
+//  CALL(Read3PNxtDumbInputDevice,DataF,hName,Layer,Port)               //
+//  CALL(Read3PNxtDumbInputDevice2,DataF,hName,Layer,Port)              //
+//  CALL(Read3PIicInputDevice,DataF,hName,Layer,Port)                   //
+//  CALL(Read3PIicInputDevice2,DataF,hName,Layer,Port)                  //
+//  CALL(Read3PEv3DumbInputDevice,DataF,hName,Layer,Port)               //
+//  CALL(Read3PEv3UartInputDevice,DataF,hName,Layer,Port)               //
+//  CALL(Write3PEv3DumbOutputDevice,DataF,hName,Layer,Port,50)          //
+                                                                      //
+  UI_DRAW(FILLWINDOW,BG_COLOR,0,0)                                    //
+  UI_DRAW(SELECT_FONT,LARGE_FONT)                                     //
+  UI_DRAW(TEXT,FG_COLOR,0,20,@hName)                                  //
+  UI_DRAW(VALUE,FG_COLOR,0,40,DataF,-8,0)                             //
+  UI_DRAW(UPDATE)                                                     //
+                                                                      //
+  JR(Loop)                                                            //
+}                                                                     //
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page ReadLegoNxtDumbInputDeviceX Read LEGO NXT Dumb Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   ReadLegoNxtDumbInputDevice                                  //  void ReadLegoNxtDumbInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page ReadLegoIicInputDeviceX Read LEGO NXT IIC Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   ReadLegoNxtIicInputDevice                                   //  void ReadLegoNxtIicInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page ReadLegoEv3DumbInputDeviceX Read LEGO EV3 Dumb Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   ReadLegoEv3DumbInputDevice                                  //  void ReadLegoEv3DumbInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page ReadLegoEv3UartInputDeviceX Read LEGO EV3 UART Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   ReadLegoEv3UartInputDevice                                  //  void ReadLegoEv3UartInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page WriteLegoNxtTachoOutputDeviceX Write LEGO NXT Tacho Output Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   WriteLegoNxtTachoOutputDevice                               //  void WriteLegoNxtTachoOutputDevice(Value,hName,Layer,Port,Data)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+  IO_8    Data                                                        //
+                                                                      //
+  DATA8   Output                                                      //
+  DATA8   Tmp                                                         //
+                                                                      //  {
+  RL8(Port,1,Output)                                                  //    Output  =  1 << Port                  
+  OUTPUT_SPEED(Layer,Output,Data)                                     //    OUTPUT_SPEED(Layer,Output,Data)
+  OUTPUT_START(Layer,Output)                                          //    OUTPUT_START(Layer,Output)  
+  MUL8(INPUTS,CHAIN_DEPT,Tmp)                                         //    Tmp    =  INPUTS * CHAIN_DEPT
+  ADD8(Port,Tmp,Tmp)                                                  //    Tmp   +=  Port
+  INPUT_DEVICE(READY_SI,Layer,Tmp,0,0,1,Value)                        //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Tmp,-1,@hName)                          //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page WriteLegoEv3DumbOutputDeviceX Write LEGO EV3 Dumb Output Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   WriteLegoEv3DumbOutputDevice                                //  void WriteLegoEv3DumbOutputDevice(Value,hName,Layer,Port,Data)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+  IO_8    Data                                                        //
+                                                                      //
+  DATA8   Output                                                      //
+  DATA8   Tmp                                                         //
+                                                                      //  {
+  RL8(Port,1,Output)                                                  //    Output  =  1 << Port                  
+  OUTPUT_POWER(Layer,Output,Data)                                     //    OUTPUT_POWER(Layer,Output,Data)
+  OUTPUT_START(Layer,Output)                                          //    OUTPUT_START(Layer,Output)  
+  MOVE8_F(Data,Value)                                                 //    Value  =  Data
+  MUL8(INPUTS,CHAIN_DEPT,Tmp)                                         //    Tmp    =  INPUTS * CHAIN_DEPT
+  ADD8(Port,Tmp,Tmp)                                                  //    Tmp   +=  Port
+  INPUT_DEVICE(GET_NAME,Layer,Tmp,-1,@hName)                          //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page WriteLegoEv3TachoOutputDeviceX Write LEGO EV3 Tacho Output Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   WriteLegoEv3TachoOutputDevice                               //  void WriteLegoEv3TachoOutputDevice(Value,hName,Layer,Port,Data)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+  IO_8    Data                                                        //
+                                                                      //
+  DATA8   Output                                                      //
+  DATA8   Tmp                                                         //
+                                                                      //  {
+  RL8(Port,1,Output)                                                  //    Output  =  1 << Port                  
+  OUTPUT_SPEED(Layer,Output,Data)                                     //    OUTPUT_SPEED(Layer,Output,Data)
+  OUTPUT_START(Layer,Output)                                          //    OUTPUT_START(Layer,Output)  
+  MUL8(INPUTS,CHAIN_DEPT,Tmp)                                         //    Tmp    =  INPUTS * CHAIN_DEPT
+  ADD8(Port,Tmp,Tmp)                                                  //    Tmp   +=  Port
+  INPUT_DEVICE(READY_SI,Layer,Tmp,0,0,1,Value)                        //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Tmp,-1,@hName)                          //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PNxtDumbInputDeviceX Read Third Party NXT Dumb Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PNxtDumbInputDevice                                    //  void Read3PNxtDumbInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //
+  DATA32  Data32                                                      //
+                                                                      //  {
+  INPUT_DEVICE(READY_RAW,Layer,Port,1,0,1,Data32)                     //    INPUT_DEVICE(READY_RAW,Layer,Port,Type,Mode,DataSets,Data32)
+  DIV32(Data32,4,Data32)                                              //    calculate value specific for sensor
+  MOVE32_F(Data32,Value)                                              //    Value   =  Data32
+  STRINGS(DUPLICATE,'HT-FORCE',@hName)                                //    hName   =  "HT-FORCE"
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PNxtDumbInputDeviceX2 Read Third Party NXT Dumb Input Device (with "typedataXX.rcf")
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PNxtDumbInputDevice2                                   //  void Read3PNxtDumbInputDevice2(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //                   Type from "typedataXX.rcf" file
+  IO_8    Port                                                        //                                      |
+                                                                      //  {                                   |
+  INPUT_DEVICE(READY_SI,Layer,Port,53,0,1,Value)                      //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PIicInputDeviceX Read Third Party IIC Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PIicInputDevice                                        //  void Read3PIicInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //
+  DATA16  Cmd                                                         //
+  DATA32  Data                                                        //
+                                                                      //  {
+  MOVE16_16(0x4401,Cmd)                                               //    Cmd     =  0x4401
+  INPUT_DEVICE(SETUP,Layer,Port,1,0,2,Cmd,4,Data)                     //    INPUT_DEVICE(SETUP,Layer,Port,1,0,2,Cmd,4,Data)
+  MOVE32_F(Data,Value)                                                //    Value   =  Data
+  STRINGS(DUPLICATE,'HT-ANG-DEG',@hName)                              //    hName   =  "HT-ANG-DEG"
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PIicInputDeviceX2 Read Third Party IIC Input Device (V1.05)
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PIicInputDevice2                                       //  void Read3PIicInputDevice2(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //
+  DATA8   Status                                                      //
+                                                                      //  {
+  INPUT_DEVICE(SET_TYPEMODE,55,0,55,0,Status)                         //    INPUT_DEVICE(SET_TYPEMODE,55,0,55,0,Status)                        
+  JR_FALSE(Status,Exists)                                             //    if (Status)
+                                                                      //    { // If non existing -> insert string
+                                                                      //
+  INPUT_DEVICE(INSERT_TYPE,'55 0 HT-ANG-DEG 1 2 8 0 1 120 0x46 -360.0 360.0 -100 100 -360.0 360.0 100 0  deg HITECHNC AnglSnsr 3 0x014100000 2 0x01440000 4',1,Status)//                           
+                                                                      //                                                                  
+Exists:                                                               //    }     
+                                                                      //                                                                      
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PEv3DumbInputDeviceX Read Third Party EV3 Dumb Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PEv3DumbInputDevice                                    //  void Read3PEv3DumbInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,28,0,1,Value)                      //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Read3PEv3UartInputDeviceX Read Third Party EV3 UART Input Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Read3PEv3UartInputDevice                                    //  void Read3PEv3UartInputDevice(Value,hName,Layer,Port)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+                                                                      //  {
+  INPUT_DEVICE(READY_SI,Layer,Port,0,0,1,Value)                       //    INPUT_DEVICE(READY_SI,Layer,Port,Type,Mode,DataSets,Value)
+  INPUT_DEVICE(GET_NAME,Layer,Port,-1,@hName)                         //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
+//! \page Write3PEv3DumbOutputDeviceX Write Third Party EV3 Dumb Output Device
+//!
+//!
+//! \verbatim
+                                                                      //
+subcall   Write3PEv3DumbOutputDevice                                  //  void Write3PEv3DumbOutputDevice(Value,hName,Layer,Port,Data)
+{                                                                     //  
+  IO_F    Value                                                       //
+  IO_16   hName                                                       //
+  IO_8    Layer                                                       //
+  IO_8    Port                                                        //
+  IO_8    Data                                                        //
+                                                                      //
+  DATA8   Output                                                      //
+  DATA8   Tmp                                                         //
+                                                                      //  {
+  RL8(Port,1,Output)                                                  //    Output  =  1 << Port                  
+  OUTPUT_POWER(Layer,Output,Data)                                     //    OUTPUT_POWER(Layer,Output,Data)
+  OUTPUT_START(Layer,Output)                                          //    OUTPUT_START(Layer,Output)  
+  MOVE8_F(Data,Value)                                                 //    Value  =  Data
+  MUL8(INPUTS,CHAIN_DEPT,Tmp)                                         //    Tmp    =  INPUTS * CHAIN_DEPT
+  ADD8(Port,Tmp,Tmp)                                                  //    Tmp   +=  Port
+  INPUT_DEVICE(GET_NAME,Layer,Tmp,-1,@hName)                          //    INPUT_DEVICE(GET_NAME,Layer,Port,Length,@hName)
+}                                                                     //  }
+                                                                      //  \endverbatim
+
+
+
+
+
+
+
+
