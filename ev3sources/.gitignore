@@ -1,6 +1,8 @@
 CVS
 .cvsignore
 .metadata
+*.bin
+*.err
 *.d
 *.ko
 *.o

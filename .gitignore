@@ -1,12 +1,17 @@
 CVS
 .cvsignore
 .metadata
+.settings
 *.d
 *.ko
 *.o
+*.err
 *.so
 *.cmd
 *.mod.c
+*.bin
+*.orig
+*.swp
 .tmp_versions
 modules.order
 Module.symvers

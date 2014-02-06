@@ -476,6 +476,20 @@ typedef   enum
   opVIREO_STEP                = 0xE1, //     00001
   opVIREO_MEMACCESS           = 0xE2, //     00010
 
+  // For the 3rd party VMs
+  opDYNLOAD_VMLOAD						= 0xF0,
+  opDYNLOAD_VMEXIT						= 0xF1,
+  opDYNLOAD_ENTRY_0				  	= 0xF2,
+  opDYNLOAD_ENTRY_1						= 0xF3,
+  opDYNLOAD_ENTRY_2						= 0xF4,
+  opDYNLOAD_ENTRY_3						= 0xF5,
+  opDYNLOAD_ENTRY_4						= 0xF6,
+  opDYNLOAD_ENTRY_5						= 0xF7,
+  opDYNLOAD_ENTRY_6						= 0xF8,
+  opDYNLOAD_ENTRY_7						= 0xF9,
+  opDYNLOAD_ENTRY_8						= 0xFA,
+  opDYNLOAD_ENTRY_9						= 0xFB,
+
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111
 }
