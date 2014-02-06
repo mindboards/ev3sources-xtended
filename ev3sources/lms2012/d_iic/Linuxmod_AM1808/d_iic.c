@@ -1266,31 +1266,31 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
         if (IicPort[Port].Result == STOP)
         { // Ready for transfer
 
-        IicPort[Port].Repeat      =  (*pIicDat).Repeat;
-        IicPort[Port].Time        =  (*pIicDat).Time;
-        IicPort[Port].OutLength   =  (*pIicDat).WrLng;
-        if ((*pIicDat).RdLng < 0)
-        {
-          IicPort[Port].InLength    =  0 - (*pIicDat).RdLng;
-          IicPort[Port].Reverse     =  1;
-        }
-        else
-        {
-          IicPort[Port].InLength    =  (*pIicDat).RdLng;
-          IicPort[Port].Reverse     =  0;
-        }
+					IicPort[Port].Repeat      =  (*pIicDat).Repeat;
+					IicPort[Port].Time        =  (*pIicDat).Time;
+					IicPort[Port].OutLength   =  (*pIicDat).WrLng;
+					if ((*pIicDat).RdLng < 0)
+					{
+						IicPort[Port].InLength    =  0 - (*pIicDat).RdLng;
+						IicPort[Port].Reverse     =  1;
+					}
+					else
+					{
+						IicPort[Port].InLength    =  (*pIicDat).RdLng;
+						IicPort[Port].Reverse     =  0;
+					}
 
-        if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
-        {
-          IicPort[Port].OutLength =   IIC_DATA_LENGTH;
-        }
-        if (IicPort[Port].InLength > IIC_DATA_LENGTH)
-        {
-          IicPort[Port].InLength  =   IIC_DATA_LENGTH;
-        }
+					if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
+					{
+						IicPort[Port].OutLength =   IIC_DATA_LENGTH;
+					}
+					if (IicPort[Port].InLength > IIC_DATA_LENGTH)
+					{
+						IicPort[Port].InLength  =   IIC_DATA_LENGTH;
+					}
 
-        memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
-        memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
+					memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
+					memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
 
           IicPort[Port].Result        =  BUSY;
 
@@ -1331,6 +1331,33 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
     }
     break;
 
+    case IIC_READ_STATUS:
+    {
+      pIicDat                     = (IICDAT*)Pointer;
+      Port                        =  (*pIicDat).Port;
+      (*pIicDat).Result 					= IicPort[Port].Result;
+    }
+    break;
+
+    case IIC_READ_DATA:
+    {
+      pIicDat                     = (IICDAT*)Pointer;
+      Port                        =  (*pIicDat).Port;
+
+      if (IicPort[Port].Result == OK)
+      { // Data ok
+
+        memcpy((void*)&(*pIicDat).RdData[0],(void*)&IicPort[Port].InBuffer[0],IicPort[Port].InLength);
+
+        (*pIicDat).Result         =  OK;
+      }
+      else
+      { // Data error
+
+        (*pIicDat).Result         =  FAIL;
+      }
+    }
+    break;
   }
 
   return (0);

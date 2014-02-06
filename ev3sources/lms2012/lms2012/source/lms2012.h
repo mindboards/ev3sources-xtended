@@ -1155,6 +1155,8 @@ IICSTR;
 #define   IIC_READ_TYPE_INFO      _IOWR('i',3,IICCTL)
 #define   IIC_SETUP               _IOWR('i',5,IICDAT)
 #define   IIC_SET                 _IOWR('i',6,IICSTR)
+#define   IIC_READ_STATUS					_IOWR('i',7,IICDAT)
+#define   IIC_READ_DATA						_IOWR('i',8,IICDAT)
 
 
 
