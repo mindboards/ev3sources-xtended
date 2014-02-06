@@ -49,12 +49,15 @@ void dynloadInit()
 /*! \brief  dynLoadExit()
  *
  */
-void dynLoadExit()
+void dynloadVMExit()
 {
 	// Execute our entry (or should that be exit) point function,
   // this will clean up anything that requires it, in the VM
 	if (virtualMachineInfo.vm_exit != NULL)
 		(virtualMachineInfo.vm_exit)();
+
+	// Reinitialise everything to 0
+	dynloadInit();
 
 	// Close the .so
 	dlclose(virtualMachineInfo.soHandle);
@@ -66,8 +69,7 @@ void dynLoadExit()
  *  <hr size="1"/>
  *  <b>     opDYNLOAD_VMLOAD (VMINDEX)  </b>
  *
- *- Read device value in Percent\n
- *- Dispatch status unchanged
+ * - Load the selected VM
  *
  *  \param  (DATA8)   VMINDEX - VM Index, Robotc = 0, Labview = 1
  *  \return (DATA8)   RESULT  - OK if VM loaded ok FAIL if it did not.

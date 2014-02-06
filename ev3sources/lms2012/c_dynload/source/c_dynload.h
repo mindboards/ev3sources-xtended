@@ -43,7 +43,7 @@ struct tVirtualMachineInfo
 typedef void (*vmInitPointFunc)(struct tVirtualMachineInfo*);
 
 void dynloadInit();
-void dynLoadExit();
+void dynloadVMExit();
 void dynloadVMLoad();
 
 void dynloadEntry_0();

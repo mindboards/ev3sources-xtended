@@ -41,6 +41,8 @@ void vm_exit()
 	fprintf(stderr, "ROBOTC: %s called\n", __func__);
 #endif
 	// Here's where the cleanup is done, dynamically allocated memory, buffers, that sort of thing
+
+
 }
 
 
