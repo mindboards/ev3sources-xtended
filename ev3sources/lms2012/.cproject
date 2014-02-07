@@ -35,8 +35,9 @@
 									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/c++/4.3.3/tr1"/>
 									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/include"/>
 									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/mach-davinci/include"/>
+									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/lms2012/lms2012/source"/>
 								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.574408402" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.574408402" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.691811343" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
@@ -61,7 +62,7 @@
 									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-03.20.00.13/arch/arm/mach-davinci/include"/>
 									<listOptionValue builtIn="false" value="/home/developer/ev3_ni_rm_dev/ev3sources/extra/linux-devkit/arm-none-linux-gnueabi/usr/include/dbus-1.0"/>
 								</option>
-								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.392879951" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols"/>
+								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.392879951" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols"/>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1049357036" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
