@@ -19,7 +19,7 @@ my ($offset_addr1, $file1, $offset_addr2, $file2, $offset_addr3, $file3, $offset
 if(!$output_filename)
 {
    $offset_addr1 = "0x0";
-   $file1 = "./uBoot";
+   $file1 = "./uBoot.keep";
    $offset_addr2 = "0x50000";
    $file2 = "./uImage";
    $offset_addr3 = "0x250000";
