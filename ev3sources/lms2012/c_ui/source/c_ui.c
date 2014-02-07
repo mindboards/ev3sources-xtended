@@ -1811,8 +1811,6 @@ void      cUiUpdateTopline(void)
     // Show brick name
     cComGetBrickName(NAME_LENGTH + 1,Name);
 
-    strcat(Name, " (DYNLOAD)");
-
     X1  =  dLcdGetFontWidth(SMALL_FONT);
     X2  =  LCD_WIDTH / X1;
     X2 -=  strlen((char*)Name);
