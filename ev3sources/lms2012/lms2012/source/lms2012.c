@@ -59,6 +59,7 @@
  */
 
 #include  "c_dynload.h"
+#include  "c_extend.h"
 #include  "EV3_Entry.h"
 
 #include  "lms2012.h"
@@ -2899,6 +2900,7 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opDYNLOAD_ENTRY_7]			= 	&dynloadEntry_7,
   [opDYNLOAD_ENTRY_8]			= 	&dynloadEntry_8,
   [opDYNLOAD_ENTRY_9]			= 	&dynloadEntry_9,
+  [opEXTEND]							=		&extendEntry,
   [opTST]                 =   &Tst
 };
 

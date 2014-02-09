@@ -15,7 +15,7 @@ include rules.mk
 # lms2012 program.
 #
 
-LIBS = c_com c_input c_memory c_output c_sound c_ui ni_ev3prims c_dynload 
+LIBS = c_com c_input c_memory c_output c_sound c_ui ni_ev3prims c_dynload c_extend
 
 robotcvm: 
 	$(MAKE) -C $(BASE)/c_robotcvm/Linuxlib_$(ARCH)

@@ -490,6 +490,9 @@ typedef   enum
   opDYNLOAD_ENTRY_8						= 0xFA,
   opDYNLOAD_ENTRY_9						= 0xFB,
 
+  // Extended opcodes
+  opEXTEND										= 0xFC,
+
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111
 }
@@ -989,6 +992,22 @@ typedef   enum
 STRING_SUBCODE;
 
 //! \endverbatim
+
+//! \page stringsubcode Specific command parameter
+//!
+//!
+//! \verbatim
+//!
+
+typedef   enum
+{
+	EXT_IIC_READ_DATA		= 1,
+	EXT_IIC_WRITE_DATA 	= 2,
+	EXT_IIC_READ_STATUS = 3,
+
+  EXTEND_SUBCODES
+}
+EXTEND_SUBCODE;
 
 
 /*! \page types
