@@ -22,6 +22,8 @@
 #ifndef C_OUTPUT_H_
 #define C_OUTPUT_H_
 
+UBYTE      cOutputPackParam(DATA32 Val, DATA8 *pStr);
+
 RESULT    cOutputInit(void);
 
 RESULT    cOutputOpen(void);

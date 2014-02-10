@@ -25,7 +25,7 @@ extern "C" {
 #include "c_memory.h"
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 #include "StringUtilities.h"
 
 using namespace Vireo;
@@ -33,16 +33,22 @@ using namespace Vireo;
 VIVM_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
 {
     TempStackCStringFromString fileName(_Param(0));
-    Int16    *handle   = _ParamPointer(1); // reference
-    Int32    *size     = _ParamPointer(2); // reference
+    Int16 handle;
+    Int32 size;
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
     if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
-        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_READ, FilenameBuf, handle, size);
+        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_READ, FilenameBuf, &handle, &size);
     }
+
+    if (_ParamPointer(1))
+        _Param(1) = handle;
+    if (_ParamPointer(2))
+        _Param(2) = size;
+
     SetDispatchStatus(DspStat);
 
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
@@ -51,7 +57,7 @@ VIVM_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
 VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
 {
     TempStackCStringFromString fileName(_Param(0));
-    Int16    *handle   = _ParamPointer(1); // reference
+    Int16 handle;
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
@@ -59,8 +65,12 @@ VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
     Int32 ISize;
     if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
-        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_WRITE, FilenameBuf, handle, &ISize);
+        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_WRITE, FilenameBuf, &handle, &ISize);
     }
+
+    if (_ParamPointer(1))
+        _Param(1) = handle;
+
     SetDispatchStatus(DspStat);
 
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
@@ -69,7 +79,7 @@ VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
 VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
 {
     TempStackCStringFromString fileName(_Param(0));
-    Int16    *handle   = _ParamPointer(1); // reference
+    Int16 handle;
 
     DSPSTAT DspStat = BUSYBREAK;
     PRGID PrgId = CurrentProgramId();
@@ -77,8 +87,12 @@ VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
     Int32 ISize;
     if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
     {
-        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_APPEND, FilenameBuf, handle, &ISize);
+        DspStat = cMemoryOpenFile(PrgId, OPEN_FOR_APPEND, FilenameBuf, &handle, &ISize);
     }
+
+    if (_ParamPointer(1))
+        _Param(1) = handle;
+
     SetDispatchStatus(DspStat);
 
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
@@ -94,11 +108,15 @@ VIVM_FUNCTION_SIGNATURE1(FileClose, Int16)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArrayCoreRef)
 {
     Int16 handle = _Param(0);
     Int32 length = _Param(1);
-    TypedArray1dCoreRef data = _Param(2); // uInt8 reference
+    TypedArrayCoreRef data;
+    if (_ParamPointer(2))
+        data = _Param(2);
+    else
+        return _NextInstruction();
 
     PRGID PrgId = CurrentProgramId();
     Int32 ISize;
@@ -137,10 +155,10 @@ VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArray1dCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArrayCoreRef)
 {
     Int16 handle = _Param(0);
-    TypedArray1dCoreRef data = _Param(1); // uInt8
+    TypedArrayCoreRef data = _Param(1); // uInt8
     Int32 length = data->Length();
 
     PRGID PrgId = CurrentProgramId();
@@ -197,17 +215,22 @@ VIVM_FUNCTION_SIGNATURE1(FileRemove, StringRef)
 VIVM_FUNCTION_SIGNATURE3(FileResolveHandle, StringRef, Int16, Int8)
 {
     TempStackCStringFromString fileName(_Param(0));
-    Int16 *handle = _ParamPointer(1); // reference
-    Int8  *write  = _ParamPointer(2); // reference
+    Int16 handle;
+    Int8  write;
 
     PRGID PrgId = CurrentProgramId();
     char FilenameBuf[vmFILENAMESIZE];
     DSPSTAT DspStat;
 
     if (ConstructFilename(PrgId, fileName.BeginCStr(), FilenameBuf, "") == OK)
-        DspStat = cMemoryGetFileHandle(PrgId, FilenameBuf, handle, write);
+        DspStat = cMemoryGetFileHandle(PrgId, FilenameBuf, &handle, &write);
     else
-        *handle = *write = -1;
+        handle = write = -1;
+
+    if (_ParamPointer(1))
+        _Param(1) = handle;
+    if (_ParamPointer(2))
+        _Param(2) = write;
 
     return _NextInstruction();
 }

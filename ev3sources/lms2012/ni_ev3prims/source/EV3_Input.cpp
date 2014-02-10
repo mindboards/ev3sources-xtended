@@ -22,7 +22,7 @@ extern "C" {
 #include "c_input.h"
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 #include "StringUtilities.h"
 
 using namespace Vireo;
@@ -31,21 +31,26 @@ VIVM_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
-    UInt8 *type  = _ParamPointer(2); // reference
-    UInt8 *mode  = _ParamPointer(3); // reference
+    UInt8 type;
+    UInt8 mode;
 
     DATA8 device = no + (layer * INPUT_PORTS);
 
     if (device < DEVICES)
     {
-        *type = InputInstance.DeviceType[device];
-        *mode = InputInstance.DeviceMode[device];
+        type = InputInstance.DeviceType[device];
+        mode = InputInstance.DeviceMode[device];
     }
     else
     {
-        *type = TYPE_NONE;
-        *mode = 0;
+        type = TYPE_NONE;
+        mode = 0;
     }
+
+    if (_ParamPointer(2))
+        _Param(2) = type;
+    if (_ParamPointer(3))
+        _Param(3) = mode;
 
     return _NextInstruction();
 }
@@ -53,11 +58,11 @@ VIVM_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
 // Functionally equivalent to opINPUT_READ/cInputRead
 VIVM_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
 {
-    UInt8  layer = _Param(0);
-    UInt8  no    = _Param(1);
-    UInt8  type  = _Param(2);
-    UInt8  mode  = _Param(3);
-    UInt8 *pct   = _ParamPointer(4); // reference
+    UInt8 layer = _Param(0);
+    UInt8 no    = _Param(1);
+    UInt8 type  = _Param(2);
+    UInt8 mode  = _Param(3);
+    UInt8 pct;
 
     DATA8 device = no + (layer * INPUT_PORTS);
 
@@ -65,19 +70,27 @@ VIVM_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
     {
         cInputSetType(device, type, mode, __LINE__);
     }
-    *pct = cInputReadDevicePct(device,0,0,NULL);
+    pct = cInputReadDevicePct(device,0,0,NULL);
+
+    if (_ParamPointer(4))
+        _Param(4) = pct;
 
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
     UInt8  type  = _Param(2);
     UInt8  mode  = _Param(3);
     UInt8  count  = _Param(4);
-    TypedArray1dCoreRef data = _Param(5); // single reference
+    TypedArrayCoreRef data;
+
+    if (_ParamPointer(5))
+        data = _Param(5);
+    else
+        return _NextInstruction();
 
     DATA8 device = no + (layer * INPUT_PORTS);
     cInputSetType(device, type, mode, __LINE__);
@@ -94,15 +107,21 @@ VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedAr
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8 layer = _Param(0);
     UInt8 no    = _Param(1);
     UInt8 count = _Param(2);
-    TypedArray1dCoreRef data = _Param(3); // single reference
+    TypedArrayCoreRef data;
+
+    if (_ParamPointer(3))
+        data = _Param(3);
+    else
+        return _NextInstruction();
 
     DATA8 device = no + (layer * INPUT_PORTS);
     data->Resize(count);
+
 
     for (UInt8 i = 0; i < count; i++)
     {
@@ -115,13 +134,13 @@ VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
     UInt8  type  = _Param(2);
     UInt8  count = _Param(3);
-    TypedArray1dCoreRef data = _Param(4); // single
+    TypedArrayCoreRef data = _Param(4); // single
 
     DATA8 device = no + (layer * INPUT_PORTS);
     data->Resize(count);
@@ -133,18 +152,32 @@ VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArray1d
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(InputIicSetup, UInt8, UInt8, TypedArray1dCoreRef, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE4(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, TypedArrayCoreRef)
 {
     UInt8  layer  = _Param(0);
     UInt8  no     = _Param(1);
-    TypedArray1dCoreRef command  = _Param(2); // uInt8
-    TypedArray1dCoreRef response = _Param(3); // uInt8 reference
+    TypedArrayCoreRef command  = _Param(2); // uInt8
+    DATA8 responseLength;
+    DATA8 *responseBegin;
+
+    if (_ParamPointer(3))
+    {
+        TypedArrayCoreRef response = _Param(3);
+        responseLength = response->Length();
+        responseBegin = (DATA8 *) response->BeginAt(0);
+    }
+    else
+    {
+        responseLength = 0;
+        responseBegin = 0;
+    }
 
     DATA8 device = no + (layer * INPUT_PORTS);
     UInt8  repeat = 1;
     UInt16 time   = 0;
+    RESULT result = BUSY;
 
-    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), response->Length(), (DATA8 *) response->BeginAt(0)))
+    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), responseLength, responseBegin, &result))
         return _this;
     else
         return _NextInstruction();

@@ -46,6 +46,7 @@ public :
     static TypeRef Define(TypeManager& tm, SubString* name, SubString* wrappedTypeString);
     static void DefineCustomPointerTypeWithValue(TypeManager& tm, const char* name, void* instruction, const char* typeString,PointerTypeEnum pointerType);
     static void DefineCustomValue(TypeManager& tm, const char* name, Int32 value, const char* typeString);
+    static void DefineCustomAlloc(TypeManager& tm, const char* name, IAlloc* pIAlloc, const char* typeString);
 
     TypeDefiner(TypeDefinerCallback pCallback, const char* pNameSapce);
 };
@@ -76,6 +77,9 @@ static void TOKENPASTE2(DefineTypes, _section_, __LINE__) (TypeManager& tm) {
 
 #define VIREO_DEFINE_GENERIC(_name_, _typeTypeString_, _genericEmitProc_) \
 (TypeDefiner::DefineCustomPointerTypeWithValue(tm, #_name_, (void*)_genericEmitProc_, _typeTypeString_, kPTGenericFunctionCodeGen));
+
+#define VIREO_DEFINE_CUSTOM_ALLOC(_name_, _type_, _allocClass_) \
+(TypeDefiner::DefineCustomAlloc(tm, #_name_, _allocClass_, _type_));
 
 #endif // TypeDefiner_h
 

@@ -60,13 +60,38 @@ struct InstructionCore
 	InstructionCore* _next;
 #endif
 };
+    
+//------------------------------------------------------------
+// A struct used for accessing any number or arguments in a non type strict way.
+struct GenericInstruction : public InstructionCore
+{
+    void* _args[1];  // may be zero or more elements
+};
 
+//------------------------------------------------------------
+// Struct for var arg functions
+struct VarArgInstruction : public InstructionCore
+{
+    size_t _count;   // may be zero or more arguments in addition to the count
+};
+    
+//------------------------------------------------------------
+// Structs for various static argument count instrucitons
 struct Instruction0 : public InstructionCore
 {
 };
 
-//------------------------------------------------------------
-// Templates for making type specific instrucitons 
+// Each struct has a Next() method that can be used out side of the class to
+// determine what the 'next' instruction is. If the instruction is derived
+// from and extended it must be overridden, or else an incorrect result will
+// be returned.
+
+#ifdef VIREO_PACKED_INSTRUCTIONS
+    #define NEXT_INSTRUCTION_METHOD()   inline InstructionCore* Next() { return this + 1; }
+#else
+    #define NEXT_INSTRUCTION_METHOD()   inline InstructionCore* Next() { return this->_next; }
+#endif
+
 template <class type0>
 struct Instruction1 : public Instruction0
 {
@@ -77,46 +102,42 @@ template <class type0, class type1>
 struct Instruction2 : public Instruction1<type0>
 {
     type1* _p1;
+    NEXT_INSTRUCTION_METHOD()
 };
 
 template <class type0, class type1, class type2>
 struct Instruction3 : public Instruction2<type0, type1>
 {
     type2* _p2;
+    NEXT_INSTRUCTION_METHOD()
 };
 
 template <class type0, class type1, class type2, class type3>
 struct Instruction4 : public Instruction3<type0, type1, type2>
 {
     type3* _p3;
+    NEXT_INSTRUCTION_METHOD()
 };
 
 template <class type0, class type1, class type2, class type3, class type4>
 struct Instruction5 : public Instruction4<type0, type1, type2, type3>
 {
     type4* _p4;
+    NEXT_INSTRUCTION_METHOD()
 };
 
 template <class type0, class type1, class type2, class type3, class type4, class type5>
 struct Instruction6 : public Instruction5<type0, type1, type2, type3, type4>
 {
     type5* _p5;
+    NEXT_INSTRUCTION_METHOD()
 };
 
 template <class type0, class type1, class type2, class type3, class type4, class type5, class type6>
 struct Instruction7 : public Instruction6<type0, type1, type2, type3, type4, type5>
 {
     type6* _p6;
-};
-
-struct VarArgInstruction : public InstructionCore
-{
-    size_t _count;
-};
-
-struct GenericInstruction : public InstructionCore
-{
-	void* _args[1];  // may be zero or more elements
+    NEXT_INSTRUCTION_METHOD()
 };
 
 //------------------------------------------------------------
@@ -124,7 +145,7 @@ struct GenericInstruction : public InstructionCore
     // Standard VarArg functions have the param count in the begining of the instruciton.
     #define _NextInstructionV() ( (InstructionCore*) ((size_t*)((VarArgInstruction*)_this + 1) + (int)_this->_count) )
     #define _NextInstruction() (_this + 1)
-    //TODO tail calls dont work in VectorSnippers
+    //TODO tail calls don't work in VectorSnippets
     // #define _TailCallNextInstruction() (_this + 1)->_function(_this+1)
 #else
     #define _NextInstructionV() (_this->_next)
@@ -133,19 +154,21 @@ struct GenericInstruction : public InstructionCore
     // #define _TailCallNextInstruction() (_this->_next->_function(_this->_next))
 #endif
 
+//------------------------------------------------------------
+// Macros to define/access arguments bassed by pointers in the snippet
+#define _ParamDef(t, n)         t* _p##n
 #define _Param(n)               (*_PROGMEM_PTR(_this, _p##n))
 #define _ParamPointer(n)        (_PROGMEM_PTR(_this, _p##n))
-#define _ParamVarArgCount()     ((int)_PROGMEM_PTR(_this, _count))
-#define _ParamDef(t, n) t* _p##n
+
+// Macros to define/access arguments stored directly in the snippet
 #define _ParamImmediateDef(t, n) t _pi##n
 #define _ParamImmediate(n)      (_PROGMEM_PTR(_this, _pi##n))
 
-#ifdef VIVM_PERF
-#define VIVM_PERF_BODY	_this->_executionCount++;
-#else
-#define VIVM_PERF_BODY
-#endif
-
+// Macro to access the arguments count variable in a variable argument functions.
+// var-arg funcions must derive from VarArgInstruction
+// so the count will be the first argument in the snippet
+#define _ParamVarArgCount()     ((int)_PROGMEM_PTR(_this, _count))
+    
 #ifdef _DEBUG
 #define VIVM_TAIL_CALLS_USE_JMP 0
 #else
@@ -161,62 +184,43 @@ struct GenericInstruction : public InstructionCore
 #endif
 
 //------------------------------------------------------------
-//  Platform specifc high performance single parameter function declaration
-//
-//  Each Macro expands into the following
-//      1. Instruction Fucntion prototype for that method
-//      2. Type specific class that derives from from template instantiated to the specific parameter types
-//      3. An init method that is used at least experiementaly on static allocation targets (e.g. arduino)
-//      4. The begining of the function it self.  (prototype is necessary for the init method.
-//
+// Macros to make type strict single parameter function declarations for snippets
+// that take arguments passed in a param block
+#define VIVM_FUNCTION_SIGNATURET(_name_, t)  \
+    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (t* _this _PROGMEM)
 
-
-#define VIVM_FUNCTION_SIGNATURET(_name_, t)  extern InstructionCore* VIVM_FASTCALL _name_ (t* _this)
+#define VIVM_FUNCTION_SIGNATUREV(_name_, _type_) \
+    extern InstructionCore* VIVM_FASTCALL _name_ (_type_* _this _PROGMEM)
 
 #define VIVM_FUNCTION_SIGNATURE0(_name_) \
-    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (InstructionCore* _this _PROGMEM);\
-    struct  _name_##Struct : public InstructionCore {}; \
     VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (InstructionCore* _this _PROGMEM)
 
 #define VIVM_FUNCTION_SIGNATURE1(_name_, t0) \
-    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction1<t0>* _this _PROGMEM ); \
-    struct _name_##Struct : public Instruction1<t0>  {\
-    void _Init(t0 *p0) {_function = (InstructionFunction)_name_; _p0 = p0;} }; \
     VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction1<t0>* _this _PROGMEM)
 
 #define VIVM_FUNCTION_SIGNATURE2(_name_, t0, t1) \
-    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction2<t0, t1>* _this _PROGMEM);\
-    struct _name_##Struct : public Instruction2<t0, t1> { \
-    void _Init(t0 *p0, t1 *p1) {_function = (InstructionFunction)_name_; _p0 = p0; _p1 = p1;} }; \
     VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction2<t0, t1>* _this _PROGMEM)
 
 #define VIVM_FUNCTION_SIGNATURE3(_name_, t0, t1, t2) \
-    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction3<t0, t1, t2>* _this _PROGMEM);\
-    struct _name_##Struct : Instruction3<t0, t1, t2> { \
-    void _Init(t0 *p0, t1 *p1, t2 *p2) {_function = (InstructionFunction)_name_; _p0 = p0; _p1 = p1; _p2 = p2;} }; \
     VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction3<t0, t1, t2>* _this _PROGMEM)
 
-#define VIVM_FUNCTION_SIGNATUREV(_name_, _type_) \
-    static InstructionCore* VIVM_FASTCALL _name_ (_type_* _this)
-
 #define VIVM_FUNCTION_SIGNATURE4(_name_, t0, t1, t2, t3) \
-    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction4<t0, t1, t2, t3>* _this _PROGMEM);\
-    struct _name_##Struct : Instruction4<t0, t1, t2, t3> { \
-    void _Init(t0 *p0, t1 *p1, t2 *p2, t3 *p3) {_function = (InstructionFunction)_name_; _p0 = p0; _p1 = p1; _p2 = p2; _p3 = p3;} }; \
     VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction4<t0, t1, t2, t3>* _this _PROGMEM)
 
-#define VIVM_FUNCTION_SIGNATURE5(_name_, t0, t1, t2, t3, t4)  extern InstructionCore* VIVM_FASTCALL _name_ (Instruction5<t0, t1, t2, t3, t4>* _this)
+#define VIVM_FUNCTION_SIGNATURE5(_name_, t0, t1, t2, t3, t4) \
+    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction5<t0, t1, t2, t3, t4>* _this _PROGMEM)
 
-#define VIVM_FUNCTION_SIGNATURE6(_name_, t0, t1, t2, t3, t4, t5)  extern InstructionCore* VIVM_FASTCALL _name_ (Instruction6<t0, t1, t2, t3, t4, t5>* _this)
+#define VIVM_FUNCTION_SIGNATURE6(_name_, t0, t1, t2, t3, t4, t5) \
+    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction6<t0, t1, t2, t3, t4, t5>* _this _PROGMEM)
 
-#define VIVM_FUNCTION_SIGNATURE7(_name_, t0, t1, t2, t3, t4, t5, t6)  extern InstructionCore* VIVM_FASTCALL _name_ (Instruction7<t0, t1, t2, t3, t4, t5, t6>* _this)
+#define VIVM_FUNCTION_SIGNATURE7(_name_, t0, t1, t2, t3, t4, t5, t6) \
+    VIVM_INSTRUCTION_LINKAGE InstructionCore* VIVM_FASTCALL _name_ (Instruction7<t0, t1, t2, t3, t4, t5, t6>* _this _PROGMEM)
 
 //------------------------------------------------------------
 #define DECLARE_VIVM_PRIMITIVE0(_name_, _body_)	\
 VIVM_FUNCTION_SIGNATURE0(_name_)				\
 {										\
 VIVM_TRACE_FUNCTION(#_name_)            \
-VIVM_PERF_BODY							\
 (_body_);								\
 return _NextInstruction();				\
 }
@@ -225,7 +229,6 @@ return _NextInstruction();				\
 VIVM_FUNCTION_SIGNATURE1(_name_, _t0_)				\
 {										\
 VIVM_TRACE_FUNCTION(#_name_)            \
-VIVM_PERF_BODY							\
 (_body_);								\
 return _NextInstruction();				\
 }
@@ -234,7 +237,6 @@ return _NextInstruction();				\
 VIVM_FUNCTION_SIGNATURE2(_name_, _t0_, _t1_)				\
 {										\
 VIVM_TRACE_FUNCTION(#_name_)            \
-VIVM_PERF_BODY							\
 (_body_);								\
 return _NextInstruction();				\
 }
@@ -243,7 +245,6 @@ return _NextInstruction();				\
 VIVM_FUNCTION_SIGNATURE3(_name_, _t0_, _t1_, _t2_)				\
 {										\
 VIVM_TRACE_FUNCTION(#_name_)            \
-VIVM_PERF_BODY							\
 (_body_);								\
 return _NextInstruction();              \
 }
@@ -252,7 +253,6 @@ return _NextInstruction();              \
 VIVM_FUNCTION_SIGNATURE4(_name_, _t0_, _t1_, _t2_, _t3_)				\
 {										\
 VIVM_TRACE_FUNCTION(#_name_)            \
-VIVM_PERF_BODY							\
 (_body_);								\
 return _NextInstruction();				\
 }
@@ -264,7 +264,6 @@ return _NextInstruction();				\
 #define DECLARE_VIVM_CONDITIONAL_BRANCH(_name_, _t1_, _t2_, _test_) \
 VIVM_FUNCTION_SIGNATURE3(_name_, InstructionCore, _t1_, _t2_) \
 {									\
-VIVM_PERF_BODY                      \
 if (_test_)                         \
 {									\
 return _this->_p0;                  \
@@ -279,7 +278,6 @@ return VIVM_TAIL(_NextInstruction()); \
 #define DECLARE_VIVM_CONDITIONAL_BRANCH1(_name_, _t1_,  _test_) \
 VIVM_FUNCTION_SIGNATURE2(_name_, InstructionCore, _t1_) \
 {									\
-VIVM_PERF_BODY                      \
 if (_test_)                         \
 {									\
 return _this->_p0;                  \

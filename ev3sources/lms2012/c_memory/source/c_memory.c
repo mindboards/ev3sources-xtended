@@ -650,7 +650,7 @@ RESULT    cMemoryCheckFilename(char *pFilename,char *pPath,char *pName,char *pEx
 }
 
 
-RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,char *pDefaultExt)
+RESULT    ConstructFilename(PRGID PrgId,char *pFilename,char *pName,const char *pDefaultExt)
 {
   RESULT  Result = FAIL;
   char    Path[vmPATHSIZE];
@@ -1164,15 +1164,6 @@ static char Delimiter[][3] =
   [DEL_COMMA]     = ",",
   [DEL_LINEFEED]  = "\n",
   [DEL_CRLF]      = "\r\n",
-};
-
-
-enum
-{
-  OPEN_FOR_WRITE    = 1,
-  OPEN_FOR_APPEND   = 2,
-  OPEN_FOR_READ     = 3,
-  OPEN_FOR_LOG      = 4
 };
 
 

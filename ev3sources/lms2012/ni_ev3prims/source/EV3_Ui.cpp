@@ -27,7 +27,7 @@ extern "C" {
 #include "c_memory.h"
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 #include "StringUtilities.h"
 
 using namespace Vireo;
@@ -84,12 +84,12 @@ VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
     UInt8     color  = _Param(0);
     UInt16    x      = _Param(1);
     UInt16    y      = _Param(2);
-    StringRef string = _Param(3);
+    TempStackCStringFromString string(_Param(3));
 
     UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
-        dLcdDrawText((*UiInstance.pLcd).Lcd, color, x, y, UiInstance.Font, (DATA8 *) string->Begin());
+        dLcdDrawText((*UiInstance.pLcd).Lcd, color, x, y, UiInstance.Font, (DATA8 *) string.BeginCStr());
         UiInstance.ScreenBusy = 1;
     }
 
@@ -101,7 +101,7 @@ VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
     UInt8     color    = _Param(0);
     UInt16    x        = _Param(1);
     UInt16    y        = _Param(2);
-    StringRef fileName = _Param(3);
+    TempStackCStringFromString fileName(_Param(3));
 
     UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
@@ -109,11 +109,11 @@ VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
         char pathName[MAX_FILENAME_SIZE];
         UBYTE pBmp[LCD_BUFFER_SIZE];
 
-        if (*((Utf8Char *) fileName->Begin()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
         }
-        sprintf(pathName, "%s%s", pathName, fileName->Begin());
+        sprintf(pathName, "%s%s", pathName, fileName.BeginCStr());
 
         if (cMemoryGetImage((DATA8 *) pathName, LCD_BUFFER_SIZE, pBmp) == OK)
         {
@@ -207,10 +207,13 @@ VIVM_FUNCTION_SIGNATURE2(UiButtonPressed, Int8, Int8)
     Int8 button = _Param(0);
     Int8 *state = _ParamPointer(1); // reference
 
-    if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
-        *state = cUiGetPress(button);
-    else
-        *state = 0;
+    if (state)
+    {
+        if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
+            *state = cUiGetPress(button);
+        else
+            *state = 0;
+    }
 
     return _NextInstruction();
 }
@@ -219,7 +222,8 @@ VIVM_FUNCTION_SIGNATURE1(UiGetVBattery, Single)
 {
     Single *voltage = _ParamPointer(0); // reference
 
-    *voltage = UiInstance.Vbatt;
+    if (voltage)
+        *voltage = UiInstance.Vbatt;
 
     return _NextInstruction();
 }

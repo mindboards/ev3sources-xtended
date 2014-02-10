@@ -81,6 +81,8 @@ const SWORD IndexTable[INDEX_TABLE_ENTRIES] = {
      -1, -1, -1, -1, 2, 4, 6, 8
    };
 
+void      cSoundInitAdPcm(void);
+
 RESULT    cSoundInit(void);
 
 RESULT    cSoundOpen(void);

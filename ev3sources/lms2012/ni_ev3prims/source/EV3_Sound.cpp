@@ -25,7 +25,7 @@ extern "C" {
 #include "c_sound.h"
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 #include "StringUtilities.h"
 
 using namespace Vireo;
@@ -101,7 +101,7 @@ VIVM_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
 VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
 {
     UInt8     Volume   = _Param(0);
-    StringRef fileName = _Param(1);
+    TempStackCStringFromString fileName(_Param(1));
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
@@ -126,16 +126,16 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
     UBYTE Tmp1;
     UBYTE Tmp2;
 
-    if (fileName->Begin())
+    if (fileName.BeginCStr())
     {
         pathName[0] = 0;
-        if (*((Utf8Char *) fileName->Begin()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
-            sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName->Begin());
+            sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName.BeginCStr());
         }
         else
-            sprintf(SoundInstance.PathBuffer, "%s.rsf", fileName->Begin());
+            sprintf(SoundInstance.PathBuffer, "%s.rsf", fileName.BeginCStr());
 
         SoundInstance.hSoundFile = open(SoundInstance.PathBuffer, O_RDONLY, 0666);
         if (SoundInstance.hSoundFile >= 0)
@@ -183,7 +183,7 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
 VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
 {
     UInt8     Volume   = _Param(0);
-    StringRef fileName = _Param(1);
+    TempStackCStringFromString fileName(_Param(1));
 
     Volume = Volume > 0   ? Volume : 0;
     Volume = Volume < 100 ? Volume : 100;
@@ -208,16 +208,16 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
     UBYTE Tmp1;
     UBYTE Tmp2;
 
-    if (fileName->Begin())
+    if (fileName.BeginCStr())
     {
         pathName[0] = 0;
-        if (*((Utf8Char *) fileName->Begin()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
-            sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName->Begin());
+            sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName.BeginCStr());
         }
         else
-            sprintf(SoundInstance.PathBuffer, "%s.rsf", fileName->Begin());
+            sprintf(SoundInstance.PathBuffer, "%s.rsf", fileName.BeginCStr());
 
         SoundInstance.hSoundFile = open(SoundInstance.PathBuffer, O_RDONLY, 0666);
         if (SoundInstance.hSoundFile >= 0)
@@ -266,7 +266,8 @@ VIVM_FUNCTION_SIGNATURE1(SoundTest, UInt8)
 {
     UInt8 *isBusy = _ParamPointer(0); // reference
 
-    *isBusy = ((*SoundInstance.pSound).Status == BUSY);
+    if (isBusy)
+        *isBusy = ((*SoundInstance.pSound).Status == BUSY);
 
     return _NextInstruction();
 }

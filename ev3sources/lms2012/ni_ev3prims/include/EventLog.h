@@ -32,12 +32,11 @@ namespace Vireo {
 
 class EventLog {
 private:
-    Boolean         _traceEnabled;
     StringRef       _errorLog;
     Int32           _softErrorCount;
     Int32           _hardErrorCount;
     Int32           _warningCount;
-    
+    Boolean         _traceEnabled;
 public:
     enum EventSeverity {
         // Diagnostic trace notice, these are only recorded is tracing is turned on.
@@ -58,14 +57,12 @@ public:
     };
     
     EventLog(StringRef stringRef);
-    Boolean TraceEnabled() { return _traceEnabled; }
-    void SetTraceEnabled(Boolean value) { _traceEnabled = value; }
-    Int32 TotalErrorCount() { return _softErrorCount + _hardErrorCount; };
-    Int32 HardErrorCount() { return  _hardErrorCount; };
-    void LogEvent(EventSeverity severity, const char *message, SubString *extra = null);
+    Int32 TotalErrorCount()                 { return _softErrorCount + _hardErrorCount; };
+    Int32 HardErrorCount()                  { return  _hardErrorCount; };
+    Boolean TraceEnabled()                  { return _traceEnabled; }
+    void SetTraceEnabled(Boolean value)     { _traceEnabled = value; }
+    void LogEvent(EventSeverity severity, Int32 lineNumber, const char *message, SubString *extra = null);
 };
-
-
 
 } // namespace Vireo
 

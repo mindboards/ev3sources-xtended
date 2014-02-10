@@ -50,16 +50,159 @@ enum TokenTraits
 };
 
 //------------------------------------------------------------
+enum AsciiCharTraitsEnum {
+    kACT_Id          = 0x01,
+    kACT_Symbol      = 0x02,
+    kACT_Number      = 0x04,
+    kACT_Letter      = 0x08,
+    kACT_Space       = 0x10,
+    kACT_Eol         = 0x20,
+};
+
+const UInt8 AsciiCharTraits[] =
+{
+    0,      //0
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    /* 09 ht*/  kACT_Space,
+    /* 0A lf*/  kACT_Space | kACT_Eol,
+    /* 0B vt*/  kACT_Space,
+    /* 0C ff*/  kACT_Space,
+    /* 0D cr*/  kACT_Space | kACT_Eol,
+    0,
+    0,
+    0,      //16
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    /* 20    */   kACT_Space,   //32
+    /* 21 !  */   kACT_Symbol,
+    /* 22 "  */   0,
+    /* 23 #  */   kACT_Symbol,
+    /* 24 $  */   kACT_Symbol,
+    /* 25 %  */   kACT_Symbol,
+    /* 26 &  */   kACT_Symbol,
+    /* 27 '  */   0,
+    /* 28 (  */   kACT_Symbol,
+    /* 29 )  */   kACT_Symbol,
+    /* 2A *  */   kACT_Symbol,
+    /* 2B +  */   kACT_Id,
+    /* 2C ,  */   kACT_Symbol,
+    /* 2D -  */   kACT_Id,
+    /* 2E .  */   kACT_Symbol,
+    /* 2F /  */   kACT_Symbol,
+    /* 30 0  */   kACT_Id,      //48
+    /* 31 1  */   kACT_Id,
+    /* 32 2  */   kACT_Id,
+    /* 33 3  */   kACT_Id,
+    /* 34 4  */   kACT_Id,
+    /* 35 5  */   kACT_Id,
+    /* 36 6  */   kACT_Id,
+    /* 37 7  */   kACT_Id,
+    /* 38 8  */   kACT_Id,
+    /* 39 9  */   kACT_Id,
+    /* 3A :  */   0,
+    /* 3B ;  */   0,
+    /* 3C <  */   0,
+    /* 3D =  */   0,
+    /* 3E >  */   0,
+    /* 3F ?  */   0,
+    /* 40 @  */   0,      //64
+    /* 41 A  */   kACT_Id,
+    /* 42 B  */   kACT_Id,
+    /* 43 C  */   kACT_Id,
+    /* 44 D  */   kACT_Id,
+    /* 45 E  */   kACT_Id,
+    /* 46 F  */   kACT_Id,
+    /* 47 G  */   kACT_Id,
+    /* 48 H  */   kACT_Id,
+    /* 49 I  */   kACT_Id,
+    /* 4A J  */   kACT_Id,
+    /* 4B L  */   kACT_Id,
+    /* 4C L  */   kACT_Id,
+    /* 4D M  */   kACT_Id,
+    /* 4E N  */   kACT_Id,
+    /* 4F O  */   kACT_Id,
+    /* 50 P  */   kACT_Id,      //80
+    /* 51 Q  */   kACT_Id,
+    /* 52 R  */   kACT_Id,
+    /* 53 S  */   kACT_Id,
+    /* 54 T  */   kACT_Id,
+    /* 55 U  */   kACT_Id,
+    /* 56 V  */   kACT_Id,
+    /* 57 W  */   kACT_Id,
+    /* 58 X  */   kACT_Id,
+    /* 59 Y  */   kACT_Id,
+    /* 5A Z  */   kACT_Id,
+    /* 5B [  */   kACT_Symbol,
+    /* 5C \  */   kACT_Symbol,
+    /* 5D ]  */   kACT_Symbol,
+    /* 5E ^  */   kACT_Symbol,
+    /* 5F _  */   kACT_Id,
+    /* 60 `  */   0,      //96
+    /* 61 a  */   kACT_Id,
+    /* 62 b  */   kACT_Id,
+    /* 63 c  */   kACT_Id,
+    /* 64 d  */   kACT_Id,
+    /* 65 e  */   kACT_Id,
+    /* 66 f  */   kACT_Id,
+    /* 67 g  */   kACT_Id,
+    /* 68 h  */   kACT_Id,
+    /* 69 i  */   kACT_Id,
+    /* 6A j  */   kACT_Id,
+    /* 6B k  */   kACT_Id,
+    /* 6C l  */   kACT_Id,
+    /* 6D m  */   kACT_Id,
+    /* 6E n  */   kACT_Id,
+    /* 6F o  */   kACT_Id,
+    /* 70 p  */   kACT_Id,
+    /* 71 q  */   kACT_Id,
+    /* 72 r  */   kACT_Id,
+    /* 73 s  */   kACT_Id,
+    /* 74 t  */   kACT_Id,
+    /* 75 u  */   kACT_Id,
+    /* 76 v  */   kACT_Id,
+    /* 77 w  */   kACT_Id,
+    /* 78 x  */   kACT_Id,
+    /* 79 y  */   kACT_Id,
+    /* 7A z  */   kACT_Id,
+    /* 7B {  */   kACT_Symbol,
+    /* 7C |  */   kACT_Symbol,
+    /* 7D }  */   kACT_Symbol,
+    /* 7E ~  */   kACT_Symbol,
+    /* 7F del*/   0,
+};
+    
 class SubString : public SimpleSubVector<Utf8Char>
 {
-    public:
+public:
+    
     static Boolean IsAscii(char c)      { return !(c & 0x10); }
     static Boolean IsEolChar(char c)    { return (c == '\r') || (c == '\n'); }
-    static Boolean IsSpaceChar(char c)  { return (c == ' ') || (c == '\t') || IsEolChar(c); }
+    static Boolean IsSpaceChar(char c)  { return  ((UInt8)c < 127) && (AsciiCharTraits[(UInt8)c] & kACT_Space); }
     static Boolean IsNumberChar(char c) { return (c >= '0' && c <= '9'); }
-    static Boolean IsIdentifierChar(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || (c == '_'); };
-    static Boolean IsSymbolChar(char c) { return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '^') || (c >= '{' && c <= '~'); };
-    public:
+    static Boolean IsIdentifierChar(char c) { return  ((UInt8)c < 127) && (AsciiCharTraits[(UInt8)c] & kACT_Id); }
+    static Boolean IsSymbolChar(char c) { return  ((UInt8)c < 127) && (AsciiCharTraits[(UInt8)c] & kACT_Symbol); }
+
+public:
     SubString()                         {}
     SubString(const char * begin)       { AliasAssign((const Utf8Char*)begin, (const Utf8Char*)(begin ? (begin + strlen(begin)) : begin)); }
     SubString(const Utf8Char * begin, const Utf8Char *end) { AliasAssign(begin, end); }
@@ -86,6 +229,7 @@ class SubString : public SimpleSubVector<Utf8Char>
     Boolean ReadInt(IntMax* value);
     Boolean ParseDouble(Double* value);
     Boolean ReadToken(SubString* token);
+    Int32 CountMatches(char value);
     void TrimQuotedString();
     TokenTraits ReadValueToken(SubString* token, TokenTraits allowedTraits);
 };

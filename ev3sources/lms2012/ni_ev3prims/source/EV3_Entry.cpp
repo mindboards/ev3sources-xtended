@@ -19,60 +19,104 @@
  */
 
 #include "ExecutionContext.h"
-#include "VirtualInstrument.h"
 #include "EggShell.h"
 #include "CEntryPoints.h"
 
 #include "EV3_Entry.h"
 extern "C" {
 #include "lms2012.h"
+#include "c_dynload.h"
 }
 
 using namespace Vireo;
+
+void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
+{
+#ifdef DEBUG_DYNLOAD
+    fprintf(stderr, "LABVIEW: %s called: ", __func__);
+#endif
+
+    // Here's where the entry points are configured.
+    // Not all of them have to be setup, as long as you know how
+    // many there are.
+    virtualMachineInfo->entryPointFunc[0] = &VireoInit;
+    virtualMachineInfo->entryPointFunc[1] = &VireoStep;
+    virtualMachineInfo->entryPointFunc[2] = &VireoMemAccess;
+
+    (virtualMachineInfo->vm_exit) = &vm_exit;
+
+#ifdef DEBUG_DYNLOAD
+    fprintf(stderr, "done.\n");
+#endif
+}
+
+
+void vm_exit()
+{
+#ifdef DEBUG_DYNLOAD
+    fprintf(stderr, "LABVIEW: %s called\n", __func__);
+#endif
+    // Here's where the cleanup is done, dynamically allocated memory, buffers, that sort of thing
+
+
+}
 
 EggShell *pRootShell;
 EggShell *pShell;
 
 void VireoInit(void)
 {
-    char *fileName = (char *) PrimParPointer();
+    try {
+        char *fileName = (char *) PrimParPointer();
 
-    if (pShell)
-    {
-        pShell->Delete();
-        pShell = null;
-    }
-    if (pRootShell)
-    {
-        pRootShell->Delete();
-        pRootShell = null;
-    }
-    pRootShell = EggShell::Create(null);
-    pShell = EggShell::Create(pRootShell);
-    pShell->TheExecutionContext()->SetDelayedLoad(true);
+        if (pShell)
+        {
+            pShell->Delete();
+            pShell = null;
+        }
+        if (pRootShell)
+        {
+            pRootShell->Delete();
+            pRootShell = null;
+        }
+        pRootShell = EggShell::Create(null);
+        pShell = EggShell::Create(pRootShell);
+        pShell->TheExecutionContext()->SetDelayedLoad(true);
 
-    SubString  input;
-    pShell->ReadFile(fileName, &input);
-    pShell->REPL(&input);
+        SubString  input;
+        pShell->ReadFile(fileName, &input);
+        pShell->REPL(&input);
+    } catch (...) {
+        SetDispatchStatus(FAILBREAK);
+    }
 }
 
 void VireoStep()
 {
-    *(DATA8*)PrimParPointer() = (DATA8) pShell->TheExecutionContext()->ExecuteSlices(20);
+    try {
+        ExecutionState state = pShell->TheExecutionContext()->ExecuteSlices(400);
+        *(DATA8*)PrimParPointer() = (DATA8) state;
+    } catch (...) {
+        SetDispatchStatus(FAILBREAK);
+    }
 }
 
 void VireoMemAccess()
 {
-    Int8 peekOrPoke = *(Int8 *) PrimParPointer();
-    char *viName = (char *) PrimParPointer();
-    char *eltName = (char *) PrimParPointer();
-    Int32 bufferSize = *(Int32 *) PrimParPointer();
-    char *buffer = (char *) PrimParPointer();
-    Int32 *result = (Int32 *) PrimParPointer();
+    try {
+        Int8 peekOrPoke = *(Int8 *) PrimParPointer();
+        char *viName = (char *) PrimParPointer();
+        char *eltName = (char *) PrimParPointer();
+        Int32 bufferSize = *(Int32 *) PrimParPointer();
+        char *buffer = (char *) PrimParPointer();
+        Int32 *result = (Int32 *) PrimParPointer();
 
-    if (peekOrPoke == 0)
-        *result = EggShell_PeekMemory(pShell, viName, eltName, bufferSize, buffer);
-    else
-        *result = EggShell_PokeMemory(pShell, viName, eltName, bufferSize, buffer);
+        if (peekOrPoke == 0)
+            *result = EggShell_PeekMemory(pShell, viName, eltName, bufferSize, buffer);
+        else
+            *result = EggShell_PokeMemory(pShell, viName, eltName, bufferSize, buffer);
+    } catch (...) {
+        SetDispatchStatus(FAILBREAK);
+    }
 }
 
