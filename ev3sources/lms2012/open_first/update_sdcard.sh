@@ -7,7 +7,6 @@ echo
 sudo -v
 echo
 echo "  ...."checking.sdcard
-sleep 10
 
 current=${PWD}
 

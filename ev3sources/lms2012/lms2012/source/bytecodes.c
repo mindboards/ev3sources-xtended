@@ -372,7 +372,7 @@ static OPCODE OpCodes[256] =
   OC(   opVIREO_MEMACCESS,      PAR8,PAR8,PAR8,PAR32,PAR8,PAR32,                0,0                   ),
 
   // For dynload
-  OC(		opDYNLOAD_VMLOAD,				PAR8,																						0,0,0,0,0,0,0         ),
+  OC(		opDYNLOAD_VMLOAD,				PAR8,PAR8,																			0,0,0,0,0,0           ),
   OC(		opDYNLOAD_VMEXIT,				0,                                              0,0,0,0,0,0,0         ),
 
   // Each opcode takes 2 parameters: one is a sub command and the other is the size of the data passed
