@@ -28,7 +28,7 @@ INCLUDES = -I$(BASE)/lms2012/source \
 	   -I$(BASE)/c_output/source \
 	   -I$(BASE)/c_sound/source \
 	   -I$(BASE)/c_ui/source \
-	   -I$(BASE)/ni_ev3prims/include \
+	   -I$(BASE)/c_vireobridge/source \
 	   -I$(BASE)/c_dynload/source 
 
 ifeq ($(ARCH),X86)
@@ -59,7 +59,7 @@ all: install
 %.o: ../source/%.c
 	$(CROSS_COMPILE)gcc $(CFLAGS) -c -MMD -MP -o $@ $<
 
-$(TARGET): $(OBJS) $(filter -lni_ev3prims -lc_%,$(LIBS)) 
+$(TARGET): $(OBJS) $(filter -lc_%,$(LIBS)) 
 	$(CROSS_COMPILE)gcc $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 install: $(INSTALL_TARGET)

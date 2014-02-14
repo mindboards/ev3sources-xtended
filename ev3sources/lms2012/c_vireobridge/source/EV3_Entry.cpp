@@ -28,7 +28,12 @@ extern "C" {
 #include "c_dynload.h"
 }
 
+#define MEMACCESS_MAX_INPUTS_SIZE 1024
+
 using namespace Vireo;
+
+EggShell *pRootShell;
+EggShell *pShell;
 
 void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
 {
@@ -46,7 +51,7 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
     (virtualMachineInfo->vm_exit) = &vm_exit;
 
 #ifdef DEBUG_DYNLOAD
-    fprintf(stderr, "done.\n");
+    fprintf(stderr, "done.\r\n");
 #endif
 }
 
@@ -54,20 +59,28 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
 void vm_exit()
 {
 #ifdef DEBUG_DYNLOAD
-    fprintf(stderr, "LABVIEW: %s called\n", __func__);
+    fprintf(stderr, "LABVIEW: %s called\r\n", __func__);
 #endif
     // Here's where the cleanup is done, dynamically allocated memory, buffers, that sort of thing
-
-
+    if (pShell)
+    {
+        pShell->Delete();
+        pShell = null;
+    }
+    if (pRootShell)
+    {
+        pRootShell->Delete();
+        pRootShell = null;
+    }
 }
-
-EggShell *pRootShell;
-EggShell *pShell;
 
 void VireoInit(void)
 {
     try {
+        // Get the fileName and pop off unused parameters.
         char *fileName = (char *) PrimParPointer();
+        PrimParPointer();
+        PrimParPointer();
 
         if (pShell)
         {
@@ -95,7 +108,11 @@ void VireoStep()
 {
     try {
         ExecutionState state = pShell->TheExecutionContext()->ExecuteSlices(400);
+
+        // Store the execution state as a return value and pop off unused parameters.
+        PrimParPointer();
         *(DATA8*)PrimParPointer() = (DATA8) state;
+        PrimParPointer();
     } catch (...) {
         SetDispatchStatus(FAILBREAK);
     }
@@ -103,18 +120,41 @@ void VireoStep()
 
 void VireoMemAccess()
 {
+    // Arguments for Eggshell peek and poke are passed in with PrimParPointer.
+    // peekOrPoke, viName, and eltSize are packed into inputs.
+    // result is passed in outputs, and dataSize is passed by itself.
+    // data is passed in inputs for peek and in outputs for poke.
     try {
-        Int8 peekOrPoke = *(Int8 *) PrimParPointer();
-        char *viName = (char *) PrimParPointer();
-        char *eltName = (char *) PrimParPointer();
-        Int32 bufferSize = *(Int32 *) PrimParPointer();
-        char *buffer = (char *) PrimParPointer();
-        Int32 *result = (Int32 *) PrimParPointer();
+        char *inputs   = (char *) PrimParPointer();
+        char *outputs  = (char *) PrimParPointer();
+        Int16 dataSize = *(Int16 *)PrimParPointer();
 
-        if (peekOrPoke == 0)
-            *result = EggShell_PeekMemory(pShell, viName, eltName, bufferSize, buffer);
-        else
-            *result = EggShell_PokeMemory(pShell, viName, eltName, bufferSize, buffer);
+        Int8 peekOrPoke = *(Int8 *)inputs;
+        char *viName = inputs + 1;
+        char *eltName;
+        char *data;
+        Int32 *result = (Int32 *) outputs;
+
+        UInt16 offset = 1;
+        while ((offset < MEMACCESS_MAX_INPUTS_SIZE) && inputs[offset++])
+            ;
+        eltName = inputs + offset;
+
+        if (peekOrPoke == 0) { // peek
+            if (offset >= MEMACCESS_MAX_INPUTS_SIZE)
+                throw;
+            data = outputs + sizeof(Int32);
+            *result = EggShell_PeekMemory(pShell, viName, eltName, dataSize, data);
+        } else if (peekOrPoke == 1) { // poke
+            while ((offset < MEMACCESS_MAX_INPUTS_SIZE) && inputs[offset++])
+                ;
+            offset += 3 - ((offset - 1) % 4); // Make the data offset 4-byte aligned
+            if (offset >= MEMACCESS_MAX_INPUTS_SIZE)
+                throw;
+            data = inputs + offset;
+            *result = EggShell_PokeMemory(pShell, viName, eltName, dataSize, data);
+        } else
+            throw;
     } catch (...) {
         SetDispatchStatus(FAILBREAK);
     }

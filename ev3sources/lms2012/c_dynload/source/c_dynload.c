@@ -76,7 +76,7 @@ void dynloadVMExit()
  *  \param  (DATA8)   VMINDEX - VM Index, Robotc = 0, Labview = 1
  *  \return (DATA8)   RESULT  - OK if VM loaded ok FAIL if it did not.
  */
-/*! \brief  opINPUT_READ byte code
+/*! \brief  opDYNLOAD_VMLOAD(VMINDEX, RESULT) byte code
  *
  */
 void dynloadVMLoad()
@@ -100,7 +100,7 @@ void dynloadVMLoad()
   // A VM has already been loaded.
   if (virtualMachineInfo.vmIndex >= 0)
   {
-  	res = FAIL;
+  	res = virtualMachineInfo.vmIndex == vmIndex ? OK : FAIL;
 		*(DATA8*)PrimParPointer() =  res;
   	return;
   }
@@ -125,7 +125,7 @@ void dynloadVMLoad()
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Loading %s\r\n", fullVMPath);
+	fprintf(stderr, "DYNLOAD: Loading %s: ", fullVMPath);
 #endif
 
 	// You can change this to another type of binding.
@@ -150,7 +150,7 @@ void dynloadVMLoad()
 	// is taken from the dlopen man page, apparently it's required.
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Binding to vm_init\r\n");
+	fprintf(stderr, "DYNLOAD: Binding to vm_init: ");
 #endif
 
 	*(void **) (&initFunc) = dlsym(virtualMachineInfo.soHandle, "vm_init");
@@ -159,7 +159,7 @@ void dynloadVMLoad()
 	fprintf(stderr, "done\r\n");
 #endif
 
-	// If an error occured revolving our entry point, shout about it.
+	// If an error occured resolving our entry point, shout about it.
 	if ((error = dlerror()) != NULL)
 	{
 #ifdef DEBUG_DYNLOAD

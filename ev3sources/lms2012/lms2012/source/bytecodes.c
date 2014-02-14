@@ -366,27 +366,23 @@ static OPCODE OpCodes[256] =
   OC(   opMAILBOX_TEST,         PAR8,PAR8,                                      0,0,0,0,0,0           ),
   OC(   opMAILBOX_READY,        PAR8,                                           0,0,0,0,0,0,0         ),
   OC(   opMAILBOX_CLOSE,        PAR8,                                           0,0,0,0,0,0,0         ),
-  //    Spare
-  OC(   opVIREO_INIT,           PAR8,                                           0,0,0,0,0,0,0         ),
-  OC(   opVIREO_STEP,           PAR8,                                           0,0,0,0,0,0,0         ),
-  OC(   opVIREO_MEMACCESS,      PAR8,PAR8,PAR8,PAR32,PAR8,PAR32,                0,0                   ),
 
   // For dynload
   OC(		opDYNLOAD_VMLOAD,				PAR8,PAR8,																			0,0,0,0,0,0           ),
   OC(		opDYNLOAD_VMEXIT,				0,                                              0,0,0,0,0,0,0         ),
 
-  // Each opcode takes 2 parameters: one is a sub command and the other is the size of the data passed
-  // to it.  This allows for maximum flexibility.
-  OC(		opDYNLOAD_ENTRY_0,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_1,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_2,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_3,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_4,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_5,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_6,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_7,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_8,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-  OC(		opDYNLOAD_ENTRY_9,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
+  // Each opcode takes 3 parameters.  The corresponding function may use these in any way it wants.
+  // For example, they could be used as subcommand, response, and size of the response.
+  OC(		opDYNLOAD_ENTRY_0,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_1,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_2,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_3,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_4,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_5,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_6,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_7,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_8,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(		opDYNLOAD_ENTRY_9,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
 
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),

@@ -1,11 +1,12 @@
 SOURCES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3_Entry.cpp EV3_File.cpp EV3_Com.cpp
 
-TARGET = libni_ev3prims.so
+TARGET = libvireobridge.so
 
 CONF = Linuxlib
 ARCH = AM1808
 
 # include ../../open_first/rules.mk
+# Part of rules.mk is used below with modifications for C++ source and linking against libvireo.so
 
 #
 # ARCH defines
@@ -37,7 +38,8 @@ INCLUDES = -I$(BASE)/lms2012/source \
            -I$(BASE)/c_output/source \
            -I$(BASE)/c_sound/source \
            -I$(BASE)/c_ui/source \
-           -I$(BASE)/ni_ev3prims/include \
+           -I$(BASE)/c_vireobridge/source \
+           -I$(BASE)/c_vireobridge/includeVireo \
            -I$(BASE)/c_dynload/source
 
 ifeq ($(ARCH),X86)
@@ -51,7 +53,7 @@ INCLUDES += -I$(DEVKIT)/usr/lib/dbus-1.0/include
 INCLUDES += -I$(DEVKIT)/usr/include
 CFLAGS = -DPCASM $(INCLUDES) -Os -Wall -fPIC
 # LDFLAGS = -L$(BASE)/lms2012/Linux_$(ARCH)/sys/lib -L$(DEVKIT)/usr/lib
-LDFLAGS = -L../include
+LDFLAGS = -L. -lvireo -Wl,-rpath=/home/root/lms2012/3rdparty-vm
 endif
 
 ifeq ($(CONF),Linuxlib)
@@ -69,12 +71,12 @@ all: install
 %.o: ../source/%.cpp
 	$(CROSS_COMPILE)g++ $(CFLAGS) -c -MMD -MP -o $@ $<
 
-$(TARGET): $(OBJS) $(filter -lni_ev3prims -lc_%,$(LIBS))
+$(TARGET): $(OBJS) $(filter -lc_%,$(LIBS))
 	$(CROSS_COMPILE)g++ $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 install: $(INSTALL_TARGET)
 $(INSTALL_TARGET): $(TARGET)
-	mkdir -p $(dir $@) && cp $< $@
+	mkdir -p $(dir $@) && cp $< $@ && cp libvireo.so $(BASE)/lms2012/Linux_$(ARCH)/$(INSTALL_DIR)
 
 $(SUBDIRS:%=-l%): FORCE
 	$(MAKE) -C ../../$(@:-l%=%)/Linuxlib_$(ARCH) install

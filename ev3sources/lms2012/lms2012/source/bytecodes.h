@@ -472,9 +472,6 @@ typedef   enum
   opMAILBOX_CLOSE             = 0xDD, //       101
 
 //        SPARE                           111.....
-  opVIREO_INIT                = 0xE0, //     00000
-  opVIREO_STEP                = 0xE1, //     00001
-  opVIREO_MEMACCESS           = 0xE2, //     00010
 
   // For the 3rd party VMs
   opDYNLOAD_VMLOAD						= 0xF0,

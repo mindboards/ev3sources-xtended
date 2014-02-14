@@ -34,6 +34,7 @@ mkdir /mnt/tmpdrv_fs/media/usb
 mv $PATH4/apps /mnt/tmpdrv_ud/
 mv $PATH4/prjs /mnt/tmpdrv_ud/
 mv $PATH4/sys/settings /mnt/tmpdrv_ud/
+mv $PATH4/3rdparty-vm /mnt/tmpdrv_ud/
 mkdir /mnt/tmpdrv_ud/bluetooth
 
 find '/mnt/tmpdrv_fs/' -type d -name CVS -exec rm -rf {} +
@@ -47,6 +48,7 @@ ln -s /mnt/ramdisk/apps/ $PATH4/apps
 ln -s /mnt/ramdisk/prjs/ $PATH4/prjs
 ln -s /mnt/ramdisk/settings/ $PATH4/sys/settings
 ln -s /mnt/ramdisk/settings/ /mnt/tmpdrv_fs/var/lib/dropbear
+ln -s /mnt/ramdisk/3rdparty-vm/ $PATH4/3rdparty-vm
 
 rm $PATH4/../.ash_history
 rm $PATH4/lms2012
@@ -71,6 +73,7 @@ find /mnt/tmpdrv_ud/settings/* -type f -name '*.*' -exec chmod 644 {} \;
 chmod 644 /mnt/tmpdrv_ud/settings/BrickName
 #chmod 644 /mnt/tmpdrv_ud/settings/caldata
 #chmod 644 /mnt/tmpdrv_ud/settings/lastrun
+find /mnt/tmpdrv_ud/3rdparty-vm/* -type f -name '*.*' -exec chmod 644 {} \;
 
 if [ -f $PATH5/def_sett.tgz ];
 then
