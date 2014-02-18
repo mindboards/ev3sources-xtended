@@ -699,11 +699,11 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   COM_SET_SUBP,           SET_SSID,               PAR8,PAR8,                                      0,0,0,0,0,0           ),
   SC(   COM_SET_SUBP,           SET_MODE2,              PAR8,PAR8,                                      0,0,0,0,0,0           ),
 
-  // layer, port, datalen, data*
-  SC(   EXTEND_SUBP,            EXT_IIC_READ_DATA,      PAR8,PAR8,PAR8,PAR8,                            0,0,0,0               ),
-  // layer, port, writelen, wrdata*, readlen
-  SC(   EXTEND_SUBP,            EXT_IIC_WRITE_DATA,     PAR8,PAR8,PAR8,PAR8,PAR8,                       0,0,0                 ),
-  // layer, port, status*
-  SC(   EXTEND_SUBP,            EXT_IIC_READ_STATUS,    PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
+//  // layer, port, datalen, data*
+//  SC(   EXTEND_SUBP,            EXT_IIC_READ_DATA,      PAR8,PAR8,PAR8,PAR8,                            0,0,0,0               ),
+//  // layer, port, writelen, wrdata*, readlen
+//  SC(   EXTEND_SUBP,            EXT_IIC_WRITE_DATA,     PAR8,PAR8,PAR8,PAR8,PAR8,                       0,0,0                 ),
+//  // layer, port, status*
+//  SC(   EXTEND_SUBP,            EXT_IIC_READ_STATUS,    PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
 
 };

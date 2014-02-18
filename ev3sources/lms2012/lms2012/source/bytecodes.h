@@ -491,7 +491,7 @@ typedef   enum
   opDYNLOAD_ENTRY_9						= 0xFB,
 
   // Extended opcodes
-  opEXTEND										= 0xFC,
+//  opEXTEND										= 0xFC,
 
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111
@@ -999,15 +999,15 @@ STRING_SUBCODE;
 //! \verbatim
 //!
 
-typedef   enum
-{
-	EXT_IIC_READ_DATA		= 1,
-	EXT_IIC_WRITE_DATA 	= 2,
-	EXT_IIC_READ_STATUS = 3,
-
-  EXTEND_SUBCODES
-}
-EXTEND_SUBCODE;
+//typedef   enum
+//{
+//	EXT_IIC_READ_DATA		= 1,
+//	EXT_IIC_WRITE_DATA 	= 2,
+//	EXT_IIC_READ_STATUS = 3,
+//
+//  EXTEND_SUBCODES
+//}
+//EXTEND_SUBCODE;
 
 
 /*! \page types
