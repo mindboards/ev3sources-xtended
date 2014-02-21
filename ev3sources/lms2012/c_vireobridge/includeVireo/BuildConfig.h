@@ -144,7 +144,7 @@ SDG
 
     #define kVireoOS_macosxU 1
     #define VIREO_DATE_TIME_STDLIB
-    //#define VIREO_PACKED_INSTRUCTIONS
+ //   #define VIREO_PACKED_INSTRUCTIONS
 
     //#define VIVM_SUPPORTS_ISR
     #define VIVM_ISR_DISABLE

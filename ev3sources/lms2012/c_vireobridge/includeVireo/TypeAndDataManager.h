@@ -45,27 +45,26 @@ namespace Vireo
 {
 
 class TypeCommon;
-class TypedBlock;
 class TypeManager;
 class ExecutionContext;
-
-#define TADM_NEW_PLACEMENT(_class_) new (TypeManagerScope::Current()->Malloc(sizeof(_class_))) _class_
-#define TADM_NEW_PLACEMENT_DYNAMIC(_class_, _d_) new (TypeManagerScope::Current()->Malloc(_class_::StructSize(_d_))) _class_
-
+class IAlloc;
+    
 typedef TypeCommon  *TypeRef;
 typedef TypeManager *TypeManagerRef;
-    
-// StaticType is used for functions tha take typed determined at load time.
-// specifiying StaticType for the paramete will result in the instruction holding a TypeCommon*
+
+// StaticType is used for functions tha take types determined at load time.
+// specifiying StaticType for the parameter will result in the instruction holding a TypeCommon*
 // Instead of a TypeRef*
 typedef TypeCommon StaticType;
 
-// Starting to bootstrap the type manager.
-class TypedArray1DCore;
+class TypedArrayCore;
+
 template <class T>
 class TypedArray1D;
-typedef  TypedArray1D<TypeRef> *TypeRefArray1DRef;
 
+#define TADM_NEW_PLACEMENT(_class_) new (TypeManagerScope::Current()->Malloc(sizeof(_class_))) _class_
+#define TADM_NEW_PLACEMENT_DYNAMIC(_class_, _d_) new (TypeManagerScope::Current()->Malloc(_class_::StructSize(_d_))) _class_
+    
 
 // EncodingEnum defines the base set of encodings used to annotate the underlying semantics
 // of a low level bit block. It is the key for serialization to and from binary, ASCII
@@ -159,9 +158,15 @@ struct StaticTypeAndData
 
 inline IntIndex Min(IntIndex a, IntIndex b) { return a < b ? a : b; }
 inline IntIndex Max(IntIndex a, IntIndex b) { return a > b ? a : b; }
+void PrintType(TypeRef type, const char* message);
+
 //------------------------------------------------------------
 class TypeManager
 {
+public:
+    static TypeManager* New(TypeManager* tmParent);
+    static void Delete(TypeManager* tm);
+    
 private:
     TypeManager*    _rootTypeManager;   // null if it is the root, or it is not using a root.
 
@@ -178,23 +183,26 @@ private:
     TypeCommon* _badType;
     TypeCommon* _typeList;          // list of all Types allocated by this TypeManager
     
-friend class TypeAndDataStringParser;
+friend class TDViaParser;
     TypeRef FindTypeInternal(SubString* name);
         
     // TODO The manager needs to define the Addressable Quantum size (bit in an addressable item, often a octet
     // but some times it is larger (e.g. 16 or 32) the CDC 7600 was 60
     // also defines alignment rules. Each element in a cluster is addressable
-public:
+private:
     TypeManager(TypeManager* typeManager);
     ~TypeManager();
+public:
+    void    ProcessDelayedLoads();
     void    DeleteTypes(Boolean finalTime);
     void    TrackType(TypeCommon* type);
-    void    GetTypes(TypeRefArray1DRef);
+    void    GetTypes(TypedArray1D<TypeRef>*);
     
     TypeManager *RootTypeManager() { return _rootTypeManager; }
     TypeRef Define(SubString* name, TypeRef type);
     TypeRef FindType(SubString* name);
     void*   FindNamedTypedBlock(SubString* name, PointerAccessEnum mode);
+    void*   FindNamedObject(SubString* name);
     TypeRef BadType();
 
     Int32   AQAlignment(Int32 size);
@@ -206,11 +214,8 @@ public:
 public:
     NIError RegisterType(const char* name, const char* typeString);
 	NIError DefineCustomPointerTypeWithValue(const char* name, void* pointer, TypeRef type, PointerTypeEnum pointerType);
+	NIError DefineCustomAlloc(const char* name, IAlloc* pAlloc, TypeRef type);
     
-public:
-    // High level allocation functions
-    NIError CreateTypedBlock(TypeRef typeRef, TypedBlock** pData);
-    // NIError FreeTypedBlock(TypedBlock** pData);
 public:
     // Low level allocation functions
     // TODO pull out into its own class.
@@ -219,7 +224,7 @@ public:
     void Free(void* pBuffer);
     
     Boolean AllocationPermitted(size_t countAQ);
-    void TrackAllocation(void* id, size_t countAQ);
+    void TrackAllocation(void* id, size_t countAQ, Boolean bAlloc);
 
     Int32  _totalAllocations;
     size_t _totalAQAllocated;
@@ -279,8 +284,8 @@ public:
 };
 
 //------------------------------------------------------------
-// InlineArray - A class to help dynamic structures that contain a single
-// fixed size aray initialized at construction time.
+// InlineArray - A class to help dynamic classes/structures that
+// end with an array whose size is set at construction time.
 template <class T>
 class InlineArray
 {
@@ -295,6 +300,26 @@ public:
     void Assign(const T* source, Int32 count)   { memcpy(Begin(), source, count * sizeof(T)); }
     T& operator[] (const Int32 index)           { return _array[index]; }
     IntIndex Length()                           { return (IntIndex)(End() - Begin()); }
+};
+
+//------------------------------------------------------------
+// Visitor class for types.
+class TypeVisitor
+{
+public:
+    virtual void VisitBad(TypeRef type) = 0;
+    virtual void VisitBitBlock(TypeRef type) = 0;
+    virtual void VisitBitCluster(TypeRef type) = 0;
+    virtual void VisitCluster(TypeRef type)  = 0;
+    virtual void VisitParamBlock(TypeRef type)  = 0;
+    virtual void VisitEquivalence(TypeRef type) = 0;
+    virtual void VisitArray(TypeRef type)  = 0;
+    virtual void VisitElement(TypeRef type) = 0;
+    virtual void VisitNamed(TypeRef type) = 0;
+    virtual void VisitPointer(TypeRef type) = 0;
+    virtual void VisitDefaultValue(TypeRef type) = 0;
+    virtual void VisitCustomDefaultPointer(TypeRef type) = 0;
+    virtual void VisitCustomAlloc(TypeRef type) = 0;
 };
 
 //------------------------------------------------------------
@@ -323,27 +348,26 @@ public:
 // smaller targets might be half that.
 protected:
     Int32   _topAQSize;
-    UInt16  _rank:8;            // 0 for scalar, 1 or greater means arrays room for rank upto 255
+    UInt16  _rank:8;            // 0 for scalar, 0 or greater for arrays room for rank upto 255
     UInt16  _alignment:8;       // In AQ units  //TODO could be stored as binary exponent in 3 bits
    
     UInt16  _encoding:kEncodingBitFieldSize; // aggirgate or single format
     UInt16  _isFlat:1;          // ( 0) All data is contained in TopAQ elements ( e.g. no pointers)
-    UInt16  _isValid:1;         // ( 1) contains no invalid types
-    UInt16  _isBitLevel:1;      // ( 2) is a bitblock or bitcluster
+    UInt16  _isValid:1;         // ( 1) Contains no invalid types
+    UInt16  _isBitLevel:1;      // ( 2) Is a bitblock or bitcluster
 
-    UInt16  _hasCustomDefault:1;// ( 3) a non 0 non null value
+    UInt16  _hasCustomDefault:1;// ( 3) A non 0 non null value
     UInt16  _wasModified:1;     // ( 4) Internal, true when a type resolves a missing piece
-    UInt16  _isFullyResolved:1; // ( 5) a non 0 non null value. TODO for forward references
+    UInt16  _isFullyResolved:1; // ( 5) A non 0 non null value. TODO for forward references
     UInt16  _isFixedSize:1;     // ( 6) Total number of elements is fixed (false for variable arrays)
-    UInt16  _hasGenericType:1;  // ( 10) is a bitblock or bitcluster
+    UInt16  _hasGenericType:1;  // ( 7) The type contians some generic property values
+    UInt16  _hasPadding:1;      // ( 8) To satisfy alignment requirements for elements TopAQSize() includes some padding
     
     //  properties unique to prototype elements. they are never merged up
-    UInt16  _elementUsageType:3;// (7-9) ElementType::UsageType
-    //  properties unique to CustomValue objects (a private field)
-    UInt16  _extraAllocatedData:1;//(11)
+    UInt16  _elementUsageType:3;// (9-11) ElementType::UsageType
     //  properties unique to CustomPointerType objects
-    UInt16  _pointerType:3;     //(12-14)
-                                // (15) not used
+    UInt16  _pointerType:3;     // (12-14)
+    UInt16  _ownsDefDefData:1;  // (15) Owns DefaultDefault data (clusters and arrays)
     
 public:
     // Public API
@@ -352,11 +376,11 @@ public:
     Int32   TopAQSize()             { return _topAQSize; }
     Boolean HasCustomDefault()      { return _hasCustomDefault != 0; }
     Int32   Rank()                  { return _rank; }
-    Boolean IsArray()               { return _rank > 0; }
-    Boolean IsObject()              { return IsArray(); }   // Arrays are the only type of object that exists so far
+    Boolean IsArray()               { return BitEncoding() == kEncoding_Array; }
     Boolean IsFlat()                { return _isFlat != 0; }
     Boolean IsValid()               { return _isValid != 0; }
     Boolean IsBitLevel()            { return _isBitLevel != 0; }
+    Boolean HasPadding()            { return _hasPadding != 0; }
     Boolean HasGenericType()        { return _hasGenericType != 0; }
     Boolean WasModified()           { return _wasModified != 0; }
 
@@ -367,10 +391,13 @@ public:
     Boolean IsTempParam()           { return _elementUsageType == kUsageTypeTemp; }
     Boolean IsOptionalParam()       { return true; }//TODO {return _elementUsageType == kUsageTypeOptionalInput ;}
     UsageTypeEnum ElementUsageType(){ return (UsageTypeEnum)_elementUsageType; }
+    Boolean OwnsDefDefData()        { return _ownsDefDefData != 0; }
 
     // Properties for CustomValuePointers
     PointerTypeEnum PointerType(){ return (PointerTypeEnum)_pointerType; }
 
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitBad(this); }
+    virtual TypeRef BaseType()                          { return null; }
     virtual Int32   SubElementCount()                   { return 0; }
     virtual TypeRef GetSubElementByName(SubString* name){ return null; }
     virtual TypeRef GetSubElement(Int32 index)          { return null; }
@@ -379,7 +406,6 @@ public:
     // Element name in an aggrigate (e.g cluster field name such as "top")
     virtual void GetName(SubString* name)               { name->AliasAssign(null, null); }
     virtual void GetElementName(SubString* name)        { name->AliasAssign(null, null); }
-    virtual TypeRef GetBaseType()                       { return null; }
     virtual IntIndex* GetDimensionLengths()             { return null; }
     
     // Offset in in AQs in the container aggrigate
@@ -415,12 +441,12 @@ protected:
     WrappedType(TypeManager *typeManager, TypeRef type);
 public:
     // Type operations
+    virtual TypeRef BaseType()                          { return _wrapped; }
     virtual Int32   SubElementCount()                   { return _wrapped->SubElementCount(); }
     virtual TypeRef GetSubElementByName(SubString* name){ return _wrapped->GetSubElementByName(name); }
     virtual TypeRef GetSubElement(Int32 index)          { return _wrapped->GetSubElement(index); }
     virtual Int32   BitSize()                           { return _wrapped->BitSize(); }
     virtual void    GetName(SubString* name)            { _wrapped->GetName(name); }
-    virtual TypeRef GetBaseType()                       { return _wrapped; }
     virtual IntIndex* GetDimensionLengths()             { return _wrapped->GetDimensionLengths(); }
     // Data operations
     virtual void*   Begin(PointerAccessEnum mode)       { return _wrapped->Begin(mode); }
@@ -457,6 +483,7 @@ public:
         { return sizeof(NamedType) + InlineArray<Utf8Char>::ExtraStructSize(name->Length()); }
     static NamedType* New(TypeManager* typeManager, SubString* name, TypeRef type);
     
+    virtual void    Visit(TypeVisitor *tv)          { tv->VisitNamed(this); }
     virtual void    GetName(SubString* name)        { name->AliasAssign(_name.Begin(), _name.End()); }
     virtual void    GetElementName(SubString* name) { name->AliasAssign(null, null); }
 };
@@ -476,8 +503,9 @@ public:
     static IntIndex StructSize(SubString* name) { return sizeof(ElementType) + InlineArray<Utf8Char>::ExtraStructSize(name->Length()); }
     static ElementType* New(TypeManager* typeManager, SubString* name, TypeRef wrappedType, UsageTypeEnum usageType);
     
-    virtual void    GetElementName(SubString* name)     { name->AliasAssign(_elementName.Begin(), _elementName.End()); }
-    virtual IntIndex ElementOffset()                    { return _offset; }
+    virtual void    Visit(TypeVisitor *tv)          { tv->VisitElement(this); }
+    virtual void    GetElementName(SubString* name) { name->AliasAssign(_elementName.Begin(), _elementName.End()); }
+    virtual IntIndex ElementOffset()                { return _offset; }
 };
 //------------------------------------------------------------
 // BitBlockType - A raw set of bits
@@ -489,6 +517,7 @@ private:
     BitBlockType(TypeManager* typeManager, Int32 size, EncodingEnum encoding);
 public:
     static BitBlockType* New(TypeManager* typeManager, Int32 size, EncodingEnum encoding);
+    virtual void    Visit(TypeVisitor *tv)          { tv->VisitBitBlock(this); }
     virtual Int32   BitSize() {return _bitSize;};
 };
 //------------------------------------------------------------
@@ -541,6 +570,7 @@ private:
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static BitClusterType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void    Visit(TypeVisitor *tv)  { tv->VisitBitCluster(this); }
     virtual NIError InitData(void* pData)   { return kNIError_Success; }
     virtual Int32 BitSize()                 { return _bitSize; }
 };
@@ -556,6 +586,7 @@ private:
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static EquivalenceType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void    Visit(TypeVisitor *tv)  { tv->VisitEquivalence(this); }
     virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
@@ -574,6 +605,7 @@ private:
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static ClusterType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void    Visit(TypeVisitor *tv)  { tv->VisitCluster(this); }
     virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
@@ -593,6 +625,7 @@ private:
     static IntIndex StructSize(Int32 count) { return AggrigateType::StructSize(count); }
 public:
     static ParamBlockType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
+    virtual void    Visit(TypeVisitor *tv)  { tv->VisitParamBlock(this); }
     virtual NIError InitData(void* pData)
         {
             return kNIError_Success;
@@ -615,29 +648,33 @@ class ArrayType : public WrappedType
 private:
     ArrayType(TypeManager* typeManager, TypeRef elementType, IntIndex rank, IntIndex* dimensionLengths);
     static IntIndex StructSize(Int32 rank) { return sizeof(ArrayType) + ((rank-1) * sizeof(IntIndex)); }
+
 public:
     enum { MaximumRank = 255 };   
     static ArrayType* New(TypeManager* typeManager, TypeRef elementType, IntIndex rank, IntIndex* dimensionLengths);
     
-    // EmptyInstance is a singleton for each instance of an ArrayType used as the default
-    // value for dynamic arrays.
-    // TypedArray1DCore *_emptyInstance;     // TODO
+    // _pDefault is a singleton for each instance of an ArrayType used as the default
+    // value, allocated one demand
+    void*   _pDefault;
     
     // In the type dimension is described as follows:
     // negative=bounded, positive=fixed, zero=fix with no elements
     // negative VariableDimensionSentinel means varible, and will not be prealocated.
     IntIndex    _dimensionLengths[1];
     
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitArray(this); }
+    virtual TypeRef BaseType()                          { return null; } // arrays are a more advanced wrapping of a type.
     virtual Int32   SubElementCount()                   { return 1; }
-    virtual TypeRef GetSubElementByName(SubString* name){ return null; }
+    virtual TypeRef GetSubElementByName(SubString* name){ return Rank() == 0 ? _wrapped->GetSubElementByName(name) : null ; }
     virtual TypeRef GetSubElement(Int32 index)          { return index == 0 ? _wrapped : null; }
     virtual void    GetName(SubString* name)            { name->AliasAssignCStr("Array"); }
-    virtual TypeRef GetBaseType()                       { return null; }
     virtual IntIndex* GetDimensionLengths()             { return &_dimensionLengths[0]; }
 
+    virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
+
 };
 //------------------------------------------------------------
 // DefaultValueType - A type that can initialize values to non zero/empty values
@@ -646,20 +683,11 @@ class DefaultValueType : public WrappedType
 {
 private:
     DefaultValueType(TypeManager* typeManager, TypeRef type);
-    ~DefaultValueType();
+    static IntIndex StructSize(TypeRef type)            { return sizeof(DefaultValueType) + type->TopAQSize(); }
 public:
     static DefaultValueType* New(TypeManager* typeManager, TypeRef type);
-    // The custom default value. Either stored in the object or in a TypedBlock.
-    union {
-        TypedBlock*     _typedBlock;
-        void*           _pointer;
-        Double			_double;
-        AQBlock8        _aqBlock8;
-        AQBlock4        _aqBlock4;
-        AQBlock2        _aqBlock2;
-        AQBlock1        _aqBlock1;
-    } u;
 public:
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitDefaultValue(this); }
     virtual void*   Begin(PointerAccessEnum mode);
     virtual NIError InitData(void* pData);
 };
@@ -672,7 +700,7 @@ protected:
     PointerType(TypeManager* typeManager, TypeRef type);
 public:
     static PointerType* New(TypeManager* typeManager, TypeRef type);
-    
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitPointer(this); }
     virtual TypeRef GetSubElement(Int32 index)          { return index == 0 ? _wrapped : null; }
     virtual Int32   SubElementCount()                   { return 1; }
     virtual TypeRef GetSubElementByName(SubString* name){ return null; }
@@ -695,15 +723,40 @@ public:
         *(void**)pData = _defaultPointerValue;
         return kNIError_Success;
     }
-    virtual void*   Begin(PointerAccessEnum mode)   { return &_defaultPointerValue; }
+    virtual void*   Begin(PointerAccessEnum mode)       { return &_defaultPointerValue; }
 };
 //------------------------------------------------------------
-// TypedArray1DCore -
+// CustomAllocType - A type that has custom Init/Copy/Clear functions
+//------------------------------------------------------------
+class IAlloc {
+public:
+    virtual NIError InitData(TypeRef type, void* pData) = 0;
+    virtual NIError CopyData(TypeRef type, const void* pData, void* pDataCopy) = 0;
+    virtual NIError ClearData(TypeRef type, void* pData) = 0;
+};
+    
+class CustomAllocType : public WrappedType
+{
+protected:
+    CustomAllocType(TypeManager* typeManager, TypeRef type, IAlloc *pAlloc);
+    IAlloc*    _pAlloc;
+public:
+    static CustomAllocType* New(TypeManager* typeManager, TypeRef type, IAlloc *pIAlloc);
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitPointer(this); }
+    virtual NIError InitData(void* pData)               { return _pAlloc->InitData(this, pData); }
+    virtual NIError CopyData(const void* pData, void* pDataCopy) { return _pAlloc->CopyData(this, pData, pDataCopy); }
+    virtual NIError ClearData(void* pData)              { return _pAlloc->ClearData(this, pData); }
+};
+
+//------------------------------------------------------------
+// TypedArrayCore -
 // The base class contains all the member fields,
 // and the core algorithms for arrays
 //------------------------------------------------------------
-typedef TypedArray1DCore* TypedArray1dCoreRef;
-class TypedArray1DCore
+typedef TypedArrayCore *TypedArrayCoreRef, TypedBlock; // TODO get rid of TypedBlock
+typedef TypedBlock *TypedBlockRef;  // TODO => merge into ArrayCoreRef
+
+class TypedArrayCore  // =>TypedArrayCore
 {
 protected:
 #ifdef VIVM_TYPE_MANAGER
@@ -711,7 +764,6 @@ protected:
     AQBlock1*               _pRawBufferEnd;
     TypeRef                 _typeRef;
     TypeRef                 _eltTypeRef;
-//  AQBlock1*               _pCapactiy; TODO
 #endif
 
     // _dimensionAndSlabLengths works as follows
@@ -726,11 +778,11 @@ public:
     IntIndex* GetSlabLengths()      { return &_dimensionAndSlabLengths[0] + _typeRef->Rank(); }
     
 protected:
-    static IntIndex StructSize(Int32 rank) { return sizeof(TypedArray1DCore) + ((rank-1) * sizeof(IntIndex) * 2); }
-    TypedArray1DCore(Int32 rank)
-    {
-        memset(this, 0, TypedArray1DCore::StructSize(rank));
-    }
+    static IntIndex StructSize(Int32 rank)  { return sizeof(TypedArrayCore) + ((rank-1) * sizeof(IntIndex) * 2); }
+    TypedArrayCore(TypeRef type);
+public:
+    static TypedArrayCore* New(TypeRef type);
+
 public:
     AQBlock1* BeginAt(IntIndex index)
     {
@@ -741,6 +793,7 @@ public:
         return begin;
     }
 public:
+    void* RawObj()                  { VIVM_CORE_ASSERT(_typeRef->Rank() == 0); return RawBegin(); } // some extra asserts fo  ZDAs
     AQBlock1* RawBegin()            { return _pRawBufferBegin; }
     AQBlock1* RawEnd()              { return _pRawBufferEnd; }
     void* BeginAtAQ(IntIndex index) { return RawBegin() + index; }
@@ -748,17 +801,18 @@ public:
 public:
     TypeRef Type()                  { return _typeRef; }
     TypeRef ElementType()           { return _eltTypeRef; }
+    Boolean SetElementType(TypeRef, Boolean preserveElements);
     
 protected:
-    NIError AQAlloc(IntIndex countBytes);
-    NIError AQRealloc(IntIndex countBytes, IntIndex preserveBytes);
+    Boolean AQAlloc(IntIndex countBytes);
+    Boolean AQRealloc(IntIndex countBytes, IntIndex preserveBytes);
     void AQFree();
     
 public:
     IntIndex AQSize()               { return (IntIndex) (_pRawBufferEnd - _pRawBufferBegin); }
     Boolean ValidateAccess(IntIndex index, IntIndex range);
     
-    static Boolean ValidateHandle(TypedArray1DCore* block)
+    static Boolean ValidateHandle(TypedArrayCore* block)
     {
         // TODO: Allow for block valiate mode where all allocations and frees are tracked in a map
         return (block != null);
@@ -805,16 +859,16 @@ public:
     NIError ClearData();
     
     // Resize for multi dim arrays
-    NIError ResizeDimensions(Int32 rank, Int32 *dimensionLengths);
+    Boolean ResizeDimensions(Int32 rank, Int32 *dimensionLengths);
     
     // Make this array match the shape of the reference type.
-    NIError ResizeToMatch(TypedArray1DCore* pReference);
+    Boolean ResizeToMatch(TypedArrayCore* pReference);
     
     // Resize for 1d arrays, if not enough memory leave as is.
-    NIError Resize(Int32 size);
+    Boolean Resize(Int32 size);
     
     // Resize ,if not enough memory, then size to zero
-    NIError ResizeOrEmpty(Int32 size);
+    Boolean ResizeOrEmpty(Int32 size);
     
 public:
     NIError Replace1D(IntIndex position, IntIndex count, const void* pSource, Boolean truncate);
@@ -822,16 +876,17 @@ public:
     NIError Remove1D(IntIndex position, IntIndex count);    
 };
 
-// TypedArray1D -  a template class that provides staticly typed methods.
+// TypedArray1D - a template class that provides staticly typed methods.
 // the template assumes that template type matches the runt-time type.
 template <class T>
-class TypedArray1D : public TypedArray1DCore// TODO could/should this drive from TypeCommon?
+class TypedArray1D : public TypedArrayCore
 {
 public:
-    T* Begin()                  { return (T*) TypedArray1DCore::RawBegin(); }
-    T* End()                    { return (T*) TypedArray1DCore::RawEnd(); }
+    T* Obj()                    { return (T*) RawObj(); }
+    T* Begin()                  { return (T*) TypedArrayCore::RawBegin(); }
+    T* End()                    { return (T*) TypedArrayCore::RawEnd(); }
     T  At(IntIndex index)       { return *(T*) BeginAt(index);};
-    T* BeginAt(IntIndex index)  { return (T*) TypedArray1DCore::BeginAt(index); }
+    T* BeginAt(IntIndex index)  { return (T*) TypedArrayCore::BeginAt(index); }
     template <class T2> T2 AtAQ(IntIndex index) { return *(T2*)BeginAtAQ(index); }
     
     // TODO Indexing every element of a multi-dim array with these would be pretty costly
@@ -850,31 +905,6 @@ public:
     NIError Append(IntIndex count, const T* pElements)  { return Insert1D(Length(), count, pElements); }
     NIError Append(TypedArray1D* array) { return Insert1D(Length(), array->Length(), array->Begin()); }
     NIError CopyFrom(IntIndex count, const T* pElements){ return Replace1D(0, count, pElements, true); }
-    
-public:
-protected:
-    // This creates a block of bytes described by the type supplied. There are two
-    // types of blocks.
-    //  (1) If the type is an array then the block will hold 0 or more elements of the array. If its zero
-    //      no memory will be allocated for the element buffer
-    //  (2) If the type is a cluster then the block will hold exactly 1 instance of that cluster.
-    //      and memory is allocated so teh element buffer can hold the cluster
-    TypedArray1D(TypeRef typeRef)
-    : TypedArray1DCore(typeRef->IsArray() ? typeRef->Rank() : 0)
-    {
-        _typeRef = typeRef;
-        if (typeRef->IsArray()) {
-            // Arrays: cache a copy of the element TypeRef and leave the buffer empty
-            _eltTypeRef = typeRef->GetSubElement((Int32)0);
-            VIVM_CORE_ASSERT(_pRawBufferBegin == null);
-            VIVM_CORE_ASSERT(_pRawBufferEnd == null);
-            ResizeDimensions(typeRef->Rank(), typeRef->GetDimensionLengths());
-        } else {
-            // Clusters: null out _eltTypeRef, and allocate storage.
-            _eltTypeRef = null;
-            AQAlloc(typeRef->TopAQSize());
-        }
-    };
 };
 
 //------------------------------------------------------------
@@ -895,16 +925,6 @@ typedef TypedArray1D< UInt8 > BinaryBuffer, *BinaryBufferRef;
 typedef TypedArray1D< Int32 > Int32Array1D;
 typedef TypedArray1D< StringRef > StringArray1D, *StringArray1DRef;
 typedef TypedArray1D< TypeRef > TypeRefArray1D;
-
-//------------------------------------------------------------
-typedef TypedBlock* TypedBlockRef;
-class TypedBlock : public TypedArray1D<UInt8>
-{
-private:
-    TypedBlock(TypeRef typeRef) :TypedArray1D<UInt8>(typeRef) {}
-public:
-    static NIError Create(TypeRef typeRef, TypedBlockRef* pData);
-};
 
 //------------------------------------------------------------
 // Utility functions to read and write numbers to memory basd on size and encoding

@@ -41,22 +41,21 @@ enum
 };
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 
 using namespace Vireo;
 
 VIVM_FUNCTION_SIGNATURE3(MailBoxOpen, Int8, StringRef, Int8)
 {
     Int8 boxNo        = _Param(0);
-    StringRef boxName = _Param(1);
+    TempStackCStringFromString boxName(_Param(1));
     Int8 dataType     = _Param(2);
 
-    TempStackCStringFromString boxNameCStr(boxName);
     DSPSTAT DspStat = FAILBREAK;
 
     if (OK != ComInstance.MailBox[boxNo].Status)
     {
-        snprintf((char*)(&(ComInstance.MailBox[boxNo].Name[0])), 50,"%s",boxNameCStr.BeginCStr());
+        snprintf((char*)(&(ComInstance.MailBox[boxNo].Name[0])), 50,"%s",boxName.BeginCStr());
         memset(ComInstance.MailBox[boxNo].Content, 0, MAILBOX_CONTENT_SIZE);
         ComInstance.MailBox[boxNo].Type      =  dataType;
         ComInstance.MailBox[boxNo].Status    =  OK;
@@ -81,11 +80,15 @@ VIVM_FUNCTION_SIGNATURE1(MailBoxClose, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
 {
     Int8 boxNo   = _Param(0);
     Int8 length  = _Param(1);
-    TypedArray1dCoreRef data = _Param(2); // uInt8 reference
+    TypedArrayCoreRef data;
+    if (_ParamPointer(2))
+        data = _Param(2);
+    else
+        return _NextInstruction();
 
     if (OK == ComInstance.MailBox[boxNo].Status)
     {
@@ -147,11 +150,11 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArray1dCoreRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(MailBoxWrite, StringRef, StringRef, TypedArray1dCoreRef)
+VIVM_FUNCTION_SIGNATURE3(MailBoxWrite, StringRef, StringRef, TypedArrayCoreRef)
 {
     TempStackCStringFromString brickName(_Param(0));
     TempStackCStringFromString boxName(_Param(1));
-    TypedArray1dCoreRef data = _Param(2); // uInt8
+    TypedArrayCoreRef data = _Param(2); // uInt8
 
     UBYTE ChNos;
     UBYTE ComChNo;
@@ -242,7 +245,7 @@ VIVM_FUNCTION_SIGNATURE3(ComSetConnection, Int8, StringRef, Int8)
     }
     else if (hardware == HW_WIFI)
     {
-        if (connect && (cWiFiGetIndexFromName((char*)name.BeginCStr(), (UBYTE*)&item) == OK))
+        if (connect && (cWiFiGetIndexFromName(name.BeginCStr(), (UBYTE*)&item) == OK))
         {
             cWiFiConnectToAp((int)item);
             DspStat = NOBREAK;
@@ -261,45 +264,57 @@ VIVM_FUNCTION_SIGNATURE7(ComGetFavourItem, Int8, Int8, Int8, StringRef, Int8, In
     Int8 hardware   = _Param(0);
     Int8 item       = _Param(1);
     Int8 length     = _Param(2);
-    StringRef name  = _Param(3); // reference
-    Int8 *paired    = _ParamPointer(4); // reference
-    Int8 *connected = _ParamPointer(5); // reference
-    Int8 *type      = _ParamPointer(6); // reference
+    StringRef name;
+    Int8 paired = 0;
+    Int8 connected = 0;
+    Int8 type = 0;
 
+    Utf8Char *nameBegin;
     DSPSTAT DspStat = FAILBREAK;
     UBYTE Flags;
 
-    if (length == -1)
-        length = vmBRICKNAMESIZE;
-    name->Resize(length);
+    if (_ParamPointer(3))
+    {
+        name = _Param(3);
+        name->Resize(length == -1 ? vmBRICKNAMESIZE : length);
+        length = name->Length();
+        nameBegin = name->Begin();
+    }
+    else
+    {
+        length = 0;
+        nameBegin = 0;
+    }
 
     if (hardware == HW_BT)
     {
-        *paired = 1;
-        *connected = 0;
-        *type = ICON_UNKNOWN;
+        paired = 1;
+        type = ICON_UNKNOWN;
 
-        cBtGetDevListEntry(item, connected, type, (UBYTE*)name->Begin(), length);
+        cBtGetDevListEntry(item, &connected, &type, (UBYTE*)nameBegin, length);
         DspStat = NOBREAK;
     }
     else if (hardware == HW_WIFI)
     {
-        *paired = 0;
-        *connected = 0;
-        *type = 0;
-
-        cWiFiGetName((char *)name->Begin(), (int)item, length);
+        cWiFiGetName((char*)nameBegin, (int)item, length);
         Flags = cWiFiGetFlags(item);
 
         if (Flags & CONNECTED)
-            *connected = 1;
+            connected = 1;
         if (Flags & KNOWN)
-            *paired = 1;
+            paired = 1;
         if (Flags & WPA2)
-            *type = 1;
+            type = 1;
 
         DspStat = NOBREAK;
     }
+
+    if (_ParamPointer(4))
+        _Param(4) = paired;
+    if (_ParamPointer(5))
+        _Param(5) = connected;
+    if (_ParamPointer(6))
+        _Param(6) = type;
 
     SetDispatchStatus(DspStat);
 

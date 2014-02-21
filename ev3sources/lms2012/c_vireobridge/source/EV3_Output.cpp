@@ -27,7 +27,7 @@ extern "C" {
 #include "c_daisy.h"
 }
 
-#include "ExecutionContext.h"
+#include "TypeAndDataManager.h"
 #include "StringUtilities.h"
 
 using namespace Vireo;
@@ -543,13 +543,8 @@ VIVM_FUNCTION_SIGNATURE3(OutputGetCount, UInt8, UInt8, Int32)
     UInt8  no    = _Param(1);
     Int32 *tacho = _ParamPointer(2); // reference
 
-    if (layer == 0)
-    {
-        if (no < OUTPUTS)
-        {
-            *tacho = OutputInstance.pMotor[no].TachoSensor;
-        }
-    }
+    if (tacho && layer == 0 && no < OUTPUTS)
+        *tacho = OutputInstance.pMotor[no].TachoSensor;
 
     return _NextInstruction();
 }
@@ -559,6 +554,9 @@ VIVM_FUNCTION_SIGNATURE3(OutputTest, UInt8, UInt8, UInt8)
     UInt8  layer  = _Param(0);
     UInt8  nos    = _Param(1);
     UInt8 *isBusy = _ParamPointer(2); // reference
+
+    if (isBusy == 0)
+        return _NextInstruction();
 
     char OutputData[20];
     int test1, test2;

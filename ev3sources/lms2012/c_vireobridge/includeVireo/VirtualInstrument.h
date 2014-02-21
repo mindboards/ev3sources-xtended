@@ -37,14 +37,13 @@ class VIClump;
 #define VI_TypeName             "VirtualInstrument"
 #define ReentrantVI_TypeName    "ReentrantVirtualInstrument"
 
-#define VI_TypeString             \
-"c(                               \
-    e(.ExecutionContext Context)  \
-    e(.Variant ParamBlock)        \
-    e(.Variant DataSpace)         \
-    e(.VIClumpArray1D Clumps)     \
-)"
-
+#define VI_TypeString               \
+"a(c(                               \
+    e(.ExecutionContext Context)    \
+    e(a(.*) ParamBlock)             \
+    e(a(.*) DataSpace)              \
+    e(a(.VIClump *) Clumps)         \
+))"
 
 class VirtualInstrument
 {
@@ -59,10 +58,12 @@ public :
 public:
     VirtualInstrument(ExecutionContext *context, int clumps, TypeRef paramBlockType, TypeRef dataSpaceType);
     ExecutionContext* OwningContext()   {return _executionContext;}
-    TypedBlock* ParamBlock()            {return _paramBlock;}
-    TypedBlock* DataSpace()             {return _dataSpace;}
+    TypedArrayCore* ParamBlock()        {return _paramBlock;}
+    TypedArrayCore* DataSpace()         {return _dataSpace;}
     TypedArray1D<VIClump>* Clumps()     {return _clumps;}
 };
+
+typedef TypedArray1D<VirtualInstrument> VirtualInstrumentObject;
 
 class FunctionClump
 {
@@ -70,27 +71,18 @@ public:
 	InstructionCore* _codeStart;        // first instruction object in clump. may be shared  between multipl QEs
 };
 
-// Still tinking about how to arrange these classes
-class QueueClump
-{
-private:
-	InstructionCore* _codeStart;        // first instruction object in clump. may be shared  between multipl QEs
-};
-
-#define VIClump_TypeString          \
-"c(                                 \
-e(.DataPointer,CodeStart)           \
-e(.DataPointer,Next)                \
-e(.DataPointer,Owner)               \
-e(.DataPointer,NextWaitingCaller)   \
-e(.DataPointer,Caller)              \
-e(.DataPointer,SavePC)              \
-e(.Int64,WakeUpInfo)                \
-e(.Int32,FireCount)                 \
-e(.Int32,ShortCount)                \
+#define VIClump_TypeString              \
+"c(                                     \
+    e(.InstructionList CodeStart)       \
+    e(.DataPointer Next)                \
+    e(.DataPointer Owner)               \
+    e(.DataPointer NextWaitingCaller)   \
+    e(.DataPointer Caller)              \
+    e(.Instruction SavePC)              \
+    e(.Int64 WakeUpInfo)                \
+    e(.Int32 FireCount)                 \
+    e(.Int32 ShortCount)                \
 )"
-
-
 
 // A QueueElt (QE) will be allocated for every VI and every sub clump for VIs that have parallelism.
 // Reentrant callers need to maintain seperate state so a copy is needed for each call site.
@@ -110,20 +102,12 @@ public:
     
 public:
     void Trigger();
-    void Wait();
     CounterType         FireCount() { return _fireCount;}
     CounterType         ShortCount() { return _shortCount;}
     
     void InsertIntoWaitList(VIClump* elt);
     VirtualInstrument*  OwningVI() {return _owningVI;};
-    TypeManager*        TheTypeManager();
-    
-#ifdef VIVM_DYNAMIC_ALLOCATION
-public:
-    void InitData();
-    void ClearData();
-    void FreeInstructions(InstructionCore* instruction);
-#endif
+    TypeManager*        TheTypeManager();    
 };
 
 // The SubVI Call instruciton contains a pointer tot he root clump
@@ -133,12 +117,7 @@ struct CallVIInstruction : public InstructionCore
     _ParamImmediateDef(VIClump*, viRootClump);
     _ParamImmediateDef(InstructionCore*, copyInSnippet);
     _ParamImmediateDef(InstructionCore*, copyOutSnippet);
-#if 0
-    // rescheduleSnippet is the only r/w element in generated, an issue if if instructions are stored in FLASH
-    // the state could be stored in the current clump a well since a clump can only be
-    // suspend for one VI cal at a time.
-    // _ParamImmediateDef(InstructionCore*, rescheduleSnippet);
-#endif
+    NEXT_INSTRUCTION_METHOD()
 };
 
 #ifdef VIVM_DYNAMIC_ALLOCATION
@@ -189,7 +168,29 @@ class ClumpParseState
     static const Int32 kMaxArguments = 100; // TODO dynamic
     static const Int32 kMaxPatchInfos = 100; // TODO allow more
 public:
+    enum ArgumentState {
+        // Initial state, not where it should end in either.
+        kArgumentNotResolved,
+        // Bad states to end in
+        kArgumentTooMany,
+        kArgumentTooFew,
+        kArgumentTypeMismatch,
+        kArgumentNotOptional,
+        kArgumentNotMutable,
+        // Good states to end in
+        kArgumentResolved_FirstGood,
+        kArgumentResolvedToLocal = kArgumentResolved_FirstGood,
+        kArgumentResolvedToGlobal,
+        kArgumentResolvedToParameter,
+        kArgumentResolvedToClump,
+        kArgumentResolvedToPerch,
+        kArgumentResolvedToStaticString,
+        kArgumentResolvedToInstructionFunction,
+        kArgumentResolved_LastGood = kArgumentResolvedToStaticString,
+    };
+    ArgumentState _argumentState;
     EventLog*       _pLog;
+    
     Int32           _argCount;
     void*           _argPointers[kMaxArguments];
     TypeRef         _argTypes[kMaxArguments];
@@ -205,9 +206,14 @@ public:
     
     VirtualInstrument *_vi;
     VIClump*        _clump;
+private:
     // ----
     Int32           _formalParameterIndex;
     TypeRef         _formalParameterType;
+    TypeRef         _actualArgumentType;
+public:
+    SubString       _actualArgumentName;
+public:
     // ----
     TypeRef         _paramBlockType;
     AQBlock1*       _paramBlockBase;
@@ -237,24 +243,27 @@ public:
     //------------------------------------------------------------
                     ClumpParseState(VIClump* clump, EventLog* pLog);
     void            StartSnippet(InstructionCore** startLocation);
-    TypeRef         FormalParameterType();
+    TypeRef         FormalParameterType()       { return _formalParameterType; }
+    TypeRef         ActualArgumentType()        { return _actualArgumentType; }
+    Boolean         LastArgumentError()         { return _argumentState < kArgumentResolved_FirstGood; }
     TypeRef         ReadFormalParameterType();
     void            SetClumpFireCount(Int32 fireCount);
     TypeRef         StartInstruction(SubString* opName);
     TypeRef         ReresolveInstruction(SubString* opName, bool allowErrors);
-    TypeRef         ResolveActualArgumentAddress(SubString* argument, AQBlock1** ppData);
-    NIError         AddDataTargetArgument(SubString* argument, Boolean prependType);
-    NIError         AddStaticString(SubString* argument);
+    void            ResolveActualArgumentAddress(SubString* argument, AQBlock1** ppData);
+    void            AddDataTargetArgument(SubString* argument, Boolean prependType);
+    void            AddStaticString(SubString* argument);
     void            InternalAddArg(TypeRef actualType, void* arg);
     void            InternalAddArgNeedingPatch(PatchInfo::PatchType patchType, void** whereToPeek);
     Boolean         VarArgParameterDetected()   { return _pVarArgCount != null; }
     Boolean         GenericFunction()           { return _instructionType->HasGenericType(); }
     void            AddVarArgCount();
     void            MarkPerch(SubString* perchToken);
-    NIError         AddBranchTargetArgument(SubString* branchTargetToken);
-    NIError         AddClumpTargetArgument(SubString* clumpIndexToken);
+    void            AddBranchTargetArgument(SubString* branchTargetToken);
+    void            AddClumpTargetArgument(SubString* clumpIndexToken);
+    void            AddInstructionFunctionArgument(SubString* instructionNameToken);
     VirtualInstrument*  AddSubVITargetArgument(SubString* subVIName);
-    NIError         AddInstructionFunctionArgument(SubString* instructionNameToken);
+    void            LogArgumentProcessing(Int32 lineNumber);
     InstructionCore*    EmitCallVIInstruction();
     InstructionCore*    EmitInstruction();
     void            CommitSubSnippet();

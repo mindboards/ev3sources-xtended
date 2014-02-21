@@ -21,6 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void vm_init(struct tVirtualMachineInfo *);
+void vm_exit(void);
+
 void VireoInit(void);
 void VireoStep(void);
 void VireoMemAccess(void);
