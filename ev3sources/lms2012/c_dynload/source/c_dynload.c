@@ -55,6 +55,8 @@ void dynloadVMExit()
   // this will clean up anything that requires it, in the VM
 	if (virtualMachineInfo.vm_exit != NULL)
 		(virtualMachineInfo.vm_exit)();
+	else
+		SetDispatchStatus(FAILBREAK);
 
 	// Reinitialise everything to 0
 	dynloadInit();
@@ -74,7 +76,7 @@ void dynloadVMExit()
  *  \param  (DATA8)   VMINDEX - VM Index, Robotc = 0, Labview = 1
  *  \return (DATA8)   RESULT  - OK if VM loaded ok FAIL if it did not.
  */
-/*! \brief  opINPUT_READ byte code
+/*! \brief  opDYNLOAD_VMLOAD(VMINDEX, RESULT) byte code
  *
  */
 void dynloadVMLoad()
@@ -92,13 +94,13 @@ void dynloadVMLoad()
   vmIndex = *(char *)PrimParPointer();
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Called with index: %d\n", vmIndex);
+	fprintf(stderr, "DYNLOAD: Called with index: %d\r\n", vmIndex);
 #endif
 
   // A VM has already been loaded.
-  if (virtualMachineInfo.vmIndex < 0)
+  if (virtualMachineInfo.vmIndex >= 0)
   {
-  	res = FAIL;
+  	res = virtualMachineInfo.vmIndex == vmIndex ? OK : FAIL;
 		*(DATA8*)PrimParPointer() =  res;
   	return;
   }
@@ -111,11 +113,11 @@ void dynloadVMLoad()
 			sprintf(fullVMPath, "%s/%s", DYNLOAD_VM_SO_PATH, DYNLOAD_VM_ROBOTC_SO_NAME);
 			break;
 		case DYNLOAD_VM_LABVIEW:
-			sprintf(fullVMPath, "%s/%s", DYNLOAD_VM_SO_PATH, DYNLOAD_VM_ROBOTC_SO_NAME);
+			sprintf(fullVMPath, "%s/%s", DYNLOAD_VM_SO_PATH, DYNLOAD_VM_LABVIEW_SO_NAME);
 			break;
 		default:
 #ifdef DEBUG_DYNLOAD
-			fprintf(stderr, "DYNLOAD: Illegal VM Index %d\n", vmIndex);
+			fprintf(stderr, "DYNLOAD: Illegal VM Index %d\r\n", vmIndex);
 #endif
 			res = FAIL;
 			*(DATA8*)PrimParPointer() =  res;
@@ -131,7 +133,7 @@ void dynloadVMLoad()
 	virtualMachineInfo.soHandle = dlopen(fullVMPath, RTLD_LAZY);
 	if (!virtualMachineInfo.soHandle) {
 #ifdef DEBUG_DYNLOAD
-		fprintf(stderr, "DYNLOAD: %s\n", dlerror());
+		fprintf(stderr, "DYNLOAD: %s\r\n", dlerror());
 #endif
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
@@ -139,7 +141,7 @@ void dynloadVMLoad()
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "done\n", fullVMPath);
+	fprintf(stderr, "done\r\n");
 #endif
 
 	dlerror();    /* Clear any existing error */
@@ -154,14 +156,14 @@ void dynloadVMLoad()
 	*(void **) (&initFunc) = dlsym(virtualMachineInfo.soHandle, "vm_init");
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "done\n");
+	fprintf(stderr, "done\r\n");
 #endif
 
-	// If an error occured revolving our entry point, shout about it.
+	// If an error occured resolving our entry point, shout about it.
 	if ((error = dlerror()) != NULL)
 	{
 #ifdef DEBUG_DYNLOAD
-		fprintf(stderr, "DYNLOAD: %s\n", error);
+		fprintf(stderr, "DYNLOAD: %s\r\n", error);
 #endif
 		dlclose(virtualMachineInfo.soHandle);
 		res = FAIL;
@@ -202,11 +204,13 @@ void dynloadVMLoad()
 void dynloadEntry_0()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[0] != NULL)
 		(virtualMachineInfo.entryPointFunc[0])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -228,11 +232,13 @@ void dynloadEntry_0()
 void dynloadEntry_1()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[1] != NULL)
 		(virtualMachineInfo.entryPointFunc[1])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -254,11 +260,13 @@ void dynloadEntry_1()
 void dynloadEntry_2()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[2] != NULL)
 		(virtualMachineInfo.entryPointFunc[2])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -280,11 +288,13 @@ void dynloadEntry_2()
 void dynloadEntry_3()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[3] != NULL)
 		(virtualMachineInfo.entryPointFunc[3])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -306,11 +316,13 @@ void dynloadEntry_3()
 void dynloadEntry_4()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[4] != NULL)
 		(virtualMachineInfo.entryPointFunc[4])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -332,11 +344,13 @@ void dynloadEntry_4()
 void dynloadEntry_5()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[5] != NULL)
 		(virtualMachineInfo.entryPointFunc[5])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -358,11 +372,13 @@ void dynloadEntry_5()
 void dynloadEntry_6()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[6] != NULL)
 		(virtualMachineInfo.entryPointFunc[6])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -384,11 +400,13 @@ void dynloadEntry_6()
 void dynloadEntry_7()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[7] != NULL)
 		(virtualMachineInfo.entryPointFunc[7])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -410,11 +428,13 @@ void dynloadEntry_7()
 void dynloadEntry_8()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[8] != NULL)
 		(virtualMachineInfo.entryPointFunc[8])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }
 
 
@@ -436,9 +456,11 @@ void dynloadEntry_8()
 void dynloadEntry_9()
 {
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Entry point %s called\n", __func__);
+	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
 	if (virtualMachineInfo.entryPointFunc[9] != NULL)
 		(virtualMachineInfo.entryPointFunc[9])();
+	else
+		SetDispatchStatus(FAILBREAK);
 }

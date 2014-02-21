@@ -127,7 +127,6 @@ enum
   COM_GET_SUBP    = 14,
   COM_SET_SUBP    = 15,
   FILENAME_SUBP   = 16,
-  EXTEND_SUBP			= 17,
 
   SUBPS
 };
@@ -388,8 +387,6 @@ static OPCODE OpCodes[256] =
   OC(		opDYNLOAD_ENTRY_7,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
   OC(		opDYNLOAD_ENTRY_8,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
   OC(		opDYNLOAD_ENTRY_9,			PAR8,PAR8,                                      0,0,0,0,0,0           ),
-
-  OC(   opEXTEND,               PAR8,SUBP,EXTEND_SUBP,                          0,0,0,0,0             ),
 
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),
@@ -698,12 +695,5 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   COM_SET_SUBP,           SET_ENCRYPT,            PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
   SC(   COM_SET_SUBP,           SET_SSID,               PAR8,PAR8,                                      0,0,0,0,0,0           ),
   SC(   COM_SET_SUBP,           SET_MODE2,              PAR8,PAR8,                                      0,0,0,0,0,0           ),
-
-//  // layer, port, datalen, data*
-//  SC(   EXTEND_SUBP,            EXT_IIC_READ_DATA,      PAR8,PAR8,PAR8,PAR8,                            0,0,0,0               ),
-//  // layer, port, writelen, wrdata*, readlen
-//  SC(   EXTEND_SUBP,            EXT_IIC_WRITE_DATA,     PAR8,PAR8,PAR8,PAR8,PAR8,                       0,0,0                 ),
-//  // layer, port, status*
-//  SC(   EXTEND_SUBP,            EXT_IIC_READ_STATUS,    PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
 
 };
