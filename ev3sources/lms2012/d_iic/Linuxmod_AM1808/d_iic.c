@@ -1367,19 +1367,11 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 
 			if (IicPort[Port].Result != BUSY)
 			{
-				IicPort[Port].Repeat      =  (*pIicDat).Repeat;
-				IicPort[Port].Time        =  (*pIicDat).Time;
+				IicPort[Port].Repeat      =  1;
+				IicPort[Port].Time        =  0;
 				IicPort[Port].OutLength   =  (*pIicDat).WrLng;
-				if ((*pIicDat).RdLng < 0)
-				{
-					IicPort[Port].InLength    =  0 - (*pIicDat).RdLng;
-					IicPort[Port].Reverse     =  1;
-				}
-				else
-				{
-					IicPort[Port].InLength    =  (*pIicDat).RdLng;
-					IicPort[Port].Reverse     =  0;
-				}
+				IicPort[Port].InLength    =  (*pIicDat).RdLng;
+				IicPort[Port].Reverse     =  0;
 
 				if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
 				{

@@ -473,6 +473,12 @@ typedef   enum
 
 //        SPARE                           111.....
 
+  // Extended opcodes
+  opINPUT_SET_CONN						= 0xE0,	// override the connection type
+  opINPUT_IIC_READ						= 0xE1, // read the last written I2C data
+  opINPUT_IIC_STATUS					= 0XE2, // read the status
+  opINPUT_IIC_WRITE						= 0xE3, // write the data to the I2C bus
+
   // For the 3rd party VMs
   opDYNLOAD_VMLOAD						= 0xF0,
   opDYNLOAD_VMEXIT						= 0xF1,
@@ -487,7 +493,7 @@ typedef   enum
   opDYNLOAD_ENTRY_8						= 0xFA,
   opDYNLOAD_ENTRY_9						= 0xFB,
 
-  // Extended opcodes
+
 
 //  \endverbatim \ref TST \verbatim
   opTST                       = 0xFF  //  11111111

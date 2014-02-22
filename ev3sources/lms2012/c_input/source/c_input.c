@@ -5293,19 +5293,23 @@ void      cInputSample(void)
 
 void      cInputSetConn(void)
 {
-	RESULT res   =  FAIL;
-  DATA8 Layer  =  *(DATA8*)PrimParPointer();
-  DATA8 No     =  *(DATA8*)PrimParPointer();
-  DATA8 Conn   =  *(DATA8*)PrimParPointer();
+  DATA8 Layer  		=  *(DATA8*)PrimParPointer();
+  DATA8 No     		=  *(DATA8*)PrimParPointer();
+  DATA8 Conn   		=  *(DATA8*)PrimParPointer();
+  RESULT *pResult	=  (DATA8*)PrimParPointer();
 
   // This only works for the first layer (for now)
-  if (No != 0)
+  if (Layer != 0)
   {
-  	res = FAIL;
-  	*(DATA8*)PrimParPointer() =  res;
+  	*pResult = FAIL;
   	return;
   }
 
+  if (No >= vmINPUTS)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
 
 	switch (Conn)
 	{
@@ -5334,8 +5338,96 @@ void      cInputSetConn(void)
 		break;
 	}
 
-	res = OK;
-	*(DATA8*)PrimParPointer() =  res;
+	*pResult = OK;
+}
+
+
+void    cInputIICRead(void)
+{
+	DATA8	Layer			= *(DATA8*)PrimParPointer();
+	DATA8 No 				= *(DATA8*)PrimParPointer();
+  DATA8 *RdLng    =	(DATA8*)PrimParPointer();
+  DATA8 *pRdData  =	(DATA8*)PrimParPointer();
+  DATA8 *pResult = (DATA8*)PrimParPointer();
+
+  if (Layer != 0)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+  if (No >= vmINPUTS)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+  if (*RdLng > MAX_DEVICE_DATALENGTH)
+  {
+    *RdLng  =  MAX_DEVICE_DATALENGTH;
+  }
+
+	InputInstance.IicDat.Port     =  No;
+	InputInstance.IicDat.RdLng    =  *RdLng;
+
+	ioctl(InputInstance.IicFile,IIC_READ_DATA,&InputInstance.IicDat);
+
+	if (InputInstance.IicDat.Result == OK)
+	{
+    Memcpy(pRdData,&InputInstance.IicDat.RdData[0], InputInstance.IicDat.RdLng);
+		*pResult = OK;
+	}
+	else
+	{
+		*pResult = FAIL;
+	}
+}
+
+
+
+void    cInputIIWrite(void)
+{
+
+	DATA8	Layer			= *(DATA8*)PrimParPointer();
+	DATA8 No 				= *(DATA8*)PrimParPointer();
+  DATA8 WrLng     = *(DATA8*)PrimParPointer();
+  DATA8 *pWrData  = (DATA8*)PrimParPointer();
+  DATA8 RdLng     = *(DATA8*)PrimParPointer();
+  DATA8 *pResult  = (DATA8*)PrimParPointer();
+
+  if (Layer != 0)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+  if (No >= vmINPUTS)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+	if (WrLng > MAX_DEVICE_DATALENGTH)
+	{
+		WrLng  =  MAX_DEVICE_DATALENGTH;
+	}
+	if (RdLng > MAX_DEVICE_DATALENGTH)
+	{
+		RdLng  =  MAX_DEVICE_DATALENGTH;
+	}
+
+	InputInstance.IicDat.Port     =  No;
+	InputInstance.IicDat.Repeat   =  1;
+	InputInstance.IicDat.Time     =  0;
+	InputInstance.IicDat.WrLng    =  WrLng;
+	InputInstance.IicDat.RdLng    =  RdLng;
+
+	Memcpy(&InputInstance.IicDat.WrData[0],pWrData,InputInstance.IicDat.WrLng);
+
+	ioctl(InputInstance.IicFile,IIC_WRITE_DATA,&InputInstance.IicDat);
+
+
+  *pResult  =  InputInstance.IicDat.Result;
 }
 
 
