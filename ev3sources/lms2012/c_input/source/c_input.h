@@ -87,6 +87,13 @@ void      cInputSample(void);
 
 void      cInputSetConn(void);
 
+void    cInputIICRead(void);
+
+void    cInputIICWrite(void);
+
+void    cInputIICStatus(void);
+
+
 
 typedef   struct
 {

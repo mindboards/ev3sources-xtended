@@ -5296,7 +5296,7 @@ void      cInputSetConn(void)
   DATA8 Layer  		=  *(DATA8*)PrimParPointer();
   DATA8 No     		=  *(DATA8*)PrimParPointer();
   DATA8 Conn   		=  *(DATA8*)PrimParPointer();
-  RESULT *pResult	=  (DATA8*)PrimParPointer();
+  DATA8 *pResult	=  (DATA8*)PrimParPointer();
 
   // This only works for the first layer (for now)
   if (Layer != 0)
@@ -5385,7 +5385,7 @@ void    cInputIICRead(void)
 
 
 
-void    cInputIIWrite(void)
+void    cInputIICWrite(void)
 {
 
 	DATA8	Layer			= *(DATA8*)PrimParPointer();
@@ -5426,6 +5426,32 @@ void    cInputIIWrite(void)
 
 	ioctl(InputInstance.IicFile,IIC_WRITE_DATA,&InputInstance.IicDat);
 
+  *pResult  =  InputInstance.IicDat.Result;
+}
+
+
+void    cInputIICStatus(void)
+{
+
+	DATA8	Layer			= *(DATA8*)PrimParPointer();
+	DATA8 No 				= *(DATA8*)PrimParPointer();
+  DATA8 *pResult  = (DATA8*)PrimParPointer();
+
+  if (Layer != 0)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+  if (No >= vmINPUTS)
+  {
+  	*pResult = FAIL;
+  	return;
+  }
+
+	InputInstance.IicDat.Port     =  No;
+
+	ioctl(InputInstance.IicFile,IIC_READ_STATUS,&InputInstance.IicDat);
 
   *pResult  =  InputInstance.IicDat.Result;
 }
