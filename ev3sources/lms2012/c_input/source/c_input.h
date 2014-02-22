@@ -85,6 +85,8 @@ void      cInputWrite(void);
 
 void      cInputSample(void);
 
+void      cInputSetConn(void);
+
 
 typedef   struct
 {

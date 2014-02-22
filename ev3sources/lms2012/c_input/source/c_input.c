@@ -5291,5 +5291,52 @@ void      cInputSample(void)
   }
 }
 
+void      cInputSetConn(void)
+{
+	RESULT res   =  FAIL;
+  DATA8 Layer  =  *(DATA8*)PrimParPointer();
+  DATA8 No     =  *(DATA8*)PrimParPointer();
+  DATA8 Conn   =  *(DATA8*)PrimParPointer();
+
+  // This only works for the first layer (for now)
+  if (No != 0)
+  {
+  	res = FAIL;
+  	*(DATA8*)PrimParPointer() =  res;
+  	return;
+  }
+
+
+	switch (Conn)
+	{
+		case CONN_NXT_IIC:
+		{
+			InputInstance.Analog.InDcm[No]  = TYPE_NXT_IIC;
+			InputInstance.Analog.InConn[No] = CONN_NXT_IIC;
+		}
+		break;
+
+		// Pretend it's an old NXT touch sensor
+		// You can still read the raw value from pin 1
+		case CONN_NXT_DUMB:
+		{
+			InputInstance.Analog.InDcm[No]  =  TYPE_NXT_TOUCH;
+			InputInstance.Analog.InConn[No] =  CONN_NXT_DUMB;
+		}
+		break;
+
+		// Pretend it's an EV3 touch sensor
+		case CONN_INPUT_DUMB:
+		{
+			InputInstance.Analog.InDcm[No]  =  TYPE_TOUCH;
+			InputInstance.Analog.InConn[No] =  CONN_INPUT_DUMB;
+		}
+		break;
+	}
+
+	res = OK;
+	*(DATA8*)PrimParPointer() =  res;
+}
+
 
 //*****************************************************************************
