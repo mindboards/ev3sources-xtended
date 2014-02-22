@@ -1358,6 +1358,45 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
       }
     }
     break;
+
+    case IIC_WRITE_DATA:
+    {
+			pIicDat                     = (IICDAT*)Pointer;
+
+			Port                        =  (*pIicDat).Port;
+
+			if (IicPort[Port].Result != BUSY)
+			{
+				IicPort[Port].Repeat      =  (*pIicDat).Repeat;
+				IicPort[Port].Time        =  (*pIicDat).Time;
+				IicPort[Port].OutLength   =  (*pIicDat).WrLng;
+				if ((*pIicDat).RdLng < 0)
+				{
+					IicPort[Port].InLength    =  0 - (*pIicDat).RdLng;
+					IicPort[Port].Reverse     =  1;
+				}
+				else
+				{
+					IicPort[Port].InLength    =  (*pIicDat).RdLng;
+					IicPort[Port].Reverse     =  0;
+				}
+
+				if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
+				{
+					IicPort[Port].OutLength =   IIC_DATA_LENGTH;
+				}
+				if (IicPort[Port].InLength > IIC_DATA_LENGTH)
+				{
+					IicPort[Port].InLength  =   IIC_DATA_LENGTH;
+				}
+
+				memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
+				memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
+
+				IicPort[Port].Result        =  BUSY;
+			}
+    }
+    break;
   }
 
   return (0);
