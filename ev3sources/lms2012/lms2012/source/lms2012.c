@@ -59,7 +59,6 @@
  */
 
 #include  "c_dynload.h"
-#include  "EV3_Entry.h"
 
 #include  "lms2012.h"
 #include  "c_math.h"
@@ -2884,9 +2883,6 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opMAILBOX_TEST]        =   &cComTestMailBox,
   [opMAILBOX_READY]       =   &cComReadyMailBox,
   [opMAILBOX_CLOSE]       =   &cComCloseMailBox,
-//  [opVIREO_INIT]          =   &VireoInit,
-//  [opVIREO_STEP]          =   &VireoStep,
-//  [opVIREO_MEMACCESS]     =   &VireoMemAccess,
   [opDYNLOAD_VMLOAD]			= 	&dynloadVMLoad,
   [opDYNLOAD_VMEXIT]			= 	&dynloadVMExit,
   [opDYNLOAD_ENTRY_0]			= 	&dynloadEntry_0,

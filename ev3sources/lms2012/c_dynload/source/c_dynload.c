@@ -33,7 +33,7 @@ void dynloadInit()
 
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
-		virtualMachineInfo.entryPointFunc[0] = NULL;
+		virtualMachineInfo.entryPointFunc[index] = NULL;
 	}
 }
 
