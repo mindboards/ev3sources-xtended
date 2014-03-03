@@ -55,11 +55,11 @@ void robotc_entry_0()
 	void *data = 0;
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "ROBOTC: %s called. inputs: %d, outputs: %d, datalen: %d\n", __func__, cmd, *inputs, outputs, dataSize);
+	fprintf(stderr, "ROBOTC: %s called. inputs: %d, outputs: %d, datalen: %d\n", __func__, *inputs, *outputs, dataSize);
 #endif
 
 	// Only pick a variable off that stack if you should
-	if (datalen > 0)
+	if (dataSize > 0)
 		data = PrimParPointer();
 
 	// do something here
