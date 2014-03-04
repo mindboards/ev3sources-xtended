@@ -25,12 +25,15 @@ IICDAT iic_dat;
 IIC  *pIic;
 
 int IicFile = -1;
+int DcmFile = -1;
+int UartFile = -1;
 
 void usage()
 {
 	fprintf (stderr, "Usage: kmodtest <port> <address> <write len> <write data> <read len>\n");
+	fprintf (stderr, "Usage: kmodtest <port> <write len> <write data> <read len>\n");
 	fprintf (stderr, "port      : 0-3\n");
-	fprintf (stderr, "address   : 2-254\n");
+//	fprintf (stderr, "address   : 2-254\n");
 	fprintf (stderr, "write len : 1-32\n");
 	fprintf (stderr, "write data: up to 32 bytes in hex, space separated\n");
 	fprintf (stderr, "read len  : 0-32\n");
@@ -60,6 +63,7 @@ void parseData(uint8_t *writedata, char *datastring, uint8_t writelen)
 int initI2Cport(uint8_t port)
 {
 	int Index = 0;
+	char Buf[5];
 
 	// Open device driver file
 	IicFile = open(IIC_DEVICE_NAME, O_RDWR | O_SYNC);
@@ -70,6 +74,7 @@ int initI2Cport(uint8_t port)
 		exit(1);
 	}
 
+
 	// Create mmap to kernel module
 	pIic = (IIC*)mmap(0, sizeof(IIC), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, IicFile, 0);
 	if (pIic == MAP_FAILED)
@@ -78,21 +83,50 @@ int initI2Cport(uint8_t port)
 		exit(1);
 	}
 
+	UartFile    =  open(UART_DEVICE_NAME,O_RDWR | O_SYNC);
+
+	if (UartFile == -1)
+	{
+		fprintf(stderr, "Could not open %s\n", UART_DEVICE_NAME);
+		exit(1);
+	}
+
+  // SETUP DRIVERS
+
+	DcmFile = open(DCM_DEVICE_NAME, O_RDWR | O_SYNC);
+	if (DcmFile == -1)
+	{
+		fprintf(stderr, "Could not open %s\n", DCM_DEVICE_NAME);
+		exit(1);
+	}
+
+  for (Index = 0;Index < INPUTS;Index++)
+  { // Initialise pin setup string to do nothing
+
+    Buf[Index]    =  '-';
+  }
+  Buf[Index]      =  0;
+
+  // insert "pins" in setup string
+  Buf[port]     = 0x46;
+  write(DcmFile,Buf,INPUTS);
+
 	// Open the files for
   for (Index = 0;Index < INPUTS;Index++)
   { // build setup string for UART and IIC driver
 
-    devcon.Connection[Index]  =  CONN_UNKNOWN;
-    devcon.Type[Index]        =  TYPE_UNKNOWN;
+    devcon.Connection[Index]  =  CONN_NONE;
+    devcon.Type[Index]        =  TYPE_NONE;
     devcon.Mode[Index]        =  0;
   }
 
   // Now set it up for the I2C port that we're interested in
   devcon.Connection[port] = CONN_NXT_IIC;
-  devcon.Type[port] = TYPE_NXT_IIC;
+  devcon.Type[port] = TYPE_IIC_UNKNOWN;
   devcon.Mode[port] = 0;
 
   // write setup string to kernel module
+  ioctl(UartFile,UART_SET_CONN,&devcon);
   ioctl(IicFile,IIC_SET_CONN,&devcon);
 
 	return (OK);
@@ -100,30 +134,46 @@ int initI2Cport(uint8_t port)
 
 int writeData(IICDAT *iicdatPtr)
 {
-	return (OK);
+	if (ioctl(IicFile, IIC_WRITE_DATA, iicdatPtr) != 0)
+	{
+		fprintf(stderr, "Could not ioctl: IIC_WRITE_DATA");
+		exit(1);
+	}
+
+	return iicdatPtr->Result;
 }
 
 int readData(IICDAT *iicdatPtr)
 {
-	return (OK);
+	if (ioctl(IicFile, IIC_READ_DATA, iicdatPtr) != 0)
+	{
+		fprintf(stderr, "Could not ioctl: IIC_READ_DATA");
+		exit(1);
+	}
+	return iicdatPtr->Result;
 }
 
 int readStatus(IICDAT *iicdatPtr)
 {
-	return (OK);
+	if (ioctl(IicFile, IIC_READ_STATUS, iicdatPtr) != 0)
+	{
+		fprintf(stderr, "Could not ioctl: IIC_READ_STATUS");
+		exit(1);
+	}
+	return iicdatPtr->Result;
 }
 
 int main (int argc, char *argv[])
 {
+	int i = 0;
 	uint8_t port = 0;
-	uint8_t address = 0;
 	uint8_t writedata[IIC_DATA_LENGTH];
 	uint8_t writelen = 0;
 	uint8_t readdata[IIC_DATA_LENGTH];
 	uint8_t readlen = 0;
 	uint8_t result = FAIL;
 
-	if (argc != 6)
+	if (argc != 5)
 	{
 		usage();
 	}
@@ -136,24 +186,27 @@ int main (int argc, char *argv[])
 		usage();
 	}
 
-	// Convert the address
-	address = (uint8_t)atoi(argv[2]);
-	if (address % 2)
-	{
-		fprintf(stderr, "Bad address number\n");
-		usage();
-	}
+//	// Convert the address
+//	address = (uint8_t)atoi(argv[2]);
+//	if (address % 2)
+//	{
+//		fprintf(stderr, "Bad address number\n");
+//		usage();
+//	}
 
-	writelen = (uint8_t)atoi(argv[3]);
+	// The amount of bytes to send
+	writelen = (uint8_t)atoi(argv[2]);
 	if (writelen < 1 || writelen > IIC_DATA_LENGTH)
 	{
 		fprintf(stderr, "Bad write len: %d\n", writelen);
 		usage();
 	}
 
-	parseData(writedata, argv[4], writelen);
+	// Parse the data passed to the program to be sent to the sensor
+	parseData(writedata, argv[3], writelen);
 
-	readlen = (uint8_t)atoi(argv[5]);
+	// The amount of bytes to read
+	readlen = (uint8_t)atoi(argv[4]);
 	if (readlen > IIC_DATA_LENGTH)
 	{
 		fprintf(stderr, "Bad read len: %d\n", writelen);
@@ -175,22 +228,20 @@ int main (int argc, char *argv[])
 	iic_dat.WrLng    =  writelen;
 	iic_dat.RdLng    =  readlen;
 
-	memcpy(&iic_dat.WrData[0], readdata, iic_dat.WrLng);
+	memcpy(&iic_dat.WrData[0], writedata, iic_dat.WrLng);
 
-	ioctl(IicFile, IIC_WRITE_DATA, &iic_dat);
-
-	while (1 == 1)
+	writeData(&iic_dat);
+	while (readStatus(&iic_dat) != OK)
 	{
-		if (result == OK)
-		{
-			break;
-		}
-		else if ((result == FAIL) || (result == STOP))
-		{
-			fprintf (stderr, "There was an error writing to port %d", port);
-		}
-		// Wait 1 ms
-		usleep(1000);
+		fprintf(stderr, ".");
+		usleep(10000);
+	}
+	fprintf(stderr, "\n");
+	readData(&iic_dat);
+
+	for (i = 0; i < iic_dat.RdLng; i++)
+	{
+		fprintf(stderr, "data[%d]: %02X (%c)\n", i, iic_dat.RdData[i], iic_dat.RdData[i]);
 	}
 
 

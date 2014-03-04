@@ -1203,7 +1203,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
           if (IicConfigured[Port] == 0)
           {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//            printk("d_iic  %d   Device1Ioctl: Changing to IIC\n",Port);
+            printk("d_iic  %d   Device1Ioctl: Changing to IIC\n",Port);
 #endif
             IicConfigured[Port]        =  1;
             IicPortType[Port]          =  (*pDevCon).Type[Port];
@@ -1216,7 +1216,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
               if (IicPort[Port].Mode != (*pDevCon).Mode[Port])
               {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//                printk("d_iic  %d   Device1Ioctl: Changing to    %c\n",Port,(*pDevCon).Mode[Port] + '0');
+                printk("d_iic  %d   Device1Ioctl: Changing to    %c\n",Port,(*pDevCon).Mode[Port] + '0');
 #endif
                 IicPort[Port].Mode         =  (*pDevCon).Mode[Port];
                 IicPort[Port].ChangeMode   =  1;
@@ -1229,7 +1229,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
         else
         {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//          printk("d_iic  %d   Device1Ioctl: Changing to non IIC\n",Port);
+          printk("d_iic  %d   Device1Ioctl: Changing to non IIC\n",Port);
 #endif
           (*pIic).Status[Port] &= ~IIC_DATA_READY;
           if (IicConfigured[Port])

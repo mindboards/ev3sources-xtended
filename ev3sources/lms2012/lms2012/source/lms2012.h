@@ -65,13 +65,13 @@ Development with debug messages:    DEBUG defined, TERMINAL_ENABLED = 1, DEBUG_U
 //#define   DEBUG_C_SOUND
 //#define   DEBUG_C_UI
 
-//#define   DEBUG_D_ANALOG
+#define   DEBUG_D_ANALOG
 //#define   DEBUG_D_POWER
-//#define   DEBUG_D_UART
+#define   DEBUG_D_UART
 //#define   DEBUG_D_UART_ERROR
 //#define   DEBUG_D_UI
 //#define   DEBUG_D_SOUND
-//#define   DEBUG_D_IIC
+#define   DEBUG_D_IIC
 //#define   DEBUG_D_USBDEV
 
 //#define   ENABLE_TEST_ON_PORT4
