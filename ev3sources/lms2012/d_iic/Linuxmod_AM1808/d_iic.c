@@ -613,7 +613,7 @@ static RESULT IicPortReceive(UBYTE Port,UBYTE *pTmpBuffer)
 
 enum      IIC_STATE
 {
-  IIC_IDLE,
+  IIC_IDLE, // 0
   IIC_INIT,
   IIC_RESTART,
   IIC_ENABLE,
@@ -630,10 +630,10 @@ enum      IIC_STATE
   IIC_SETUP_START,
   IIC_SETUP_WRITE,
   IIC_SETUP_READ,
-  IIC_WAITING,
+  IIC_WAITING,  // 17
   IIC_WRITING,
   IIC_READING,
-  IIC_REPEAT,
+  IIC_REPEAT,   // 20
   IIC_ERROR,
   IIC_EXIT,
   IIC_STATES
@@ -1371,7 +1371,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 				IicPort[Port].Time        =  0;
 				IicPort[Port].OutLength   =  (*pIicDat).WrLng;
 				IicPort[Port].InLength    =  (*pIicDat).RdLng;
-				IicPort[Port].Reverse     =  0;
+				IicPort[Port].Reverse     =  1;
 
 				if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
 				{

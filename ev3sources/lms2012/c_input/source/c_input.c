@@ -5293,21 +5293,23 @@ void      cInputSample(void)
 
 void      cInputSetConn(void)
 {
-  DATA8 Layer  		=  *(DATA8*)PrimParPointer();
-  DATA8 No     		=  *(DATA8*)PrimParPointer();
+//  DATA8 Layer  		=  *(DATA8*)PrimParPointer();
+//  DATA8 No     		=  *(DATA8*)PrimParPointer();
   DATA8 Conn   		=  *(DATA8*)PrimParPointer();
-  DATA8 *pResult	=  (DATA8*)PrimParPointer();
+
+  DATA8 Device = cInputGetDevice();
+//  DATA8 *pResult	=  (DATA8*)PrimParPointer();
 
   // This only works for the first layer (for now)
-  if (Layer != 0)
-  {
-  	*pResult = FAIL;
-  	return;
-  }
+//  if (Layer != 0)
+//  {
+//  	*pResult = FAIL;
+//  	return;
+//  }
 
-  if (No >= vmINPUTS)
+  if (Device >= vmINPUTS)
   {
-  	*pResult = FAIL;
+//  	*pResult = FAIL;
   	return;
   }
 
@@ -5315,8 +5317,9 @@ void      cInputSetConn(void)
 	{
 		case CONN_NXT_IIC:
 		{
-			InputInstance.Analog.InDcm[No]  = TYPE_NXT_IIC;
-			InputInstance.Analog.InConn[No] = CONN_NXT_IIC;
+			InputInstance.Analog.InDcm[Device]  = TYPE_NXT_IIC;
+			InputInstance.Analog.InConn[Device] = CONN_NXT_IIC;
+//			cInputSetDeviceType(Device,DATA8 Type, DATA8 Mode,int Line)
 		}
 		break;
 
@@ -5324,21 +5327,21 @@ void      cInputSetConn(void)
 		// You can still read the raw value from pin 1
 		case CONN_NXT_DUMB:
 		{
-			InputInstance.Analog.InDcm[No]  =  TYPE_NXT_TOUCH;
-			InputInstance.Analog.InConn[No] =  CONN_NXT_DUMB;
+			InputInstance.Analog.InDcm[Device]  =  TYPE_NXT_TOUCH;
+			InputInstance.Analog.InConn[Device] =  CONN_NXT_DUMB;
 		}
 		break;
 
 		// Pretend it's an EV3 touch sensor
 		case CONN_INPUT_DUMB:
 		{
-			InputInstance.Analog.InDcm[No]  =  TYPE_TOUCH;
-			InputInstance.Analog.InConn[No] =  CONN_INPUT_DUMB;
+			InputInstance.Analog.InDcm[Device]  =  TYPE_TOUCH;
+			InputInstance.Analog.InConn[Device] =  CONN_INPUT_DUMB;
 		}
 		break;
 	}
 
-	*pResult = OK;
+//	*pResult = OK;
 }
 
 

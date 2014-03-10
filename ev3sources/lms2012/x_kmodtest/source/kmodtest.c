@@ -30,7 +30,6 @@ int UartFile = -1;
 
 void usage()
 {
-	fprintf (stderr, "Usage: kmodtest <port> <address> <write len> <write data> <read len>\n");
 	fprintf (stderr, "Usage: kmodtest <port> <write len> <write data> <read len>\n");
 	fprintf (stderr, "port      : 0-3\n");
 //	fprintf (stderr, "address   : 2-254\n");
@@ -51,7 +50,7 @@ void parseData(uint8_t *writedata, char *datastring, uint8_t writelen)
 				break;
 		}
 		*(writedata + j) = (uint8_t)strtol(token, NULL, 16);
-		printf("byte[%d]: 0x%02X\n", j, *(writedata + j));
+//		printf("byte[%d]: 0x%02X\n", j, *(writedata + j));
   }
   if (j != writelen)
   {
@@ -132,6 +131,18 @@ int initI2Cport(uint8_t port)
 	return (OK);
 }
 
+int writeDataOld(IICDAT *iicdatPtr)
+{
+	if (ioctl(IicFile, IIC_SETUP, iicdatPtr) != 0)
+	{
+		fprintf(stderr, "Could not ioctl: IIC_SETUP");
+		exit(1);
+	}
+
+	return iicdatPtr->Result;
+}
+
+
 int writeData(IICDAT *iicdatPtr)
 {
 	if (ioctl(IicFile, IIC_WRITE_DATA, iicdatPtr) != 0)
@@ -172,6 +183,10 @@ int main (int argc, char *argv[])
 	uint8_t readdata[IIC_DATA_LENGTH];
 	uint8_t readlen = 0;
 	uint8_t result = FAIL;
+	int status = 0;
+
+	memset(iic_dat.RdData, 0, IIC_DATA_LENGTH);
+	memset(iic_dat.WrData, 0, IIC_DATA_LENGTH);
 
 	if (argc != 5)
 	{
@@ -185,14 +200,6 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "Bad port number\n");
 		usage();
 	}
-
-//	// Convert the address
-//	address = (uint8_t)atoi(argv[2]);
-//	if (address % 2)
-//	{
-//		fprintf(stderr, "Bad address number\n");
-//		usage();
-//	}
 
 	// The amount of bytes to send
 	writelen = (uint8_t)atoi(argv[2]);
@@ -213,8 +220,6 @@ int main (int argc, char *argv[])
 		usage();
 	}
 
-	fprintf (stderr, "Writing %d bytes to port %d, expecting %d bytes in reply\n", writelen, port, readlen);
-
 	if (initI2Cport(port) != OK)
 	{
 		fprintf(stderr, "Failed to initialise I2C for port %d\n", port);
@@ -227,23 +232,48 @@ int main (int argc, char *argv[])
 	iic_dat.Time     =  0;
 	iic_dat.WrLng    =  writelen;
 	iic_dat.RdLng    =  readlen;
+	iic_dat.Result   =  BUSY;
 
 	memcpy(&iic_dat.WrData[0], writedata, iic_dat.WrLng);
 
+
+//	while (writeDataOld(&iic_dat) == BUSY)
+//	{
+//		switch(iic_dat.Result)
+//		{
+//			case OK: fprintf(stderr, "O"); break;
+//			case BUSY: fprintf(stderr, "B"); break;
+//			case FAIL: fprintf(stderr, "F"); break;
+//			case STOP: fprintf(stderr, "S"); break;
+//		}
+//		usleep(1000);
+//	}
+
 	writeData(&iic_dat);
-	while (readStatus(&iic_dat) != OK)
+	do
 	{
-		fprintf(stderr, ".");
-		usleep(10000);
-	}
-	fprintf(stderr, "\n");
+		status = readStatus(&iic_dat);
+		switch(status)
+		{
+			case OK: fprintf(stderr, "O"); break;
+			case BUSY: fprintf(stderr, "B"); break;
+			case FAIL: fprintf(stderr, "F"); break;
+			case STOP: fprintf(stderr, "S"); break;
+		}
+		usleep(1000);
+	} while (status != OK);
+	fprintf(stderr, ":");
+
 	readData(&iic_dat);
 
-	for (i = 0; i < iic_dat.RdLng; i++)
+	if (iic_dat.RdLng > 0)
 	{
-		fprintf(stderr, "data[%d]: %02X (%c)\n", i, iic_dat.RdData[i], iic_dat.RdData[i]);
+		for (i = 0; i < iic_dat.RdLng; i++)
+		{
+			printf("0x%02X ", (uint8_t)(iic_dat.RdData[i] & 0xFF));
+		}
+		printf("\n");
 	}
-
 
 	exit(OK);
 }
