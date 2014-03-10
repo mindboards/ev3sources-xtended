@@ -1634,7 +1634,8 @@ void      ProgramEnd(PRGID PrgId)
       if (VMInstance.RefCount == 0)
       {
         cSoundClose();
-        cComClose();
+        // Do not close all the mailboxes when a program ends
+        // cComClose();
         cInputClose();
         cOutputClose();
         cUiClose();
