@@ -1280,6 +1280,7 @@ typedef struct
   UBYTE   OldState;
   UBYTE   Event;
   UBYTE   Timer;
+  UBYTE		FSMEnabled;
 }
 INPORT;
 
@@ -1700,6 +1701,7 @@ enum      DCM_STATE
   DCM_PIN5_LOW,
   DCM_CONNECTED_WAITING_FOR_PIN5_HIGH,
   DCM_CONNECTED_WAITING_FOR_PORT_OPEN,
+  DCM_DISABLED,
   DCM_STATES
 };
 
@@ -1727,7 +1729,8 @@ char      DcmStateText[DCM_STATES][50] =
   "DCM_PIN5_LOW",
   "DCM_CONNECTED_WAITING_FOR_PIN5_HIGH",
   "DCM_CONNECTED_WAITING_FOR_PIN6_LOW",
-  "DCM_CONNECTED_WAITING_FOR_PORT_OPEN"
+  "DCM_CONNECTED_WAITING_FOR_PORT_OPEN",
+  "DCM_DISABLED"
 };
 
 
@@ -1735,10 +1738,12 @@ INPORT    InputPortDefault =
 {
   0,
   0,
+  0,
   DCM_INIT,
   -1,
   0,
-  0
+  0,
+  1
 };
 
 
@@ -1815,9 +1820,102 @@ UWORD     Device1GetOutputPins(UBYTE Port)
 
 static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,loff_t *Data)
 {
-  int     Lng = 0;
+  char    Buf[INPUTS + 2];
+  UBYTE   Port;
+  UBYTE   Char;
+  int     Lng     = 0;
 
+  if (Count >= INPUTS)
+  {
+    Lng  =  Count;
+    copy_from_user(Buf,Buffer,INPUTS);
 
+    // first character determines command type
+    // e == enable auto-id, followed by either 1 or 0 to enable or disable
+    // '-' indicates no change
+    // Indicator on per port basis, so e--0-, means no change for ports 1, 2, 4 and disable for 3
+    //
+    // t == set the connection type
+    // This should be preceded by disabling the auto-id.  Setting the type without disabling the
+    // auto-id will do nothing.
+
+    // Enabling/disabling the FSM for the port
+    if (Buf[0] == 'e')
+    {
+      for (Port = 0;Port < NO_OF_INPUT_PORTS;Port++)
+      {
+        Char  =  Buf[Port + 1];
+
+        switch (Char)
+        {
+          case '-' :
+          { // do nothing
+          }
+          break;
+
+					case '0':
+					{
+						InputPort[Port].FSMEnabled = 0;
+					}
+					break;
+
+					case '1':
+					{
+						InputPort[Port].FSMEnabled = 1;
+					}
+					break;
+        }
+      }
+    }
+    // Set the type
+    else if (Buf[0] == 't')
+    {
+      for (Port = 0;Port < NO_OF_INPUT_PORTS;Port++)
+      {
+        Char  =  Buf[Port + 1];
+
+        // Don't bother if the port is not connected
+        if (InputPort[Port].Connected == 0)
+        	continue;
+
+        // Don't bother if the FSM is not disabled for this port
+        if (InputPort[Port].FSMEnabled == 1)
+        	continue;
+
+        switch (Char)
+        {
+          case '-' :
+          { // do nothing
+          }
+          break;
+
+					case CONN_NXT_IIC:
+					{
+						(*pAnalog).InDcm[Port]	=  TYPE_NXT_IIC;
+						(*pAnalog).InConn[Port]	=  CONN_NXT_IIC;
+					}
+					break;
+
+					// Pretend it's an old NXT light sensor
+					// You can still read the raw value from pin 1
+					case CONN_NXT_DUMB:
+					{
+						(*pAnalog).InDcm[Port]  =  TYPE_NXT_LIGHT;
+						(*pAnalog).InDcm[Port]  =  CONN_NXT_DUMB;
+					}
+					break;
+
+					// Pretend it's an EV3 touch sensor
+					case CONN_INPUT_DUMB:
+					{
+						(*pAnalog).InDcm[Port] 	=  TYPE_TOUCH;
+						(*pAnalog).InDcm[Port] 	=  CONN_INPUT_DUMB;
+					}
+					break;
+        }
+      }
+    }
+  }
 
   return (Lng);
 }
@@ -2650,6 +2748,10 @@ static enum hrtimer_restart Device3TimerInterrupt1(struct hrtimer *pTimer)
     {
       for (Port = 0;Port < NO_OF_INPUT_PORTS;Port++)
       { // look at one port at a time
+      	if (InputPort[Port].FSMEnabled == 0)
+      	{
+      		InputPort[Port].State =  DCM_DISABLED;
+      	}
 
         switch (InputPort[Port].State)
         {
@@ -3052,6 +3154,22 @@ static enum hrtimer_restart Device3TimerInterrupt1(struct hrtimer *pTimer)
             {
               InputPort[Port].Timer    =  0;
             }
+          }
+          break;
+
+          case DCM_DISABLED :
+          {
+          	// If the FSM is disabled, set the timer to 0
+          	// and pretend we've got a connection, regardless of reality
+          	if (InputPort[Port].FSMEnabled == 0)
+          	{
+							InputPort[Port].Timer     = 0;
+							InputPort[Port].Connected = 1;
+          	}
+          	else
+          	{
+              InputPort[Port].State       =  DCM_INIT;
+          	}
           }
           break;
 
