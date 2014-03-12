@@ -5382,13 +5382,12 @@ void      cInputSetConn(void)
   Buf[5]      =  0;
 
   // Set the port to the specified connection
-  Buf[Device + 1] = Conn;
-
 	switch (Conn)
 	{
 		case CONN_NXT_IIC:
 		case CONN_NXT_DUMB:
 		case CONN_INPUT_DUMB:
+		case CONN_NONE:
 		{
 			Buf[Device + 1] = Conn;
 		}
@@ -5413,6 +5412,7 @@ void      cInputSetConn(void)
  *    -  \param  (DATA8)   NO           - Port number
  *    -  \param  (DATA8)   RDLNG        - No of bytes to read
  *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
+ *    -  \return (DATA8)   RESULT       - Write/read result (OK, FAIL, BUSY, STOP)
  *
  */
 /*! \brief  opINPUT_IIC_READ byte code

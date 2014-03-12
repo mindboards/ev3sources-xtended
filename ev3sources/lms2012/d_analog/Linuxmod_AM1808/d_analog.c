@@ -1828,7 +1828,7 @@ static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,lo
   if (Count >= INPUTS)
   {
     Lng  =  Count;
-    copy_from_user(Buf,Buffer,INPUTS);
+    copy_from_user(Buf,Buffer,sizeof(Buf));
 
     // first character determines command type
     // e == enable auto-id, followed by either 1 or 0 to enable or disable
@@ -1901,7 +1901,7 @@ static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,lo
 					case CONN_NXT_DUMB:
 					{
 						(*pAnalog).InDcm[Port]  =  TYPE_NXT_LIGHT;
-						(*pAnalog).InDcm[Port]  =  CONN_NXT_DUMB;
+						(*pAnalog).InConn[Port] =  CONN_NXT_DUMB;
 					}
 					break;
 
@@ -1909,7 +1909,14 @@ static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,lo
 					case CONN_INPUT_DUMB:
 					{
 						(*pAnalog).InDcm[Port] 	=  TYPE_TOUCH;
-						(*pAnalog).InDcm[Port] 	=  CONN_INPUT_DUMB;
+						(*pAnalog).InConn[Port] =  CONN_INPUT_DUMB;
+					}
+					break;
+
+					case CONN_NONE:
+					{
+						(*pAnalog).InDcm[Port]  =  TYPE_NONE;
+						(*pAnalog).InConn[Port] =  CONN_NONE;
 					}
 					break;
         }
