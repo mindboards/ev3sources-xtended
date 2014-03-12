@@ -93,6 +93,10 @@ void    cInputIICWrite(void);
 
 void    cInputIICStatus(void);
 
+void    cInputAutoID(void);
+
+void    cInputSetConn(void);
+
 
 
 typedef   struct

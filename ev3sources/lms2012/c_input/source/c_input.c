@@ -5320,7 +5320,7 @@ void      cInputAutoID(void)
   }
 
   // Configure auto-id
-  Buf[0] = 'e'
+  Buf[0] = 'e';
 
   // Initialise auto-id string to do nothing
   for (Index = 0;Index < INPUTS;Index++)
@@ -5370,7 +5370,7 @@ void      cInputSetConn(void)
   }
 
   // Configure the connection type
-  Buf[0] = 't'
+  Buf[0] = 't';
 
   // Initialise connection type setup string to do nothing
   for (Index = 0;Index < INPUTS;Index++)
