@@ -1,27 +1,12 @@
 /**
-
-Copyright (c) 2013 National Instruments Corp.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
+ 
+Copyright (c) 2014 National Instruments Corp.
+ 
+This software is subject to the terms described in the LICENSE.TXT file
+ 
 SDG
 */
+
 
 #ifndef StringUtilities_h
 #define StringUtilities_h
@@ -225,7 +210,7 @@ public:
     Boolean ComparePrefixCStr(const char* begin) const { return ComparePrefix ((const Utf8Char*)begin, (IntIndex)strlen((const char*)begin)); }
     Boolean ReadRawChar(char* token);
     Boolean ReadChar(char token);
-    Boolean ReadChar(const char* token) { return ReadChar(token[0]);};  // TODO depricate, one used one place and thath place is depricated
+    Boolean ReadChar(const char* token) { return ReadChar(token[0]);};  // TODO deprecate, one used one place and that place is deprecated
     Boolean ReadInt(IntMax* value);
     Boolean ParseDouble(Double* value);
     Boolean ReadToken(SubString* token);

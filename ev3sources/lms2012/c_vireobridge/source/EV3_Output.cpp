@@ -36,7 +36,7 @@ using namespace Vireo;
 static DATA8 DaisyBuf[64];
 #endif
 
-VIVM_FUNCTION_SIGNATURE3(OutputStop, UInt8, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE3(OutputStop, UInt8, UInt8, UInt8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
@@ -44,8 +44,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputStop, UInt8, UInt8, UInt8)
 
     DATA8 OutputData[3];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -69,23 +67,23 @@ VIVM_FUNCTION_SIGNATURE3(OutputStop, UInt8, UInt8, UInt8)
             len            += cOutputPackParam((DATA32)brake, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(OutputSpeed, UInt8, UInt8, Int8)
+VIREO_FUNCTION_SIGNATURE3(OutputSpeed, UInt8, UInt8, Int8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
@@ -93,8 +91,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputSpeed, UInt8, UInt8, Int8)
 
     DATA8 OutputData[3];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -118,23 +114,23 @@ VIVM_FUNCTION_SIGNATURE3(OutputSpeed, UInt8, UInt8, Int8)
             len            += cOutputPackParam((DATA32)speed, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
+VIREO_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
@@ -142,8 +138,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
 
     DATA8 OutputData[3];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -167,31 +161,29 @@ VIVM_FUNCTION_SIGNATURE3(OutputPower, UInt8, UInt8, Int8)
             len            += cOutputPackParam((DATA32)power, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(OutputStart, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE2(OutputStart, UInt8, UInt8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
 
     DATA8 OutputData[2];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -220,23 +212,23 @@ VIVM_FUNCTION_SIGNATURE2(OutputStart, UInt8, UInt8)
             len            += cOutputPackParam((DATA32)  nos, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
+VIREO_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
 {
     UInt8 layer = _Param(0);
     UInt8 nos   = _Param(1);
@@ -244,8 +236,6 @@ VIVM_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
 
     DATA8 OutputData[3];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -269,23 +259,23 @@ VIVM_FUNCTION_SIGNATURE3(OutputPolarity, UInt8, UInt8, Int8)
             len            += cOutputPackParam((DATA32)pol, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UInt32, UInt8)
+VIREO_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UInt32, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  nos   = _Param(1);
@@ -296,8 +286,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UI
     UInt8  brake = _Param(6);
 
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -337,23 +325,23 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepPower, UInt8, UInt8, Int8, UInt32, UInt32, UI
             len            += cOutputPackParam((DATA32)brake, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UInt32, UInt8)
+VIREO_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UInt32, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  nos   = _Param(1);
@@ -364,8 +352,6 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UI
     UInt8  brake = _Param(6);
 
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -405,23 +391,23 @@ VIVM_FUNCTION_SIGNATURE7(OutputStepSpeed, UInt8, UInt8, Int8, UInt32, UInt32, UI
             len            += cOutputPackParam((DATA32)brake, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt8)
+VIREO_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  nos   = _Param(1);
@@ -431,8 +417,6 @@ VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt
     UInt8  brake = _Param(5);
 
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -470,31 +454,29 @@ VIVM_FUNCTION_SIGNATURE6(OutputStepSync, UInt8, UInt8, Int8, Int16, UInt32, UInt
             len            += cOutputPackParam((DATA32)brake, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(OutputResetCount, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE2(OutputResetCount, UInt8, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  nos   = _Param(1);
 
     DATA8 OutputData[2];
     UBYTE len = 0;
-    IP TmpIp = GetObjectIp();
-    DSPSTAT DspStat = NOBREAK;
 
     if (layer == 0)
     {
@@ -521,23 +503,23 @@ VIVM_FUNCTION_SIGNATURE2(OutputResetCount, UInt8, UInt8)
             len            += cOutputPackParam((DATA32)  nos, &(DaisyBuf[len]));
             if (OK != cDaisyDownStreamCmd(DaisyBuf, len, layer))
             {
-                SetObjectIp(TmpIp - 1);
-                DspStat = BUSYBREAK;
+                SetDispatchStatus(BUSYBREAK);
+                return _this;
             }
         }
         else
         {
-            SetObjectIp(TmpIp - 1);
-            DspStat = BUSYBREAK;
+            SetDispatchStatus(BUSYBREAK);
+            return _this;
         }
     }
     #endif
-    SetDispatchStatus(DspStat);
 
+    SetDispatchStatus(NOBREAK);
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(OutputGetCount, UInt8, UInt8, Int32)
+VIREO_FUNCTION_SIGNATURE3(OutputGetCount, UInt8, UInt8, Int32)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
@@ -549,18 +531,17 @@ VIVM_FUNCTION_SIGNATURE3(OutputGetCount, UInt8, UInt8, Int32)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(OutputTest, UInt8, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE3(OutputTest, UInt8, UInt8, UInt8)
 {
+    if (_ParamPointer(2) == 0)
+        return _NextInstruction();
+
     UInt8  layer  = _Param(0);
     UInt8  nos    = _Param(1);
-    UInt8 *isBusy = _ParamPointer(2); // reference
-
-    if (isBusy == 0)
-        return _NextInstruction();
 
     char OutputData[20];
     int test1, test2;
-    *isBusy = 0;
+    UInt8 isBusy = 0;
 
     if (layer == 0)
     {
@@ -570,29 +551,30 @@ VIVM_FUNCTION_SIGNATURE3(OutputTest, UInt8, UInt8, UInt8)
             sscanf(OutputData, "%u %u", &test1, &test2);
 
             if (nos & (DATA8)test2)
-                *isBusy = 1;
+                isBusy = 1;
         }
     }
     else if (cDaisyCheckBusyBit(layer, nos))
-        *isBusy = 1;
+        isBusy = 1;
+
+    _Param(2) = isBusy;
 
     return _NextInstruction();
 }
 
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(OutputStop, "p(i(.UInt8),i(.UInt8),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputPower, "p(i(.UInt8),i(.UInt8),i(.Int8))");
-    VIREO_DEFINE_FUNCTION(OutputSpeed, "p(i(.UInt8),i(.UInt8),i(.Int8))");
-    VIREO_DEFINE_FUNCTION(OutputStart, "p(i(.UInt8),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputPolarity, "p(i(.UInt8),i(.UInt8),i(.Int8))");
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(OutputStop, "p(i(.UInt8),i(.UInt8),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputPower, "p(i(.UInt8),i(.UInt8),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(OutputSpeed, "p(i(.UInt8),i(.UInt8),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(OutputStart, "p(i(.UInt8),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputPolarity, "p(i(.UInt8),i(.UInt8),i(.Int8))");
 
-    VIREO_DEFINE_FUNCTION(OutputStepPower, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputStepSpeed, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputStepSync, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.Int16),i(.UInt32),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputResetCount, "p(i(.UInt8),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(OutputGetCount, "p(i(.UInt8),i(.UInt8),o(.Int32))");
-    VIREO_DEFINE_FUNCTION(OutputTest, "p(i(.UInt8),i(.UInt8),o(.UInt8))");
-
-VIREO_DEFINE_END()
+    DEFINE_VIREO_FUNCTION(OutputStepPower, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputStepSpeed, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.UInt32),i(.UInt32),i(.UInt32),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputStepSync, "p(i(.UInt8),i(.UInt8),i(.Int8),i(.Int16),i(.UInt32),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputResetCount, "p(i(.UInt8),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(OutputGetCount, "p(i(.UInt8),i(.UInt8),o(.Int32))");
+    DEFINE_VIREO_FUNCTION(OutputTest, "p(i(.UInt8),i(.UInt8),o(.UInt8))");
+DEFINE_VIREO_END()
 

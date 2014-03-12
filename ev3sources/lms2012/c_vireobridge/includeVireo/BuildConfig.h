@@ -1,27 +1,12 @@
 /**
-
-Copyright (c) 2013 National Instruments Corp.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
+ 
+Copyright (c) 2014 National Instruments Corp.
+ 
+This software is subject to the terms described in the LICENSE.TXT file
+ 
 SDG
 */
+
 
 #ifndef BuildConfig_h
 #define BuildConfig_h
@@ -64,11 +49,11 @@ SDG
 // ARM usesregisters always. and clang x86/x64 uses registers
 #define VIVM_FASTCALL           // define to empty sring
 
-#define VIVM_INSTRUCTION_LINKAGE  static
+#define VIVM_INSTRUCTION_LINKAGE static
 
 #define VIVM_SUPPORTS_COMPLEX_NUMBERS 1
 
-#define VIVM_ARRAY_INDEX Int32
+#define VIREO_ARRAY_INDEX_TYPE Int32
 
 // VIVM_DYNAMIC_ALLOCATION - legacy arduino project, but needs to be revived
 // the runtime can be linked with structures statically created. In this
@@ -83,10 +68,13 @@ SDG
 
 #define VIREO_PERF_COUNTERS
 
-// TODO how to define globals as thread local?
+// TODO allow for thread locals on linux/unix
 #define VIVM_THREAD_LOCAL
 
 #define VIREO_POSIX_FILEIO 1
+
+// Instructions are directly concatenated there is no next pointer.
+//#define VIREO_PACKED_INSTRUCTIONS
 
 //------------------------------------------------------------
 #if defined(__ARDUINO__)
@@ -144,7 +132,6 @@ SDG
 
     #define kVireoOS_macosxU 1
     #define VIREO_DATE_TIME_STDLIB
- //   #define VIREO_PACKED_INSTRUCTIONS
 
     //#define VIVM_SUPPORTS_ISR
     #define VIVM_ISR_DISABLE
@@ -155,7 +142,7 @@ SDG
     #define VIVM_USING_ASSERTS
 
 #if __LP64__
-//    #define VIVM_ARRAY_INDEX Int64
+//    #define VIREO_ARRAY_INDEX_TYPE Int64
 #endif
     //------------------------------------------------------------
     // Macros for tracking memory usage.

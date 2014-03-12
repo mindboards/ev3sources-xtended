@@ -94,7 +94,6 @@ void VireoInit(void)
         }
         pRootShell = EggShell::Create(null);
         pShell = EggShell::Create(pRootShell);
-        pShell->TheExecutionContext()->SetDelayedLoad(true);
 
         SubString  input;
         pShell->ReadFile(fileName, &input);
@@ -111,7 +110,7 @@ void VireoStep()
 
         // Store the execution state as a return value and pop off unused parameters.
         PrimParPointer();
-        *(DATA8*)PrimParPointer() = (DATA8) state;
+        *(DATA8*)PrimParPointer() = (DATA8) (state != kExecutionState_None);
         PrimParPointer();
     } catch (...) {
         SetDispatchStatus(FAILBREAK);

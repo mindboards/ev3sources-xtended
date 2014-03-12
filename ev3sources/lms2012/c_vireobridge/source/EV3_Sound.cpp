@@ -31,7 +31,7 @@ extern "C" {
 using namespace Vireo;
 
 
-VIVM_FUNCTION_SIGNATURE0(SoundStop)
+VIREO_FUNCTION_SIGNATURE0(SoundStop)
 {
     // Stop sound
     SoundInstance.cSoundState = SOUND_STOPPED;
@@ -60,7 +60,7 @@ VIVM_FUNCTION_SIGNATURE0(SoundStop)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
+VIREO_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
 {
     UInt8  Volume    = _Param(0);
     UInt16 Frequency = _Param(1);
@@ -98,7 +98,7 @@ VIVM_FUNCTION_SIGNATURE3(SoundTone, UInt8, UInt16, UInt16)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
+VIREO_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
 {
     UInt8     Volume   = _Param(0);
     TempStackCStringFromString fileName(_Param(1));
@@ -180,7 +180,7 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
+VIREO_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
 {
     UInt8     Volume   = _Param(0);
     TempStackCStringFromString fileName(_Param(1));
@@ -262,7 +262,7 @@ VIVM_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(SoundTest, UInt8)
+VIREO_FUNCTION_SIGNATURE1(SoundTest, UInt8)
 {
     UInt8 *isBusy = _ParamPointer(0); // reference
 
@@ -273,11 +273,11 @@ VIVM_FUNCTION_SIGNATURE1(SoundTest, UInt8)
 }
 
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(SoundStop, "p()");
-    VIREO_DEFINE_FUNCTION(SoundTone, "p(i(.UInt8),i(.UInt16),i(.UInt16))");
-    VIREO_DEFINE_FUNCTION(SoundPlay, "p(i(.UInt8),i(.String))");
-    VIREO_DEFINE_FUNCTION(SoundPlayLoop, "p(i(.UInt8),i(.String))");
-    VIREO_DEFINE_FUNCTION(SoundTest,"p(o(.UInt8))");
-VIREO_DEFINE_END()
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(SoundStop, "p()");
+    DEFINE_VIREO_FUNCTION(SoundTone, "p(i(.UInt8),i(.UInt16),i(.UInt16))");
+    DEFINE_VIREO_FUNCTION(SoundPlay, "p(i(.UInt8),i(.String))");
+    DEFINE_VIREO_FUNCTION(SoundPlayLoop, "p(i(.UInt8),i(.String))");
+    DEFINE_VIREO_FUNCTION(SoundTest,"p(o(.UInt8))");
+DEFINE_VIREO_END()
 

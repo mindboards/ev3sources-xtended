@@ -1,27 +1,12 @@
 /**
-
-Copyright (c) 2013 National Instruments Corp.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
+ 
+Copyright (c) 2014 National Instruments Corp.
+ 
+This software is subject to the terms described in the LICENSE.TXT file
+ 
 SDG
 */
+
 
 #ifndef ExecutionContext_h
 #define ExecutionContext_h
@@ -57,7 +42,7 @@ enum ExecutionState
 };
 
 // Each thread can have at most one ExecutionContext (ECs). ExecutionContexts can work
-// cooperativly wiht other thread operations much like a message pump does. ECs
+// cooperatively with other thread operations much like a message pump does. ECs
 // may be the only tasks a thread has. 
 //
 // All access to the outside , graphics, time, IO
@@ -72,60 +57,55 @@ enum ExecutionState
 //------------------------------------------------------------
 class ExecutionContext
 {
+
 private:
     TypeManager* _theTypeManager;
-    Boolean      _delayedLoad;
 public:
     TypeManager* TheTypeManager()    { return _theTypeManager; }
-    Boolean      DelayedLoad()       { return _delayedLoad; }
-    void         SetDelayedLoad(Boolean value)  { _delayedLoad = value; }
 
 private:
     ECONTEXT    Queue         _runQueue;				// Elts ready To run
 	ECONTEXT    VIClump*      _sleepingList;			// Elts waiting for something external to wake them up
 	ECONTEXT    CounterType   _breakoutCount;
-	ECONTEXT    CounterType   _breakoutCountReset;
-    
+
 public:
 	ExecutionContext(TypeManager* typeManager);
 	ECONTEXT    uTicTimeType    MicroSeconds();
 #ifdef VIVM_SUPPORTS_ISR
-    ECONTEXT    VIClump*       _triggeredIsrList;               // Elts waiting for something external to wake them up
+    ECONTEXT    VIClump*        _triggeredIsrList;               // Elts waiting for something external to wake them up
     ECONTEXT    void            IsrEnqueue(QueueElt* elt);
 #endif
 	ECONTEXT    VIClump*        RunngQueueElt() {return _runningQueueElt;}
     ECONTEXT    void            CheckOccurrences(uTicTimeType t);		// Will put items on the run queue if it is time. or ready bit is set.
 
-    // Run a string of insrucitons to completion, no concurrency. 
+    // Run a string of instructions to completion, no concurrency. 
     ECONTEXT    void            ExecuteFunction(FunctionClump* fclump);  // Run a simple function to completion.
     
     // Run the concurrent execution system for a short period of time
 	ECONTEXT    ExecutionState  ExecuteSlices(Int32 numSlices);
 	ECONTEXT    InstructionCore* SuspendRunningQueueElt(InstructionCore* whereToWakeUp);
-	InstructionCore*            Done();
 	InstructionCore*            Stop();
+    ECONTEXT    void            ClearBreakout() { _breakoutCount = 0; }
+
 	void Trace(const char* message);
 	InstructionCore*            WaitMicroseconds(Int64 count, InstructionCore* next);
 	ECONTEXT    void            EnqueueRunQueue(VIClump* elt);
-	ECONTEXT    VIClump*        _runningQueueElt;		// Eement actually running
+	ECONTEXT    VIClump*        _runningQueueElt;		// Element actually running
     
+private:
+    static Boolean _classInited;
+    static Instruction0 _culDeSac;
+    static InstructionFunction _culDeSacFunction;
 public:
-    static  Instruction0 _culDeSac;
-    static  Boolean _classInited;
-    static void ClassInit(); 
-    
-#ifdef VIVM_USING_ASSERTS
-	void Assert_Hidden(Boolean test, const char* message, const char* file, int line);
-    #define VIVM_ASSERT( _TEST_ ) THREAD_EXEC()->Assert_Hidden( _TEST_, #_TEST_, __FILE__, __LINE__ );
-#else
-    #define VIVM_ASSERT( _TEST_ )
-#endif
+    static inline Boolean IsCulDeSac(InstructionCore* pInstruciton) { return pInstruciton->_function == _culDeSacFunction; }
+
+    static void ClassInit();
 };
 
 #ifdef VIVM_SINGLE_EXECUTION_CONTEXT
     // A single global instance allows allows all field references
-    // to resolver to a fixed globall address. This avoid pointer+offset
-    // instructions taht are costly on small MCUs
+    // to resolver to a fixed global address. This avoid pointer+offset
+    // instructions that are costly on small MCUs
     extern ExecutionContext gSingleExecutionContext;
     #define THREAD_EXEC()	(&gSingleExecutionContext)
 #else
@@ -162,12 +142,12 @@ public:
     
     #define THREAD_EXEC() ExecutionContextScope::Current()
 };
-
+    
 //------------------------------------------------------------
 // When runtime functions need stack based instances of a
 // TypeAndDataManager array values they can use the StackVar class.
 // Its not intended for non stack use since the life time
-// of TypeAndDataMangert values are generally conneced to data spaces.
+// of TypeAndDataMangert values are generally connected to data spaces.
 // The macro prevents the need for C++ RTTI.
 
 #define STACK_VAR(_t_, _v_) StackVar<_t_> _v_(#_t_)
@@ -182,7 +162,7 @@ public:
         static TypeRef type = null;
         if (!type) {
             type = THREAD_EXEC()->TheTypeManager()->FindType(&stringTypeName);
-            VIVM_ASSERT(type->IsArray() && !type->IsFlat());
+            VIREO_ASSERT(type->IsArray() && !type->IsFlat());
         }
         Value = null;
         if (type) {

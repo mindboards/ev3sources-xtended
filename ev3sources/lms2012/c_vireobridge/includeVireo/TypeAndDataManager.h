@@ -1,27 +1,12 @@
 /**
 
-Copyright (c) 2013 National Instruments Corp.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Copyright (c) 2014 National Instruments Corp.
+ 
+This software is subject to the terms described in the LICENSE.TXT file
 
 SDG
 */
+
 
 #ifndef TypeAndDataManager_h
 #define TypeAndDataManager_h
@@ -47,7 +32,7 @@ namespace Vireo
 class TypeCommon;
 class TypeManager;
 class ExecutionContext;
-class IAlloc;
+class IDataProcs;
     
 typedef TypeCommon  *TypeRef;
 typedef TypeManager *TypeManagerRef;
@@ -88,7 +73,7 @@ enum EncodingEnum {
     kEncoding_IEEE754Binary,
     kEncoding_Ascii,
     kEncoding_Unicode,
-    kEncoding_Pointer,              // Some systems may have more than one pointr type
+    kEncoding_Pointer,              // Some systems may have more than one pointer type cdoe/data
     
     kEncodingBitFieldSize = 5,   //Room for up to 32 primitive encoding types
 };
@@ -184,23 +169,22 @@ private:
     TypeCommon* _typeList;          // list of all Types allocated by this TypeManager
     
 friend class TDViaParser;
-    TypeRef FindTypeInternal(SubString* name);
+    TypeRef FindTypeInternal(const SubString* name);
         
     // TODO The manager needs to define the Addressable Quantum size (bit in an addressable item, often a octet
     // but some times it is larger (e.g. 16 or 32) the CDC 7600 was 60
     // also defines alignment rules. Each element in a cluster is addressable
 private:
     TypeManager(TypeManager* typeManager);
-    ~TypeManager();
 public:
-    void    ProcessDelayedLoads();
     void    DeleteTypes(Boolean finalTime);
     void    TrackType(TypeCommon* type);
     void    GetTypes(TypedArray1D<TypeRef>*);
+    void    PrintMemoryStat(const char*, Boolean last);
     
     TypeManager *RootTypeManager() { return _rootTypeManager; }
     TypeRef Define(SubString* name, TypeRef type);
-    TypeRef FindType(SubString* name);
+    TypeRef FindType(const SubString* name);
     void*   FindNamedTypedBlock(SubString* name, PointerAccessEnum mode);
     void*   FindNamedObject(SubString* name);
     TypeRef BadType();
@@ -208,13 +192,13 @@ public:
     Int32   AQAlignment(Int32 size);
     Int32   AlignAQOffset(Int32 offset, Int32 size);
     Int32   BitCountToAQSize(Int32 bitCount);
-    Int32   PointerToAQSize() {return sizeof(void*);}
-    Int32   AQBitSize() {return _aqBitCount;}
+    Int32   PointerToAQSize() {return sizeof(void*); }
+    Int32   AQBitSize() {return _aqBitCount; }
     
 public:
     NIError RegisterType(const char* name, const char* typeString);
 	NIError DefineCustomPointerTypeWithValue(const char* name, void* pointer, TypeRef type, PointerTypeEnum pointerType);
-	NIError DefineCustomAlloc(const char* name, IAlloc* pAlloc, TypeRef type);
+	NIError DefineCustomDataProcs(const char* name, IDataProcs* pDataProcs, TypeRef type);
     
 public:
     // Low level allocation functions
@@ -227,6 +211,7 @@ public:
     void TrackAllocation(void* id, size_t countAQ, Boolean bAlloc);
 
     Int32  _totalAllocations;
+    Int32  _totalAllocationFailures;
     size_t _totalAQAllocated;
     size_t _maxAllocated;
     size_t _allocationLimit;
@@ -274,7 +259,7 @@ public:
     }
     static TypeManager* Current()
     {
-        VIVM_CORE_ASSERT(TypeManagerScope::ThreadsTypeManager!= null);
+        VIREO_ASSERT(TypeManagerScope::ThreadsTypeManager!= null);
         return TypeManagerScope::ThreadsTypeManager;
     }
 #else
@@ -319,7 +304,7 @@ public:
     virtual void VisitPointer(TypeRef type) = 0;
     virtual void VisitDefaultValue(TypeRef type) = 0;
     virtual void VisitCustomDefaultPointer(TypeRef type) = 0;
-    virtual void VisitCustomAlloc(TypeRef type) = 0;
+    virtual void VisitCustomDataProc(TypeRef type) = 0;
 };
 
 //------------------------------------------------------------
@@ -334,6 +319,7 @@ private:
 public:
     TypeCommon(TypeManager* typeManager);
     TypeManager* TheTypeManager()       { return _typeManager; }
+    TypeRef Next()                      { return _next; }
 public:
     // Internal to the TypeManager, but this is hard to secifiy in C++
     virtual ~TypeCommon() {};
@@ -413,7 +399,7 @@ public:
 
     // Methods for working with individual elements
     virtual void*   Begin(PointerAccessEnum mode)       { return null; }
-    virtual NIError InitData(void* pData);
+    virtual NIError InitData(void* pData, TypeRef pattern = null);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
     
@@ -427,6 +413,7 @@ public:
     
     Boolean CompareType(TypeRef otherType);
     Boolean IsA(const SubString* name);
+    Boolean IsA(TypeRef otherType, Boolean compatibleArrays);
     
     TypeRef GetSubElementFromPath(SubString* name, Int32 *offset);
 };
@@ -450,7 +437,8 @@ public:
     virtual IntIndex* GetDimensionLengths()             { return _wrapped->GetDimensionLengths(); }
     // Data operations
     virtual void*   Begin(PointerAccessEnum mode)       { return _wrapped->Begin(mode); }
-    virtual NIError InitData(void* pData)               { return _wrapped->InitData(pData); }
+    virtual NIError InitData(void* pData, TypeRef pattern = null)
+    { return _wrapped->InitData(pData, pattern ? pattern : this); }
     virtual NIError CopyData(const void* pData, void* pDataCopy)  { return _wrapped->CopyData(pData, pDataCopy); }
     virtual NIError ClearData(void* pData)              { return _wrapped->ClearData(pData); }
 };
@@ -571,7 +559,7 @@ private:
 public:
     static BitClusterType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
     virtual void    Visit(TypeVisitor *tv)  { tv->VisitBitCluster(this); }
-    virtual NIError InitData(void* pData)   { return kNIError_Success; }
+    virtual NIError InitData(void* pData, TypeRef pattern = null)   { return kNIError_Success; }
     virtual Int32 BitSize()                 { return _bitSize; }
 };
 //------------------------------------------------------------
@@ -588,7 +576,7 @@ public:
     static EquivalenceType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
     virtual void    Visit(TypeVisitor *tv)  { tv->VisitEquivalence(this); }
     virtual void*   Begin(PointerAccessEnum mode);
-    virtual NIError InitData(void* pData);
+    virtual NIError InitData(void* pData, TypeRef pattern = null);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
 };
@@ -607,7 +595,7 @@ public:
     static ClusterType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
     virtual void    Visit(TypeVisitor *tv)  { tv->VisitCluster(this); }
     virtual void*   Begin(PointerAccessEnum mode);
-    virtual NIError InitData(void* pData);
+    virtual NIError InitData(void* pData, TypeRef pattern = null);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
 };
@@ -626,13 +614,13 @@ private:
 public:
     static ParamBlockType* New(TypeManager* typeManager, TypeRef elements[], Int32 count);
     virtual void    Visit(TypeVisitor *tv)  { tv->VisitParamBlock(this); }
-    virtual NIError InitData(void* pData)
+    virtual NIError InitData(void* pData, TypeRef pattern = null)
         {
             return kNIError_Success;
         }
     virtual NIError CopyData(const void* pData, void* pDataCopy)
         {
-            VIVM_CORE_ASSERT(false); //TODO
+            VIREO_ASSERT(false); //TODO
             return kNIError_kInsufficientResources;
         }
     virtual NIError ClearData(void* pData)
@@ -671,7 +659,7 @@ public:
     virtual IntIndex* GetDimensionLengths()             { return &_dimensionLengths[0]; }
 
     virtual void*   Begin(PointerAccessEnum mode);
-    virtual NIError InitData(void* pData);
+    virtual NIError InitData(void* pData, TypeRef pattern = null);
     virtual NIError CopyData(const void* pData, void* pDataCopy);
     virtual NIError ClearData(void* pData);
 
@@ -689,7 +677,7 @@ public:
 public:
     virtual void    Visit(TypeVisitor *tv)              { tv->VisitDefaultValue(this); }
     virtual void*   Begin(PointerAccessEnum mode);
-    virtual NIError InitData(void* pData);
+    virtual NIError InitData(void* pData, TypeRef pattern = null);
 };
 //------------------------------------------------------------
 // PointerType - A type that describes a pointer to another type
@@ -718,7 +706,7 @@ public:
 public:
     static CustomPointerType* New(TypeManager* typeManager, TypeRef type, void* pointer, PointerTypeEnum pointerType);
     
-    virtual NIError InitData(void* pData)
+    virtual NIError InitData(void* pData, TypeRef pattern = null)
     {
         *(void**)pData = _defaultPointerValue;
         return kNIError_Success;
@@ -726,26 +714,26 @@ public:
     virtual void*   Begin(PointerAccessEnum mode)       { return &_defaultPointerValue; }
 };
 //------------------------------------------------------------
-// CustomAllocType - A type that has custom Init/Copy/Clear functions
-//------------------------------------------------------------
-class IAlloc {
+// CustomDataProcType - A type that has custom Init/Copy/Clear functions
+//---------------------------------------------------------
+class IDataProcs {
 public:
-    virtual NIError InitData(TypeRef type, void* pData) = 0;
-    virtual NIError CopyData(TypeRef type, const void* pData, void* pDataCopy) = 0;
-    virtual NIError ClearData(TypeRef type, void* pData) = 0;
+    virtual NIError InitData(TypeRef type, void* pData, TypeRef pattern = null)  { return type->InitData(pData, pattern); }
+    virtual NIError CopyData(TypeRef type, const void* pData, void* pDataCopy) { return type->CopyData(pData, pDataCopy); }
+    virtual NIError ClearData(TypeRef type, void* pData) { return type->ClearData(pData); }
 };
     
-class CustomAllocType : public WrappedType
+class CustomDataProcType : public WrappedType
 {
 protected:
-    CustomAllocType(TypeManager* typeManager, TypeRef type, IAlloc *pAlloc);
-    IAlloc*    _pAlloc;
+    CustomDataProcType(TypeManager* typeManager, TypeRef type, IDataProcs *pAlloc);
+    IDataProcs*    _pDataProcs;
 public:
-    static CustomAllocType* New(TypeManager* typeManager, TypeRef type, IAlloc *pIAlloc);
-    virtual void    Visit(TypeVisitor *tv)              { tv->VisitPointer(this); }
-    virtual NIError InitData(void* pData)               { return _pAlloc->InitData(this, pData); }
-    virtual NIError CopyData(const void* pData, void* pDataCopy) { return _pAlloc->CopyData(this, pData, pDataCopy); }
-    virtual NIError ClearData(void* pData)              { return _pAlloc->ClearData(this, pData); }
+    static CustomDataProcType* New(TypeManager* typeManager, TypeRef type, IDataProcs *pIAlloc);
+    virtual void    Visit(TypeVisitor *tv)              { tv->VisitPointer(_wrapped); }
+    virtual NIError InitData(void* pData, TypeRef pattern = null)   { return _pDataProcs->InitData(_wrapped, pData, pattern ? pattern : this); }
+    virtual NIError CopyData(const void* pData, void* pDataCopy) { return _pDataProcs->CopyData(_wrapped, pData, pDataCopy); }
+    virtual NIError ClearData(void* pData)              { return _pDataProcs->ClearData(_wrapped, pData); }
 };
 
 //------------------------------------------------------------
@@ -782,18 +770,19 @@ protected:
     TypedArrayCore(TypeRef type);
 public:
     static TypedArrayCore* New(TypeRef type);
+    static void Delete(TypedArrayCore*);
 
 public:
     AQBlock1* BeginAt(IntIndex index)
     {
-        VIVM_CORE_ASSERT(index >= 0)
-        VIVM_CORE_ASSERT(ElementType() != null)
+        VIREO_ASSERT(index >= 0)
+        VIREO_ASSERT(ElementType() != null)
         AQBlock1* begin = (RawBegin() + (index * ElementType()->TopAQSize()));
-        VIVM_CORE_ASSERT(begin <= _pRawBufferEnd)  //Is there a need to return a pointer to the 'end'
+        VIREO_ASSERT(begin <= _pRawBufferEnd)  //Is there a need to return a pointer to the 'end'
         return begin;
     }
 public:
-    void* RawObj()                  { VIVM_CORE_ASSERT(_typeRef->Rank() == 0); return RawBegin(); } // some extra asserts fo  ZDAs
+    void* RawObj()                  { VIREO_ASSERT(_typeRef->Rank() == 0); return RawBegin(); } // some extra asserts fo  ZDAs
     AQBlock1* RawBegin()            { return _pRawBufferBegin; }
     AQBlock1* RawEnd()              { return _pRawBufferEnd; }
     void* BeginAtAQ(IntIndex index) { return RawBegin() + index; }
@@ -809,9 +798,6 @@ protected:
     void AQFree();
     
 public:
-    IntIndex AQSize()               { return (IntIndex) (_pRawBufferEnd - _pRawBufferBegin); }
-    Boolean ValidateAccess(IntIndex index, IntIndex range);
-    
     static Boolean ValidateHandle(TypedArrayCore* block)
     {
         // TODO: Allow for block valiate mode where all allocations and frees are tracked in a map
@@ -820,7 +806,7 @@ public:
     
     IntIndex GetLength(IntIndex i)
     {
-        VIVM_CORE_ASSERT((i >= 0) && (i < Type()->Rank())); // TODO remove, initially I want to catch any of these.
+        VIREO_ASSERT((i >= 0) && (i < Type()->Rank())); // TODO remove, initially I want to catch any of these.
         if ((i >= 0) && (i < Type()->Rank())) {
             return GetDimensionLengths()[i];
         } else {
@@ -853,22 +839,24 @@ public:
         return ((IntIndex)(_pRawBufferEnd - _pRawBufferBegin)) / _eltTypeRef->TopAQSize();
     }
     
+    // Calculate the length of a contigious chunk of elements
     IntIndex AQBlockLength(IntIndex count) { return ElementType()->TopAQSize() * count; }
     
-    NIError InitData();
-    NIError ClearData();
-    
     // Resize for multi dim arrays
-    Boolean ResizeDimensions(Int32 rank, Int32 *dimensionLengths);
+    Boolean ResizeDimensions(Int32 rank, IntIndex *dimensionLengths, Boolean preserveOld);
     
     // Make this array match the shape of the reference type.
-    Boolean ResizeToMatch(TypedArrayCore* pReference);
+    Boolean ResizeToMatchOrEmpty(TypedArrayCore* pReference);
     
     // Resize for 1d arrays, if not enough memory leave as is.
-    Boolean Resize(Int32 size);
+    Boolean Resize1D(IntIndex length);
     
     // Resize ,if not enough memory, then size to zero
-    Boolean ResizeOrEmpty(Int32 size);
+    Boolean Resize1DOrEmpty(IntIndex length);
+
+private:
+    // Resize for 1d arrays, if not enough memory leave as is.
+    Boolean ResizeCore(IntIndex aqLength, IntIndex currentLength, IntIndex length, Boolean preserveElements);
     
 public:
     NIError Replace1D(IntIndex position, IntIndex count, const void* pSource, Boolean truncate);
@@ -896,7 +884,7 @@ public:
     T* ElementAddress(IntIndex i, Int32 j) { return BeginAt((j * GetDimensionLengths()[0]) + i); }
     T* ElementAddress(IntIndex i, Int32 j, Int32 k)
     {
-        VIVM_CORE_ASSERT(false);
+        VIREO_ASSERT(false);
         // calculate dot produt
         return null;
     }

@@ -27,7 +27,7 @@ extern "C" {
 
 using namespace Vireo;
 
-VIVM_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
@@ -56,7 +56,7 @@ VIVM_FUNCTION_SIGNATURE4(InputGetTypeMode, UInt8, UInt8, UInt8, UInt8)
 }
 
 // Functionally equivalent to opINPUT_READ/cInputRead
-VIVM_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
 {
     UInt8 layer = _Param(0);
     UInt8 no    = _Param(1);
@@ -78,7 +78,7 @@ VIVM_FUNCTION_SIGNATURE5(InputReadPct, UInt8, UInt8, UInt8, UInt8, UInt8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
@@ -94,7 +94,7 @@ VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedAr
 
     DATA8 device = no + (layer * INPUT_PORTS);
     cInputSetType(device, type, mode, __LINE__);
-    data->Resize(count);
+    data->Resize1D(count);
 
     for (UInt8 i = 0; i < count; i++)
     {
@@ -107,7 +107,7 @@ VIVM_FUNCTION_SIGNATURE6(InputReadSi, UInt8, UInt8, UInt8, UInt8, UInt8, TypedAr
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8 layer = _Param(0);
     UInt8 no    = _Param(1);
@@ -120,7 +120,7 @@ VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArrayCoreRef)
         return _NextInstruction();
 
     DATA8 device = no + (layer * INPUT_PORTS);
-    data->Resize(count);
+    data->Resize1D(count);
 
 
     for (UInt8 i = 0; i < count; i++)
@@ -134,7 +134,7 @@ VIVM_FUNCTION_SIGNATURE4(InputReadRaw, UInt8, UInt8, UInt8, TypedArrayCoreRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArrayCoreRef)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
@@ -143,7 +143,7 @@ VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArrayCo
     TypedArrayCoreRef data = _Param(4); // single
 
     DATA8 device = no + (layer * INPUT_PORTS);
-    data->Resize(count);
+    data->Resize1D(count);
 
     if (device < DEVICES)
         for (UInt8 i = 0; i < count; i++)
@@ -152,18 +152,18 @@ VIVM_FUNCTION_SIGNATURE5(InputWriteRaw, UInt8, UInt8, UInt8, UInt8, TypedArrayCo
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE5(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, UInt8, TypedArrayCoreRef)
 {
     UInt8  layer  = _Param(0);
     UInt8  no     = _Param(1);
     TypedArrayCoreRef command  = _Param(2); // uInt8
-    DATA8 responseLength;
+    DATA8 responseLength = _Param(3);
     DATA8 *responseBegin;
 
-    if (_ParamPointer(3))
+    if (_ParamPointer(4))
     {
-        TypedArrayCoreRef response = _Param(3);
-        responseLength = response->Length();
+        TypedArrayCoreRef response = _Param(4);
+        response->Resize1D(responseLength);
         responseBegin = (DATA8 *) response->BeginAt(0);
     }
     else
@@ -177,13 +177,13 @@ VIVM_FUNCTION_SIGNATURE4(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, TypedAr
     UInt16 time   = 0;
     RESULT result = BUSY;
 
-    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), responseLength, responseBegin, &result))
+    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), responseLength, responseBegin, &result) == BUSY)
         return _this;
     else
         return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(InputClearChanges, UInt8, UInt8)
+VIREO_FUNCTION_SIGNATURE2(InputClearChanges, UInt8, UInt8)
 {
     UInt8  layer = _Param(0);
     UInt8  no    = _Param(1);
@@ -200,13 +200,13 @@ VIVM_FUNCTION_SIGNATURE2(InputClearChanges, UInt8, UInt8)
 }
 
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(InputGetTypeMode, "p(i(.UInt8),i(.UInt8),o(.UInt8),o(.UInt8))");
-    VIREO_DEFINE_FUNCTION(InputReadPct, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.UInt8))");
-    VIREO_DEFINE_FUNCTION(InputReadSi, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
-    VIREO_DEFINE_FUNCTION(InputReadRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
-    VIREO_DEFINE_FUNCTION(InputWriteRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.Array))");
-    VIREO_DEFINE_FUNCTION(InputIicSetup, "p(i(.UInt8),i(.UInt8),i(.Array),o(.Array))");
-    VIREO_DEFINE_FUNCTION(InputClearChanges, "p(i(.UInt8),i(.UInt8))");
-VIREO_DEFINE_END()
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(InputGetTypeMode, "p(i(.UInt8),i(.UInt8),o(.UInt8),o(.UInt8))");
+    DEFINE_VIREO_FUNCTION(InputReadPct, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.UInt8))");
+    DEFINE_VIREO_FUNCTION(InputReadSi, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
+    DEFINE_VIREO_FUNCTION(InputReadRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
+    DEFINE_VIREO_FUNCTION(InputWriteRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.UInt8),i(.Array))");
+    DEFINE_VIREO_FUNCTION(InputIicSetup, "p(i(.UInt8),i(.UInt8),i(.Array),i(.UInt8),o(.Array))");
+    DEFINE_VIREO_FUNCTION(InputClearChanges, "p(i(.UInt8),i(.UInt8))");
+DEFINE_VIREO_END()
 

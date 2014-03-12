@@ -1,27 +1,12 @@
 /**
-
-Copyright (c) 2013 National Instruments Corp.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
+ 
+Copyright (c) 2014 National Instruments Corp.
+ 
+This software is subject to the terms described in the LICENSE.TXT file
+ 
 SDG
 */
+
 
 #ifndef DataTypes_h
 #define DataTypes_h
@@ -35,10 +20,21 @@ SDG
 namespace Vireo
 {
 
+//------------------------------------------------------------
+#ifdef __cplusplus
+#define null 0
+#else
+#define null ((void *)0)
+#endif
+
+//------------------------------------------------------------
 enum { kVariableSizeSentinel = INT32_MIN };
+// Type used for index to most collections (may be Int32 on Int64 machines)
+typedef VIREO_ARRAY_INDEX_TYPE        IntIndex;
 
 typedef Int32 CounterType;
 
+//------------------------------------------------------------
 typedef enum {
     kNIError_Success = 0,
     kNIError_kInsufficientResources = 1,// Typically memory
@@ -50,29 +46,27 @@ typedef enum {
     kNIError_ValueTruncated = 7,
 } NIError ;
 
-// Types used for structs and pointers when the symantics of the underlying bits may vary
+// Types used for structs and pointers when the semantics of the underlying bits may vary
 typedef UInt8   AQBlock1;
 typedef Int16   AQBlock2;
 typedef Int32   AQBlock4;
 typedef Int64   AQBlock8;
 
-// Type used for index to most collections (may be Int32 on Int64 machines)
-typedef VIVM_ARRAY_INDEX        IntIndex;
-
+//------------------------------------------------------------
 #if defined (__ARDUINO__)
 	typedef UInt32 uTicTimeType;
 #else
 	typedef UInt64 uTicTimeType;
 #endif
-    
-#ifdef __cplusplus
-#define null 0
-#else
-#define null ((void *)0)
-#endif
 
-#define VIVM_CORE_ASSERT( _TEST_ ) VireoAssert_Hidden( _TEST_, #_TEST_, __FILE__, __LINE__ );
-void VireoAssert_Hidden(Boolean test, const char* message, const char* file, int line);
+//------------------------------------------------------------
+//#define VIREO_ASSERT_SUPPRESS
+#ifdef VIREO_ASSERT_SUPPRESS
+    #define VIREO_ASSERT( _TEST_ )
+#else
+    #define VIREO_ASSERT( _TEST_ ) VireoAssert_Hidden( _TEST_, #_TEST_, __FILE__, __LINE__ );
+    void VireoAssert_Hidden(Boolean test, const char* message, const char* file, int line);
+#endif
 
 //------------------------------------------------------------
 template <class T>
