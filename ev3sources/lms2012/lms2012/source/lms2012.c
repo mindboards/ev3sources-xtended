@@ -2889,6 +2889,7 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opINPUT_IIC_READ]			=		&cInputIICRead,
   [opINPUT_IIC_STATUS]		=		&cInputIICStatus,
   [opINPUT_IIC_WRITE]			=		&cInputIICWrite,
+  [opINPUT_SET_AUTOID]    =   &cInputAutoID,
   [opDYNLOAD_VMLOAD]			= 	&dynloadVMLoad,
   [opDYNLOAD_VMEXIT]			= 	&dynloadVMExit,
   [opDYNLOAD_ENTRY_0]			= 	&dynloadEntry_0,

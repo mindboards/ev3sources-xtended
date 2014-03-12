@@ -5291,75 +5291,141 @@ void      cInputSample(void)
   }
 }
 
-void      cInputSetConn(void)
+
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_SET_AUTOID (LAYER, NO, ENABLE)  </b>
+ *
+ *- Enabled or disable auto-id for a specific sensor port
+ *
+ *  \param  (DATA8)   LAYER   - Chain layer number [0..3]
+ *  \param  (DATA8)   NO      - Port number
+ *  \param  (DATA8)   ENABLE  - Boolean (0 disabled, 1 enable)
+ *
+ */
+/*! \brief  opINPUT_SET_AUTOID byte code
+ *
+ */
+void      cInputAutoID(void)
 {
-//  DATA8 Layer  		=  *(DATA8*)PrimParPointer();
-//  DATA8 No     		=  *(DATA8*)PrimParPointer();
-  DATA8 Conn   		=  *(DATA8*)PrimParPointer();
+	int Index;
+	char Buf[6];
 
-  DATA8 Device = cInputGetDevice();
-//  DATA8 *pResult	=  (DATA8*)PrimParPointer();
-
-  // This only works for the first layer (for now)
-//  if (Layer != 0)
-//  {
-//  	*pResult = FAIL;
-//  	return;
-//  }
+	DATA8 Device = cInputGetDevice();
+  DATA8 Enable = *(DATA8*)PrimParPointer();
 
   if (Device >= vmINPUTS)
   {
-//  	*pResult = FAIL;
   	return;
   }
+
+  // Configure auto-id
+  Buf[0] = 'e'
+
+  // Initialise auto-id string to do nothing
+  for (Index = 0;Index < INPUTS;Index++)
+  {
+    Buf[Index + 1]    =  '-';
+  }
+
+  // NULL terminate for good karma
+  Buf[5]      =  0;
+
+  // Configure the port's auto-id
+  Buf[Device + 1] = Enable;
+
+	// Write the string to the kernel module (/dev/lms_analog)
+	write(InputInstance.AdcFile, Buf, 6);
+}
+
+
+
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_SET_CONN (LAYER, NO, CONN)  </b>
+ *
+ *- Set the connection type for a specific port\n
+ *- note that this won't do much if the auto-id has not been disabled
+ *
+ *  \param  (DATA8)   LAYER   - Chain layer number [0..3]
+ *  \param  (DATA8)   NO      - Port number
+ *  \param  (DATA8)   Conn    - Connection type (CONN_NXT_IIC, CONN_NXT_DUMB or CONN_INPUT_DUMB)
+ *
+ */
+/*! \brief  opINPUT_SETCONN byte code
+ *
+ */
+void      cInputSetConn(void)
+{
+	int Index;
+	char Buf[6];
+
+	DATA8 Device = cInputGetDevice();
+
+  DATA8 Conn   =  *(DATA8*)PrimParPointer();
+
+  if (Device >= INPUTS)
+  {
+  	return;
+  }
+
+  // Configure the connection type
+  Buf[0] = 't'
+
+  // Initialise connection type setup string to do nothing
+  for (Index = 0;Index < INPUTS;Index++)
+  {
+    Buf[Index + 1]    =  '-';
+  }
+
+  // NULL terminate for good karma
+  Buf[5]      =  0;
+
+  // Set the port to the specified connection
+  Buf[Device + 1] = Conn;
 
 	switch (Conn)
 	{
 		case CONN_NXT_IIC:
-		{
-			InputInstance.Analog.InDcm[Device]  = TYPE_NXT_IIC;
-			InputInstance.Analog.InConn[Device] = CONN_NXT_IIC;
-//			cInputSetDeviceType(Device,DATA8 Type, DATA8 Mode,int Line)
-		}
-		break;
-
-		// Pretend it's an old NXT touch sensor
-		// You can still read the raw value from pin 1
 		case CONN_NXT_DUMB:
-		{
-			InputInstance.Analog.InDcm[Device]  =  TYPE_NXT_TOUCH;
-			InputInstance.Analog.InConn[Device] =  CONN_NXT_DUMB;
-		}
-		break;
-
-		// Pretend it's an EV3 touch sensor
 		case CONN_INPUT_DUMB:
 		{
-			InputInstance.Analog.InDcm[Device]  =  TYPE_TOUCH;
-			InputInstance.Analog.InConn[Device] =  CONN_INPUT_DUMB;
+			Buf[Device + 1] = Conn;
 		}
 		break;
+
+		default:
+			return;
 	}
 
-//	*pResult = OK;
+	// Write the string to the kernel module (/dev/lms_analog)
+	write(InputInstance.AdcFile, Buf, 6);
 }
 
 
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_IIC_READ (LAYER, NO, RDLNG, RDDATA)  </b>
+ *
+ *- Read I2C data from specified port\n
+ *
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read
+ *    -  \return (DATA8)   RDDATA       - DATA8 array  (handle) to read into\n
+ *
+ */
+/*! \brief  opINPUT_IIC_READ byte code
+ *
+ */
 void    cInputIICRead(void)
 {
-	DATA8	Layer			= *(DATA8*)PrimParPointer();
-	DATA8 No 				= *(DATA8*)PrimParPointer();
+	DATA8 Device = cInputGetDevice();
   DATA8 *RdLng    =	(DATA8*)PrimParPointer();
   DATA8 *pRdData  =	(DATA8*)PrimParPointer();
   DATA8 *pResult = (DATA8*)PrimParPointer();
 
-  if (Layer != 0)
-  {
-  	*pResult = FAIL;
-  	return;
-  }
-
-  if (No >= vmINPUTS)
+  if (Device >= vmINPUTS)
   {
   	*pResult = FAIL;
   	return;
@@ -5370,7 +5436,7 @@ void    cInputIICRead(void)
     *RdLng  =  MAX_DEVICE_DATALENGTH;
   }
 
-	InputInstance.IicDat.Port     =  No;
+	InputInstance.IicDat.Port     =  Device;
 	InputInstance.IicDat.RdLng    =  *RdLng;
 
 	ioctl(InputInstance.IicFile,IIC_READ_DATA,&InputInstance.IicDat);
@@ -5387,24 +5453,32 @@ void    cInputIICRead(void)
 }
 
 
-
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_IIC_WRITE (LAYER, NO, WRLNG, WRDATA, RDLNG, RESULT)  </b>
+ *
+ *- Write I2C data to specified port\n
+ *
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \param  (DATA8)   WRLNG        - No of bytes to write
+ *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read (if negative -> byte order is reversed)
+ *    -  \return (DATA8)   RESULT       - Write/read result (OK, FAIL, BUSY, STOP)
+ *
+ */
+/*! \brief  opINPUT_IIC_WRITE byte code
+ *
+ */
 void    cInputIICWrite(void)
 {
-
-	DATA8	Layer			= *(DATA8*)PrimParPointer();
-	DATA8 No 				= *(DATA8*)PrimParPointer();
+	DATA8 Device = cInputGetDevice();
   DATA8 WrLng     = *(DATA8*)PrimParPointer();
   DATA8 *pWrData  = (DATA8*)PrimParPointer();
   DATA8 RdLng     = *(DATA8*)PrimParPointer();
   DATA8 *pResult  = (DATA8*)PrimParPointer();
 
-  if (Layer != 0)
-  {
-  	*pResult = FAIL;
-  	return;
-  }
-
-  if (No >= vmINPUTS)
+  if (Device >= INPUTS)
   {
   	*pResult = FAIL;
   	return;
@@ -5419,9 +5493,9 @@ void    cInputIICWrite(void)
 		RdLng  =  MAX_DEVICE_DATALENGTH;
 	}
 
-	InputInstance.IicDat.Port     =  No;
-	InputInstance.IicDat.Repeat   =  1;
-	InputInstance.IicDat.Time     =  0;
+	InputInstance.IicDat.Port     =  Device;
+	InputInstance.IicDat.Repeat   =  1;				// Only do a one-shot
+	InputInstance.IicDat.Time     =  0;				// No specified repeat time
 	InputInstance.IicDat.WrLng    =  WrLng;
 	InputInstance.IicDat.RdLng    =  RdLng;
 
@@ -5433,26 +5507,32 @@ void    cInputIICWrite(void)
 }
 
 
+/*! \page cInput
+ *  <hr size="1"/>
+ *  <b>     opINPUT_IIC_STATUS (LAYER, NO, RESULT)  </b>
+ *
+ *- Read I2C status of specified port\n
+ *
+ *    -  \param  (DATA8)   LAYER        - Chain layer number [0..3]
+ *    -  \param  (DATA8)   NO           - Port number
+ *    -  \return (DATA8)   RESULT       - Current I2C bus status (OK, FAIL, BUSY, STOP)
+ *
+ */
+/*! \brief  opINPUT_IIC_STATUS byte code
+ *
+ */
 void    cInputIICStatus(void)
 {
-
-	DATA8	Layer			= *(DATA8*)PrimParPointer();
-	DATA8 No 				= *(DATA8*)PrimParPointer();
+	DATA8 Device = cInputGetDevice();
   DATA8 *pResult  = (DATA8*)PrimParPointer();
 
-  if (Layer != 0)
+  if (Device >= INPUTS)
   {
   	*pResult = FAIL;
   	return;
   }
 
-  if (No >= vmINPUTS)
-  {
-  	*pResult = FAIL;
-  	return;
-  }
-
-	InputInstance.IicDat.Port     =  No;
+	InputInstance.IicDat.Port     =  Device;
 
 	ioctl(InputInstance.IicFile,IIC_READ_STATUS,&InputInstance.IicDat);
 

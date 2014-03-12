@@ -1839,7 +1839,7 @@ static ssize_t Device1Write(struct file *File,const char *Buffer,size_t Count,lo
     // This should be preceded by disabling the auto-id.  Setting the type without disabling the
     // auto-id will do nothing.
 
-    // Enabling/disabling the FSM for the port
+    // Enabling/disabling the auto-id FSM for the port
     if (Buf[0] == 'e')
     {
       for (Port = 0;Port < NO_OF_INPUT_PORTS;Port++)

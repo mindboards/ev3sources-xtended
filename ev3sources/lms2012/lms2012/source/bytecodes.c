@@ -372,6 +372,7 @@ static OPCODE OpCodes[256] =
   OC(		opINPUT_IIC_READ,				PAR8,PAR8,PAR8,PAR8,PAR8,                       0,0,0                 ),
   OC(		opINPUT_IIC_STATUS,			PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
   OC(		opINPUT_IIC_WRITE,			PAR8,PAR8,PAR8,PAR8,PAR8,PAR8,                	0,0                   ),
+  OC(		opINPUT_SET_AUTOID,			PAR8,PAR8,PAR8,                                 0,0,0,0,0             ),
 
   // For dynload
   OC(		opDYNLOAD_VMLOAD,				PAR8,PAR8,																			0,0,0,0,0,0           ),
