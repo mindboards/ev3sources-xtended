@@ -5463,7 +5463,7 @@ void    cInputIICRead(void)
  *    -  \param  (DATA8)   NO           - Port number
  *    -  \param  (DATA8)   WRLNG        - No of bytes to write
  *    -  \param  (DATA8)   WRDATA       - DATA8 array  (handle) of data to write\n
- *    -  \param  (DATA8)   RDLNG        - No of bytes to read (if negative -> byte order is reversed)
+ *    -  \param  (DATA8)   RDLNG        - No of bytes to read
  *    -  \return (DATA8)   RESULT       - Write/read result (OK, FAIL, BUSY, STOP)
  *
  */
