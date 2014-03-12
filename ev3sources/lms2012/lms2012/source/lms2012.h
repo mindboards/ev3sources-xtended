@@ -1157,6 +1157,7 @@ IICSTR;
 #define   IIC_SET                 _IOWR('i',6,IICSTR)
 #define   IIC_READ_STATUS					_IOWR('i',7,IICDAT)
 #define   IIC_READ_DATA						_IOWR('i',8,IICDAT)
+#define   IIC_WRITE_DATA					_IOWR('i',9,IICDAT)
 
 
 

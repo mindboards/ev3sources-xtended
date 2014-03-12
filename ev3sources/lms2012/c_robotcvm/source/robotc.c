@@ -48,16 +48,18 @@ void vm_exit()
 
 void robotc_entry_0()
 {
-	uint8_t cmd = *(char *) PrimParPointer();
-	uint8_t datalen = *(char *) PrimParPointer();
+  char *inputs   = (char *) PrimParPointer();
+  char *outputs  = (char *) PrimParPointer();
+  uint16_t dataSize = *(uint16_t *)PrimParPointer();
+
 	void *data = 0;
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "ROBOTC: %s called. cmd: %d, datalen: %d\n", __func__, cmd, datalen);
+	fprintf(stderr, "ROBOTC: %s called. inputs: %d, outputs: %d, datalen: %d\n", __func__, *inputs, *outputs, dataSize);
 #endif
 
 	// Only pick a variable off that stack if you should
-	if (datalen > 0)
+	if (dataSize > 0)
 		data = PrimParPointer();
 
 	// do something here

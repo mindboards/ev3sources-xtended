@@ -613,7 +613,7 @@ static RESULT IicPortReceive(UBYTE Port,UBYTE *pTmpBuffer)
 
 enum      IIC_STATE
 {
-  IIC_IDLE,
+  IIC_IDLE, // 0
   IIC_INIT,
   IIC_RESTART,
   IIC_ENABLE,
@@ -630,10 +630,10 @@ enum      IIC_STATE
   IIC_SETUP_START,
   IIC_SETUP_WRITE,
   IIC_SETUP_READ,
-  IIC_WAITING,
+  IIC_WAITING,  // 17
   IIC_WRITING,
   IIC_READING,
-  IIC_REPEAT,
+  IIC_REPEAT,   // 20
   IIC_ERROR,
   IIC_EXIT,
   IIC_STATES
@@ -1203,7 +1203,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
           if (IicConfigured[Port] == 0)
           {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//            printk("d_iic  %d   Device1Ioctl: Changing to IIC\n",Port);
+            printk("d_iic  %d   Device1Ioctl: Changing to IIC\n",Port);
 #endif
             IicConfigured[Port]        =  1;
             IicPortType[Port]          =  (*pDevCon).Type[Port];
@@ -1216,7 +1216,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
               if (IicPort[Port].Mode != (*pDevCon).Mode[Port])
               {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//                printk("d_iic  %d   Device1Ioctl: Changing to    %c\n",Port,(*pDevCon).Mode[Port] + '0');
+                printk("d_iic  %d   Device1Ioctl: Changing to    %c\n",Port,(*pDevCon).Mode[Port] + '0');
 #endif
                 IicPort[Port].Mode         =  (*pDevCon).Mode[Port];
                 IicPort[Port].ChangeMode   =  1;
@@ -1229,7 +1229,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
         else
         {
 #ifdef DEBUG_TRACE_MODE_CHANGE
-//          printk("d_iic  %d   Device1Ioctl: Changing to non IIC\n",Port);
+          printk("d_iic  %d   Device1Ioctl: Changing to non IIC\n",Port);
 #endif
           (*pIic).Status[Port] &= ~IIC_DATA_READY;
           if (IicConfigured[Port])
@@ -1356,6 +1356,37 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 
         (*pIicDat).Result         =  FAIL;
       }
+    }
+    break;
+
+    case IIC_WRITE_DATA:
+    {
+			pIicDat                     = (IICDAT*)Pointer;
+
+			Port                        =  (*pIicDat).Port;
+
+			if (IicPort[Port].Result != BUSY)
+			{
+				IicPort[Port].Repeat      =  1;
+				IicPort[Port].Time        =  0;
+				IicPort[Port].OutLength   =  (*pIicDat).WrLng;
+				IicPort[Port].InLength    =  (*pIicDat).RdLng;
+				IicPort[Port].Reverse     =  1;
+
+				if (IicPort[Port].OutLength > IIC_DATA_LENGTH)
+				{
+					IicPort[Port].OutLength =   IIC_DATA_LENGTH;
+				}
+				if (IicPort[Port].InLength > IIC_DATA_LENGTH)
+				{
+					IicPort[Port].InLength  =   IIC_DATA_LENGTH;
+				}
+
+				memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
+				memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
+
+				IicPort[Port].Result        =  BUSY;
+			}
     }
     break;
   }
