@@ -479,6 +479,7 @@ typedef   enum
   opINPUT_IIC_STATUS					= 0XE2, // read the status
   opINPUT_IIC_WRITE						= 0xE3, // write the data to the I2C bus
   opINPUT_SET_AUTOID					= 0xE4, // override auto-id
+  opMAILBOX_SIZE              = 0xE5, // get size of a mailbox
 
   // For the 3rd party VMs
   opDYNLOAD_VMLOAD						= 0xF0,

@@ -3940,6 +3940,35 @@ void      cComTestMailBox(void)
 
 /*! \page cCom
  *  <hr size="1"/>
+ *  <b>     opMAILBOX_SIZE (NO, BUSY) </b>
+ *
+ *- Returns the size of the mailbox.                                                \n
+ *
+ *  \param  (DATA8)    NO         - Reference ID mailbox number                     \n
+ *  \return (DATA8)    SIZE       - Size in bytes of the contents of mailbox NO     \n
+ */
+ /*! \brief  opMAILBOX_SIZE byte code
+ *
+ */
+void      cComMailBoxSize(void)
+{
+  DSPSTAT DspStat = FAILBREAK;
+  DATA8   Size    = 0;
+  DATA8   No;
+
+  No   =  *(DATA8*)PrimParPointer();
+
+  Size = ComInstance.MailBox[No].DataSize;
+
+  *(DATA8*)PrimParPointer() = Size;
+
+  DspStat = NOBREAK;
+  SetDispatchStatus(DspStat);
+}
+
+
+/*! \page cCom
+ *  <hr size="1"/>
  *  <b>     opMAILBOX_READY (NO) </b>
  *
  *- Waiting from message to be read                            \n
@@ -3961,7 +3990,7 @@ void      cComReadyMailBox(void)
 
   if (ComInstance.MailBox[No].WriteCnt == ComInstance.MailBox[No].ReadCnt)
   {
-    DspStat = BUSYBREAK;;
+    DspStat = BUSYBREAK;
   }
 
   if (DspStat == BUSYBREAK)
