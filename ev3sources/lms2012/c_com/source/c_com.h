@@ -1451,6 +1451,7 @@ void      cComReadMailBox(void);
 void      cComTestMailBox(void);
 void      cComReadyMailBox(void);
 void      cComCloseMailBox(void);
+void      cComMailBoxSize(void);
 
 void      cComGetBrickName(DATA8 Length, DATA8 *pBrickName);
 DATA8     cComGetEvent(void);
