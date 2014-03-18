@@ -3368,7 +3368,7 @@ void      cMemoryFile(void)
  *    -   \return (HANDLER) HANDLE    - Array handle\n
  *
  *\n
- *  - CMD = SIZE
+ *  - CMD = SET_SIZE
  *    -   \param  (HANDLER) HANDLE    - Array handle\n
  *    -   \return (DATA32)  ELEMENTS  - Total number of elements in array\n
  *
@@ -3616,7 +3616,7 @@ void      cMemoryArray(void)
     }
     break;
 
-    case SIZE :
+    case SET_SIZE :
     {
       TmpHandle   =  *(HANDLER*)PrimParPointer();
       Elements    =  0;
