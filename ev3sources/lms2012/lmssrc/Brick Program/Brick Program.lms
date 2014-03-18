@@ -112,7 +112,7 @@ vmthread  MAIN                                                        //  void M
   JR_FALSE(ShowVersion,DontShowVersion)                               //    if (ShowVersion)
                                                                       //    {
   UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)                              //      UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)
-  UI_DRAW(RECT,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECT,FG_COLOR,6,52,166,24)
+  UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)
   UI_DRAW(TEXT,FG_COLOR,13,60,appv)                                   //      UI_DRAW(TEXT,FG_COLOR,13,60,appv)
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
                                                                       //
@@ -704,7 +704,7 @@ WhileHorzCount:                                                       //        
   MUL16(42,HorzCount,X0)                                              //              X0        =  HorzCount * 40
   ADD16(2,X0,X0)                                                      //              X0       +=  2
                                                                       //
-  UI_DRAW(RECT,FG_COLOR,X0,Y0,40,48)                                  //              UI_DRAW(RECT,FG_COLOR,X0,Y0,38,48
+  UI_DRAW(RECTANGLE,FG_COLOR,X0,Y0,40,48)                                  //              UI_DRAW(RECTANGLE,FG_COLOR,X0,Y0,38,48
 Empty:                                                                //            }
                                                                       //
   SUB16(LIB_MAX_VERT,Start,Tmp3)                                      //            Tmp3  =  LIB_MAX_VERT - Start
@@ -717,7 +717,7 @@ Empty:                                                                //        
                                                                       //
   MUL16(42,HorzCount,X0)                                              //                X0        =  HorzCount * 40
   ADD16(2,X0,X0)                                                      //                X0       +=  2
-  UI_DRAW(RECT,FG_COLOR,X0,124,40,5)                                  //                UI_DRAW(RECT,FG_COLOR,X0,Y0,38,48
+  UI_DRAW(RECTANGLE,FG_COLOR,X0,124,40,5)                                  //                UI_DRAW(RECTANGLE,FG_COLOR,X0,Y0,38,48
                                                                       //
 Bottom:                                                               //              }
 EndBottom:                                                            //            }
@@ -729,7 +729,7 @@ EndBottom:                                                            //        
                                                                       //
   MUL16(42,HorzCount,X0)                                              //                X0        =  HorzCount * 40
   ADD16(2,X0,X0)                                                      //                X0       +=  2
-  UI_DRAW(RECT,FG_COLOR,X0,11,40,5)                                   //                UI_DRAW(RECT,FG_COLOR,X0,Y0,38,48
+  UI_DRAW(RECTANGLE,FG_COLOR,X0,11,40,5)                                   //                UI_DRAW(RECTANGLE,FG_COLOR,X0,Y0,38,48
   UI_DRAW(LINE,BG_COLOR,0,11,175,11)                                  //                UI_DRAW(LINE,BG_COLOR,0,11,175,11)
                                                                       //
 Top:                                                                  //              }

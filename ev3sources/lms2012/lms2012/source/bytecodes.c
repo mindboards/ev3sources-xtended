@@ -558,7 +558,7 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   UI_DRAW_SUBP,           UPDATE,                 0,                                              0,0,0,0,0,0,0         ),
   SC(   UI_DRAW_SUBP,           CLEAN,                  0,                                              0,0,0,0,0,0,0         ),
   SC(   UI_DRAW_SUBP,           FILLRECT,               PAR8,PAR16,PAR16,PAR16,PAR16,                   0,0,0                 ),
-  SC(   UI_DRAW_SUBP,           RECT,                   PAR8,PAR16,PAR16,PAR16,PAR16,                   0,0,0                 ),
+  SC(   UI_DRAW_SUBP,           RECTANGLE,                   PAR8,PAR16,PAR16,PAR16,PAR16,                   0,0,0                 ),
   SC(   UI_DRAW_SUBP,           PIXEL,                  PAR8,PAR16,PAR16,                               0,0,0,0,0             ),
   SC(   UI_DRAW_SUBP,           LINE,                   PAR8,PAR16,PAR16,PAR16,PAR16,                   0,0,0                 ),
   SC(   UI_DRAW_SUBP,           CIRCLE,                 PAR8,PAR16,PAR16,PAR16,                         0,0,0,0               ),

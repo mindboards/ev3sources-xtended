@@ -58,7 +58,7 @@ vmthread  MAIN
   JR_FALSE(ShowVersion,DontShowVersion)                               //    if (ShowVersion)
                                                                       //    {
   UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)                              //      UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)
-  UI_DRAW(RECT,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECT,FG_COLOR,6,52,166,24)
+  UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)
   UI_DRAW(TEXT,FG_COLOR,13,60,appv)                                   //      UI_DRAW(TEXT,FG_COLOR,13,60,appv)
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
                                                                       //
@@ -637,13 +637,13 @@ Loop40:
 
 subcall   Test_UI_DRAW_RECT
 {
-  UI_WRITE(PUT_STRING,'    UI_DRAW(RECT...)................ ')
+  UI_WRITE(PUT_STRING,'    UI_DRAW(RECTANGLE...)................ ')
   UI_FLUSH()
   MOVE32_32(0,Counter)
   TIMER_READ_US(Start)
 Loop40:
 // TEST ***********************************************
-  UI_DRAW(RECT,FG_COLOR,15,49,146,67)
+  UI_DRAW(RECTANGLE,FG_COLOR,15,49,146,67)
 // ****************************************************
   ADD32(1,Counter,Counter)
   JR_LT32(Counter,TIMES,Loop40)

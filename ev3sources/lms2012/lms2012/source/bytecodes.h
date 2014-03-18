@@ -792,7 +792,7 @@ typedef   enum
   PICTURE       = 7,
   VALUE         = 8,
   FILLRECT      = 9,
-  RECT          = 10,
+  RECTANGLE          = 10,
   NOTIFICATION  = 11,
   QUESTION      = 12,
   KEYBOARD      = 13,

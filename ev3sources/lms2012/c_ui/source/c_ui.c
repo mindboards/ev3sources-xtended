@@ -5408,7 +5408,7 @@ void      cUiGraphDraw(DATA8 View,DATAF *pActual,DATAF *pLowest,DATAF *pHighest,
  *    -  \param  (DATA16)  Y1       - Y size [0..LCD_HEIGHT - Y0]\n
  *
  *\n
- *  - CMD = RECT
+ *  - CMD = RECTANGLE
  *    -  \param  (DATA8)   COLOR    - Color [BG_COLOR..FG_COLOR]\n
  *    -  \param  (DATA16)  X0       - X start cord [0..LCD_WIDTH]\n
  *    -  \param  (DATA16)  Y0       - Y start cord [0..LCD_HEIGHT]\n
@@ -5803,7 +5803,7 @@ void      cUiDraw(void)
     }
     break;
 
-    case RECT :
+    case RECTANGLE :
     {
       Color     =  *(DATA8*)PrimParPointer();
       X         =  *(DATA16*)PrimParPointer();
