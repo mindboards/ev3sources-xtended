@@ -3378,7 +3378,7 @@ void      cMemoryFile(void)
  *    -   \param  (DATA32)  ELEMENTS  - Total number of elements\n
  *
  *\n
- *  - CMD = DELETE
+ *  - CMD = DESTROY
  *    -   \param  (HANDLER) HANDLE    - Array handle\n
  *
  *\n
@@ -3648,7 +3648,7 @@ void      cMemoryArray(void)
     }
     break;
 
-    case DELETE :
+    case DESTROY :
     {
       TmpHandle   =  *(HANDLER*)PrimParPointer();
       cMemoryFreeHandle(TmpPrgId,TmpHandle);

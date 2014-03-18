@@ -790,7 +790,7 @@ Loop:                                                                 //        
   JR_GT16(Line,0,Loop)                                                //                while (Line > 0)
   UI_DRAW(TOPLINE,1)                                                  //                UI_DRAW(TOPLINE,1)
                                                                       //
-  ARRAY(DELETE,hTextbox)                                              //                ARRAY(DELETE,hTextbox)
+  ARRAY(DESTROY,hTextbox)                                              //                ARRAY(DESTROY,hTextbox)
                                                                       //
 NotFound:                                                             //              }
 FileNotText:                                                          //            }

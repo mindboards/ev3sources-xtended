@@ -535,7 +535,7 @@ vmthread  MAIN
   UI_WRITE(PUT_STRING,'\r\n')
   UI_FLUSH()
 
-  ARRAY(DELETE,hString)
+  ARRAY(DESTROY,hString)
 }
 */
 /*
@@ -704,8 +704,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,@hDest)
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATA16
 
@@ -724,8 +724,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATA32
 
@@ -744,8 +744,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATAF
 
@@ -764,8 +764,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 
 

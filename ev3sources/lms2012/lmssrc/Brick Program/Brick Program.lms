@@ -284,16 +284,16 @@ NotBack:                                                              //      }
   JR_TRUE(Run,Loop)                                                   //    while (Run)
                                                                       //
   // Delete hBlockPar2                                                //
-  ARRAY(DELETE,hBlockPar2)                                            //    ARRAY(DELETE,hBlockPar2)
+  ARRAY(DESTROY,hBlockPar2)                                            //    ARRAY(DESTROY,hBlockPar2)
                                                                       //
   // Delete hBlockPar1                                                //
-  ARRAY(DELETE,hBlockPar1)                                            //    ARRAY(DELETE,hBlockPar1)
+  ARRAY(DESTROY,hBlockPar1)                                            //    ARRAY(DESTROY,hBlockPar1)
                                                                       //
   // Delete hBlockStream                                              //
-  ARRAY(DELETE,hBlockStream)                                          //    ARRAY(DELETE,hBlockStream)
+  ARRAY(DESTROY,hBlockStream)                                          //    ARRAY(DESTROY,hBlockStream)
                                                                       //
   // Delete hBlockLib                                                 //
-  ARRAY(DELETE,hBlockLib)                                             //    ARRAY(DELETE,hBlockLib)
+  ARRAY(DESTROY,hBlockLib)                                             //    ARRAY(DESTROY,hBlockLib)
                                                                       //
   UI_BUTTON(SET_BACK_BLOCK,0)                                         //
                                                                       //                                                                      
@@ -1591,7 +1591,7 @@ EndInsert:                                                            //
   FILE(OPEN_WRITE,Name,hFile)                                         //      FILE(OPEN_WRITE,Name,hFile)
   FILE(WRITE_BYTES,hFile,Size,@hProgram)                              //      FILE(WRITE_BYTES,hFile,Size,@hProgram)
   FILE(CLOSE,hFile)                                                   //      FILE(CLOSE,hFile)
-  ARRAY(DELETE,hProgram)                                              //      ARRAY(DELETE,hProgram)
+  ARRAY(DESTROY,hProgram)                                              //      ARRAY(DESTROY,hProgram)
                                                                       //
 }                                                                     //  }
                                                                       //

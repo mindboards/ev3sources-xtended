@@ -113,8 +113,8 @@ subcall   Test0201                                                    //  void T
   MOVE32_F(Place,DataF)                                               //
   CALL(TestRange,'SIZE               ',Result,DataF,DataF)            //
                                                                       //
-  ARRAY(DELETE,hCopy)                                                 //
-  ARRAY(DELETE,hArray)                                                //
+  ARRAY(DESTROY,hCopy)                                                 //
+  ARRAY(DESTROY,hArray)                                                //
                                                                       //
                                                                       //
   CALL(TestWrite,' MEMORY ARRAY DATA16')                              //
@@ -191,8 +191,8 @@ subcall   Test0201                                                    //  void T
   MOVE32_F(Place,DataF)                                               //
   CALL(TestRange,'SIZE               ',Result,DataF,DataF)            //
                                                                       //
-  ARRAY(DELETE,hCopy)                                                 //
-  ARRAY(DELETE,hArray)                                                //
+  ARRAY(DESTROY,hCopy)                                                 //
+  ARRAY(DESTROY,hArray)                                                //
                                                                       //
                                                                       //
   CALL(TestWrite,' MEMORY ARRAY DATA32')                              //
@@ -269,8 +269,8 @@ subcall   Test0201                                                    //  void T
   MOVE32_F(Place,DataF)                                               //
   CALL(TestRange,'SIZE               ',Result,DataF,DataF)            //
                                                                       //
-  ARRAY(DELETE,hCopy)                                                 //
-  ARRAY(DELETE,hArray)                                                //
+  ARRAY(DESTROY,hCopy)                                                 //
+  ARRAY(DESTROY,hArray)                                                //
                                                                       //
                                                                       //
   CALL(TestWrite,' MEMORY ARRAY DATAF')                               //
@@ -347,8 +347,8 @@ subcall   Test0201                                                    //  void T
   MOVE32_F(Place,DataF)                                               //
   CALL(TestRange,'SIZE               ',Result,DataF,DataF)            //
                                                                       //
-  ARRAY(DELETE,hCopy)                                                 //
-  ARRAY(DELETE,hArray)                                                //
+  ARRAY(DESTROY,hCopy)                                                 //
+  ARRAY(DESTROY,hArray)                                                //
                                                                       //
   CALL(TestClose)                                                     //
 }                                                                     //  }

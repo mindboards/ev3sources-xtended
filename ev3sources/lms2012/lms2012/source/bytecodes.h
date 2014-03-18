@@ -879,7 +879,7 @@ FILE_SUBCODE;
 
 typedef   enum
 {
-  DELETE              = 0,
+  DESTROY             = 0,
   CREATE8             = 1,
   CREATE16            = 2,
   CREATE32            = 3,

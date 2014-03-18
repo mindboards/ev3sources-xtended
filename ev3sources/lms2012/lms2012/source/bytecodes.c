@@ -449,7 +449,7 @@ static  SUBCODE SubCodes[SUBPS][MAX_SUBCODES] =
   SC(   ARRAY_SUBP,             CREATE32,               PAR32,PAR16,                                    0,0,0,0,0,0           ),
   SC(   ARRAY_SUBP,             CREATEF,                PAR32,PAR16,                                    0,0,0,0,0,0           ),
   SC(   ARRAY_SUBP,             RESIZE,                 PAR16,PAR32,                                    0,0,0,0,0,0           ),
-  SC(   ARRAY_SUBP,             DELETE,                 PAR16,                                          0,0,0,0,0,0,0         ),
+  SC(   ARRAY_SUBP,             DESTROY,                PAR16,                                          0,0,0,0,0,0,0         ),
   SC(   ARRAY_SUBP,             FILL,                   PAR16,PARV,                                     0,0,0,0,0,0           ),
   SC(   ARRAY_SUBP,             COPY,                   PAR16,PAR16,                                    0,0,0,0,0,0           ),
   SC(   ARRAY_SUBP,             INIT8,                  PAR16,PAR32,PAR32,PARVALUES,PAR8,               0,0,0                 ),

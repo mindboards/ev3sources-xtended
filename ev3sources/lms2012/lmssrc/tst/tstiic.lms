@@ -68,9 +68,9 @@ Loop:                                                                 //    {
   JR(Loop)                                                            //    while (TRUE)
                                                                       //
   // Clean up                                                         //
-  ARRAY(DELETE,hIicReply)                                             //    ARRAY(DELETE,hIicReply)
-  ARRAY(DELETE,hIicCommand)                                           //    ARRAY(DELETE,hIicCommand)
-  ARRAY(DELETE,hIicSetup)                                             //    ARRAY(DELETE,hIicSetup)
+  ARRAY(DESTROY,hIicReply)                                             //    ARRAY(DESTROY,hIicReply)
+  ARRAY(DESTROY,hIicCommand)                                           //    ARRAY(DESTROY,hIicCommand)
+  ARRAY(DESTROY,hIicSetup)                                             //    ARRAY(DESTROY,hIicSetup)
 }                                                                     //  }
 //! \endverbatim
 /*
@@ -121,8 +121,8 @@ Loop:                                                                 //    {
   JR(Loop)                                                            //    while (TRUE)
                                                                       //
   // Clean up                                                         //
-  ARRAY(DELETE,hIicReply)                                             //    ARRAY(DELETE,hIicReply)
-  ARRAY(DELETE,hIicCommand)                                           //    ARRAY(DELETE,hIicCommand)
+  ARRAY(DESTROY,hIicReply)                                             //    ARRAY(DESTROY,hIicReply)
+  ARRAY(DESTROY,hIicCommand)                                           //    ARRAY(DESTROY,hIicCommand)
 }                                                                     //  }
 */
 
