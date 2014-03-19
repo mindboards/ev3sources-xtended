@@ -111,7 +111,7 @@ vmthread  MAIN                                                        //  void M
   JR_FALSE(ShowVersion,DontShowVersion)                               //    if (ShowVersion)
                                                                       //    {
   UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)                              //      UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)
-  UI_DRAW(RECT,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECT,FG_COLOR,6,52,166,24)
+  UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)
   UI_DRAW(TEXT,FG_COLOR,13,60,appv)                                   //      UI_DRAW(TEXT,FG_COLOR,13,60,appv)
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
                                                                       //
@@ -422,28 +422,28 @@ ExitData:                                                             //    whil
   JR_GTEQ32(Index,MAX_PORTS,ExitDataDone)                             //    {
                                                                       //
   ARRAY_READ(hhGrids,Index,Handle)                                    //      Handle  =  hhGrids[Index]
-  ARRAY(DELETE,Handle)                                                //      ARRAY(DELETE,Handle)
+  ARRAY(DESTROY,Handle)                                                //      ARRAY(DESTROY,Handle)
                                                                       //
   ADD32(Index,1,Index)                                                //      Index++
   JR(ExitData)                                                        //    }
 ExitDataDone:                                                         //
                                                                       //
-  ARRAY(DELETE,hhGrids)                                               //    ARRAY(DELETE,hhGrids)
-  ARRAY(DELETE,hSampleRates)                                          //    ARRAY(DELETE,hSampleRates)
-  ARRAY(DELETE,hDataSets)                                             //    ARRAY(DELETE,hDataSets)
-  ARRAY(DELETE,hLogModes)                                             //    ARRAY(DELETE,hLogModes)
-  ARRAY(DELETE,hMaxModes)                                             //    ARRAY(DELETE,hMaxModes)
-  ARRAY(DELETE,hTypes)                                                //    ARRAY(DELETE,hTypes)
-  ARRAY(DELETE,hInits)                                                //    ARRAY(DELETE,hInits)
-  ARRAY(DELETE,hModes)                                                //    ARRAY(DELETE,hModes)
-  ARRAY(DELETE,hDecimals)                                             //    ARRAY(DELETE,hDecimals)
-  ARRAY(DELETE,hFigures)                                              //    ARRAY(DELETE,hFigures)
-  ARRAY(DELETE,hSpans)                                                //    ARRAY(DELETE,hSpans)
-  ARRAY(DELETE,hOffsets)                                              //    ARRAY(DELETE,hOffsets)
-  ARRAY(DELETE,hMaxs)                                                 //    ARRAY(DELETE,hMaxs)
-  ARRAY(DELETE,hMins)                                                 //    ARRAY(DELETE,hMins)
-  ARRAY(DELETE,hValues)                                               //    ARRAY(DELETE,hValues)
-  ARRAY(DELETE,hDevices)                                              //    ARRAY(DELETE,hDevices)
+  ARRAY(DESTROY,hhGrids)                                               //    ARRAY(DESTROY,hhGrids)
+  ARRAY(DESTROY,hSampleRates)                                          //    ARRAY(DESTROY,hSampleRates)
+  ARRAY(DESTROY,hDataSets)                                             //    ARRAY(DESTROY,hDataSets)
+  ARRAY(DESTROY,hLogModes)                                             //    ARRAY(DESTROY,hLogModes)
+  ARRAY(DESTROY,hMaxModes)                                             //    ARRAY(DESTROY,hMaxModes)
+  ARRAY(DESTROY,hTypes)                                                //    ARRAY(DESTROY,hTypes)
+  ARRAY(DESTROY,hInits)                                                //    ARRAY(DESTROY,hInits)
+  ARRAY(DESTROY,hModes)                                                //    ARRAY(DESTROY,hModes)
+  ARRAY(DESTROY,hDecimals)                                             //    ARRAY(DESTROY,hDecimals)
+  ARRAY(DESTROY,hFigures)                                              //    ARRAY(DESTROY,hFigures)
+  ARRAY(DESTROY,hSpans)                                                //    ARRAY(DESTROY,hSpans)
+  ARRAY(DESTROY,hOffsets)                                              //    ARRAY(DESTROY,hOffsets)
+  ARRAY(DESTROY,hMaxs)                                                 //    ARRAY(DESTROY,hMaxs)
+  ARRAY(DESTROY,hMins)                                                 //    ARRAY(DESTROY,hMins)
+  ARRAY(DESTROY,hValues)                                               //    ARRAY(DESTROY,hValues)
+  ARRAY(DESTROY,hDevices)                                              //    ARRAY(DESTROY,hDevices)
 }                                                                     //  }
                                                                       //
                                                                       //
@@ -1230,7 +1230,7 @@ EndMode:                                                              //        
 NoMode2:                                                              //        }
 NoBar2:                                                               //      }
                                                                       //
-  UI_DRAW(RECT,FG_COLOR,133,16,40,48)                                 //      UI_DRAW(RECT,FG_COLOR,133,16,40,48)
+  UI_DRAW(RECTANGLE,FG_COLOR,133,16,40,48)                                 //      UI_DRAW(RECTANGLE,FG_COLOR,133,16,40,48)
   UI_DRAW(LINE,FG_COLOR,133,65,133,106)                               //      UI_DRAW(LINE,FG_COLOR,133,65,133,106)
                                                                       //
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
@@ -1297,7 +1297,7 @@ NotEnterButton:                                                       //      }
 NotBackButton:                                                        //      }
                                                                       //    }
   JR_TRUE(Run,Loop)                                                   //    while (Run)
-  ARRAY(DELETE,hModesTmp)                                             //    ARRAY(DELETE,hModesTmp)
+  ARRAY(DESTROY,hModesTmp)                                             //    ARRAY(DESTROY,hModesTmp)
                                                                       //
 }                                                                     //  }
                                                                       //

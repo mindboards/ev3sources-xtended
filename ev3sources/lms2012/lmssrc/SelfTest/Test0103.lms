@@ -48,8 +48,8 @@ subcall   Test0103                                                    //  void T
   STRINGS(DUPLICATE,'Src1',@hSrc1)                                    //
   STRINGS(DUPLICATE,@hSrc1,@hDestination)                             //
   STRINGS(DUPLICATE,@hDestination,String)                             //
-  ARRAY(DELETE,hDestination)                                          //
-  ARRAY(DELETE,hSrc1)                                                 //
+  ARRAY(DESTROY,hDestination)                                          //
+  ARRAY(DESTROY,hSrc1)                                                 //
   CALL(TestCheck,'Src1               ',String,'Src1')                 //
                                                                       //
   ARRAY(CREATE8,0,hSrc1)                                              //
@@ -59,9 +59,9 @@ subcall   Test0103                                                    //  void T
   STRINGS(DUPLICATE,'Src2',@hSrc2)                                    //
   STRINGS(ADD,@hSrc1,@hSrc2,@hDestination)                            //
   STRINGS(DUPLICATE,@hDestination,String)                             //
-  ARRAY(DELETE,hDestination)                                          //
-  ARRAY(DELETE,hSrc2)                                                 //
-  ARRAY(DELETE,hSrc1)                                                 //
+  ARRAY(DESTROY,hDestination)                                          //
+  ARRAY(DESTROY,hSrc2)                                                 //
+  ARRAY(DESTROY,hSrc1)                                                 //
   CALL(TestCheck,'Src1 + Src2        ',String,'Src1Src2')             //
                                                                       //
   STRINGS(VALUE_TO_STRING,123.456F,10,3,String)                       //

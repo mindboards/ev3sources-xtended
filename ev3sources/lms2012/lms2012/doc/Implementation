@@ -42,7 +42,7 @@
  *-# SD card back key bug fixed                                                               \n
  *-# ISSUE 2636 - "Brick Program" app - test for attached sensor                              \n
  *-# ISSUE 3226 - opMATH MOD8, MOD16, MOD32 zero bug fixed                                    \n
- *-# ISSUE 3492 - opUI_DRAW LINE and RECT hang bug fixed                                      \n
+ *-# ISSUE 3492 - opUI_DRAW LINE and RECTANGLE hang bug fixed                                      \n
  *-# ISSUE 3565 - Brick Hang with 3rd party sensor bug fixed                                  \n
  *-# Added TIInit_6.6.15.bts to the filesystem to support 1325A version bluetooth             \n
  *-# Special exception text added to headers: "lmstypes.h", "lms2012.h" and "bytecodes.h"     \n

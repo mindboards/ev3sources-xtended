@@ -495,6 +495,7 @@ typedef   enum
   opDYNLOAD_ENTRY_7						= 0xF9,
   opDYNLOAD_ENTRY_8						= 0xFA,
   opDYNLOAD_ENTRY_9						= 0xFB,
+  opDYNLOAD_GET_VM						= 0xFC,
 
 
 
@@ -793,7 +794,7 @@ typedef   enum
   PICTURE       = 7,
   VALUE         = 8,
   FILLRECT      = 9,
-  RECT          = 10,
+  RECTANGLE     = 10,
   NOTIFICATION  = 11,
   QUESTION      = 12,
   KEYBOARD      = 13,
@@ -880,7 +881,7 @@ FILE_SUBCODE;
 
 typedef   enum
 {
-  DELETE              = 0,
+  DESTROY             = 0,
   CREATE8             = 1,
   CREATE16            = 2,
   CREATE32            = 3,
@@ -892,7 +893,7 @@ typedef   enum
   INIT16              = 9,
   INIT32              = 10,
   INITF               = 11,
-  SIZE                = 12,
+  SET_SIZE            = 12,
   READ_CONTENT        = 13,
   WRITE_CONTENT       = 14,
   READ_SIZE           = 15,

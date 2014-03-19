@@ -45,7 +45,7 @@ vmthread  MAIN                                                        //  void  
   JR_FALSE(ShowVersion,DontShowVersion)                               //    if (ShowVersion)
                                                                       //    {
   UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)                              //      UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)
-  UI_DRAW(RECT,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECT,FG_COLOR,6,52,166,24)
+  UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)
   UI_DRAW(TEXT,FG_COLOR,13,60,appv)                                   //      UI_DRAW(TEXT,FG_COLOR,13,60,appv)
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
                                                                       //

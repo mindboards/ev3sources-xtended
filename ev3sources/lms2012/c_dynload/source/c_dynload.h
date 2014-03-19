@@ -45,6 +45,7 @@ typedef void (*vmInitPointFunc)(struct tVirtualMachineInfo*);
 void dynloadInit();
 void dynloadVMExit();
 void dynloadVMLoad();
+void dynLoadGetVM();
 
 void dynloadEntry_0();
 void dynloadEntry_1();

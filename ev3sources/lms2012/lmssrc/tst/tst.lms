@@ -1225,7 +1225,7 @@ vmthread  MAIN
 
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hTest)
+  ARRAY(DESTROY,hTest)
 
   ARRAY(CREATEF,0,hTest)
 
@@ -1243,7 +1243,7 @@ vmthread  MAIN
   UI_WRITE(PUT_STRING,'\r\n');
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hTest)
+  ARRAY(DESTROY,hTest)
 
 
 }
@@ -1526,7 +1526,7 @@ Skip:
 End:
   JR(End)
 
-  ARRAY(DELETE,hTextbox)
+  ARRAY(DESTROY,hTextbox)
 }
 */
 /*
@@ -1865,8 +1865,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATA16
 
@@ -1885,8 +1885,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATA32
 
@@ -1905,8 +1905,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 // DATAF
 
@@ -1925,8 +1925,8 @@ subcall   TestArrayCopy
   UI_WRITE(PUT_STRING,'\r\n')
   UI_WRITE(WRITE_FLUSH)
 
-  ARRAY(DELETE,hDest)
-  ARRAY(DELETE,hSource)
+  ARRAY(DESTROY,hDest)
+  ARRAY(DESTROY,hSource)
 
 
 
@@ -1979,10 +1979,10 @@ Loop2:
   MOVE32_32(0,Cnt)
 Loop3:
   ARRAY_READ(hStringArray,Cnt,hTmp)
-  ARRAY(DELETE,hTmp)
+  ARRAY(DESTROY,hTmp)
   ADD32(1,Cnt,Cnt)
   JR_LT32(Cnt,NO_OF_STR,Loop3)
-  ARRAY(DELETE,hStringArray)
+  ARRAY(DESTROY,hStringArray)
 }
 */
 

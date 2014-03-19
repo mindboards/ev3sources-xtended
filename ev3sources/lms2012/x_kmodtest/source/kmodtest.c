@@ -261,7 +261,7 @@ int main (int argc, char *argv[])
 			case STOP: fprintf(stderr, "S"); break;
 		}
 		usleep(1000);
-	} while (status != OK);
+	} while (status == BUSY);
 	fprintf(stderr, ":");
 
 	readData(&iic_dat);

@@ -190,12 +190,12 @@ NotTimeYet2: // Used when timing
   FILE(REMOVE,'logfile.rdf')
 
   // Delete arrayes  
-  ARRAY(DELETE,hValues)
-  ARRAY(DELETE,hDataSets)
-  ARRAY(DELETE,hModes)
-  ARRAY(DELETE,hTypes)
-  ARRAY(DELETE,hDevices)
-  ARRAY(DELETE,hInits)
+  ARRAY(DESTROY,hValues)
+  ARRAY(DESTROY,hDataSets)
+  ARRAY(DESTROY,hModes)
+  ARRAY(DESTROY,hTypes)
+  ARRAY(DESTROY,hDevices)
+  ARRAY(DESTROY,hInits)
   
                                                                       //
   MOVE32_F(Time,Data)

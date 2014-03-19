@@ -682,11 +682,13 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
   UBYTE   Port;
   UBYTE   Tmp;
   UBYTE   TmpBuffer[IIC_DATA_LENGTH];
+  RESULT  Result;
 
   hrtimer_forward_now(pTimer,Device1Time);
 
   for (Port = 0;Port < NO_OF_IIC_PORTS;Port++)
   { // look at one port at a time
+  	Result = FAIL;
 
     switch (IicPort[Port].State)
     { // Main state machine
@@ -759,7 +761,8 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_NXT_TEMP_READ :
       {
-        if (IicPortReceive(Port,TmpBuffer) != BUSY)
+      	Result = IicPortReceive(Port,TmpBuffer);
+        if (Result != BUSY)
         {
           if (TmpBuffer[0] == 0x60)
           {
@@ -816,7 +819,8 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_MANUFACTURER_READ :
       {
-        if (IicPortReceive(Port,TmpBuffer) != BUSY)
+      	Result = IicPortReceive(Port,TmpBuffer);
+        if (Result != BUSY)
         {
           memcpy((void*)IicStrings[Port].Manufacturer,(void*)TmpBuffer,IIC_NAME_LENGTH);
           IicStrings[Port].Manufacturer[IIC_NAME_LENGTH]  =  0;
@@ -892,7 +896,8 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_TYPE_READ :
       {
-        if (IicPortReceive(Port,TmpBuffer) != BUSY)
+      	Result = IicPortReceive(Port,TmpBuffer);
+        if (Result != BUSY)
         {
           memcpy((void*)IicStrings[Port].SensorType,(void*)TmpBuffer,IIC_NAME_LENGTH);
           IicStrings[Port].SensorType[IIC_NAME_LENGTH]  =  0;
@@ -966,7 +971,8 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_SETUP_READ :
       {
-        if (IicPortReceive(Port,TmpBuffer) != BUSY)
+      	Result = IicPortReceive(Port,TmpBuffer);
+        if (Result != BUSY)
         {
           IicPort[Port].State           =  IIC_WAITING;
           if (IicStrings[Port].PollLng)
@@ -1030,7 +1036,19 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
       case IIC_READING :
       {
-        if (IicPortReceive(Port,TmpBuffer) != BUSY)
+      	Result = IicPortReceive(Port,TmpBuffer);
+      	if (Result == FAIL)
+      	{
+          (*pIic).Status[Port]     &= ~IIC_WRITE_REQUEST;
+          (*pIic).Status[Port]     &= ~IIC_DATA_READY;
+          IicPort[Port].Result      =  FAIL;
+          IicPort[Port].State       =  IIC_WAITING;
+
+#ifdef DEBUG_D_IIC
+          printk("IIC_READING: failed\n");
+#endif // DEBUG_D_IIC
+      	}
+      	else if (Result != BUSY)
         {
 
 #ifndef DISABLE_FAST_DATALOG_BUFFER

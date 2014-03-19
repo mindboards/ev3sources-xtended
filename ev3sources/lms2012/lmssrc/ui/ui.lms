@@ -74,7 +74,7 @@ vmthread Main                                                         //  void M
   JR_FALSE(ShowVersion,DontShowVersion)                               //    if (ShowVersion)
                                                                       //    {
   UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)                              //      UI_DRAW(FILLRECT,BG_COLOR,4,50,170,28)
-  UI_DRAW(RECT,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECT,FG_COLOR,6,52,166,24)
+  UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)                                  //      UI_DRAW(RECTANGLE,FG_COLOR,6,52,166,24)
   UI_DRAW(TEXT,FG_COLOR,13,60,appv)                                   //      UI_DRAW(TEXT,FG_COLOR,13,60,appv)
   UI_DRAW(UPDATE)                                                     //      UI_DRAW(UPDATE)
                                                                       //
@@ -790,7 +790,7 @@ Loop:                                                                 //        
   JR_GT16(Line,0,Loop)                                                //                while (Line > 0)
   UI_DRAW(TOPLINE,1)                                                  //                UI_DRAW(TOPLINE,1)
                                                                       //
-  ARRAY(DELETE,hTextbox)                                              //                ARRAY(DELETE,hTextbox)
+  ARRAY(DESTROY,hTextbox)                                              //                ARRAY(DESTROY,hTextbox)
                                                                       //
 NotFound:                                                             //              }
 FileNotText:                                                          //            }

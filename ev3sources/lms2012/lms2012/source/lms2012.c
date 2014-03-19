@@ -2903,6 +2903,7 @@ PRIM      PrimDispatchTabel[PRIMDISPATHTABLE_SIZE] =
   [opDYNLOAD_ENTRY_7]			= 	&dynloadEntry_7,
   [opDYNLOAD_ENTRY_8]			= 	&dynloadEntry_8,
   [opDYNLOAD_ENTRY_9]			= 	&dynloadEntry_9,
+  [opDYNLOAD_GET_VM]      =   &dynLoadGetVM,
   [opTST]                 =   &Tst
 };
 
