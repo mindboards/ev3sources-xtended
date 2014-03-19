@@ -494,6 +494,7 @@ typedef   enum
   opDYNLOAD_ENTRY_7						= 0xF9,
   opDYNLOAD_ENTRY_8						= 0xFA,
   opDYNLOAD_ENTRY_9						= 0xFB,
+  opDYNLOAD_GET_VM						= 0xFC,
 
 
 

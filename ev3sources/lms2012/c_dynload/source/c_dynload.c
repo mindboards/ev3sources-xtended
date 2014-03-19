@@ -171,8 +171,6 @@ void dynloadVMLoad()
 		return;
 	}
 
-
-
 	// Set the VM type
 	virtualMachineInfo.vmIndex = vmIndex;
 
@@ -183,6 +181,23 @@ void dynloadVMLoad()
 	res = OK;
 	*(DATA8*)PrimParPointer() =  res;
 	return;
+}
+
+
+/*! \page cDynload
+ *  <hr size="1"/>
+ *  <b>     opDYNLOAD_GET_VM </b>
+ *
+ * - Get the index of the currently loaded VM
+ *
+ *  \return (DATA8)   RESULT  - VM Index, Robotc = 0, Labview = 1, -1 for no loaded VM
+ */
+/*! \brief  opDYNLOAD_GET_VM(RESULT) byte code
+ *
+ */
+void dynLoadGetVM()
+{
+	*(char *)PrimParPointer() = (char)virtualMachineInfo.vmIndex;
 }
 
 

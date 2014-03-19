@@ -391,6 +391,7 @@ static OPCODE OpCodes[256] =
   OC(		opDYNLOAD_ENTRY_7,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
   OC(		opDYNLOAD_ENTRY_8,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
   OC(		opDYNLOAD_ENTRY_9,			PAR8,PAR8,PAR16,                                0,0,0,0,0             ),
+  OC(   opDYNLOAD_GET_VM,       PAR8,                                           0,0,0,0,0,0,0         ),
 
   //    Test
   OC(   opTST,                  PAR8,SUBP,TST_SUBP,                             0,0,0,0,0             ),
