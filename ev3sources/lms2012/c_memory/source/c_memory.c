@@ -54,6 +54,7 @@
 
 #include  "lms2012.h"
 #include  "c_memory.h"
+#include  "c_md5.h"
 #include  "../../c_ui/source/c_ui.h"
 
 #if (HARDWARE != SIMULATION)
@@ -4698,6 +4699,39 @@ void      cMemoryFileName(void)
     break;
 
   }
+}
+
+/*! \page cMemory
+ *
+ *  <hr size="1"/>
+ *  <b>     opFILE_MD5SUM (NAME, MD5SUM, SUCCESS)  </b>
+ *
+ *- Get md5 sum of a file\n
+ *- Dispatch status unchanged
+ *
+ *  \param  (DATA8)   NAME      - First character in file name (character string)\n
+ *  \return (DATA8)   MD5SUM    - First byte in md5 sum (byte array)\n
+ *  \return (DATA8)   SUCCESS   - Success flag (0 = no, 1 = yes)\n
+ *
+ *\n
+ *
+ */
+/*! \brief  opFILE_MD5SUM byte code
+ *
+ */
+void      cMemoryFileMd5Sum(void)
+{
+  DATA8   *pFileName;
+  DATA8   *pMd5Sum;
+  DATA8   *pSuccess;
+
+  pFileName =  (DATA8*)PrimParPointer();
+  pMd5Sum   =  (DATA8*)PrimParPointer();
+  pSuccess  =  (DATA8*)PrimParPointer();
+
+  memset(pMd5Sum, 0, 16);
+
+  *pSuccess = md5_file((char*)pFileName, 0, (unsigned char *) pMd5Sum);
 }
 
 

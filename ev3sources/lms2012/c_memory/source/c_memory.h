@@ -39,6 +39,8 @@ DSPSTAT   cMemoryReadFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8
 void      cMemoryDeleteSubFolders(char *pFolderName);
 DSPSTAT   cMemoryWriteFile(PRGID PrgId,HANDLER Handle,DATA32 Size,DATA8 Del,DATA8 *pSource);
 DSPSTAT   cMemoryGetFileHandle(PRGID PrgId,char *pFileName,HANDLER *pHandle,DATA8 *pOpenForWrite);
+void      cMemoryFilename(PRGID PrgId,char *pName,char *pExt,DATA8 Length,char *pResult);
+void      cMemoryFileMd5Sum(void);
 
 RESULT    cMemoryInit(void);
 
