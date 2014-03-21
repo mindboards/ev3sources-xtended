@@ -100,7 +100,23 @@ void dynloadVMLoad()
   // A VM has already been loaded.
   if (virtualMachineInfo.vmIndex >= 0)
   {
-  	res = virtualMachineInfo.vmIndex == vmIndex ? OK : FAIL;
+  	// If the loaded VM is the one we were interested in
+  	// do nothing and report OK
+  	// Otherwise report failure
+  	if (virtualMachineInfo.vmIndex == vmIndex)
+  	{
+#ifdef DEBUG_DYNLOAD
+  		fprintf(stderr, "DYNLOAD: VM %d already loaded, doing nothing\r\n", vmIndex);
+#endif
+  		res = OK;
+  	}
+  	else
+  	{
+#ifdef DEBUG_DYNLOAD
+  		fprintf(stderr, "DYNLOAD: VM attempting to load %d, VM %d already loaded\r\n", vmIndex, virtualMachineInfo.vmIndex);
+#endif
+  		res = FAIL;
+  	}
 		*(DATA8*)PrimParPointer() =  res;
   	return;
   }
@@ -125,7 +141,7 @@ void dynloadVMLoad()
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Loading %s: ", fullVMPath);
+	fprintf(stderr, "DYNLOAD: Loading %s: \r\n", fullVMPath);
 #endif
 
 	// You can change this to another type of binding.
@@ -141,7 +157,7 @@ void dynloadVMLoad()
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "done\r\n");
+	fprintf(stderr, "DYNLOAD: Loading completed successfully\r\n");
 #endif
 
 	dlerror();    /* Clear any existing error */
