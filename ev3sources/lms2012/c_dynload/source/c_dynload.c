@@ -51,18 +51,22 @@ void dynloadInit()
  */
 void dynloadVMExit()
 {
-	// Execute our entry (or should that be exit) point function,
-  // this will clean up anything that requires it, in the VM
-	if (virtualMachineInfo.vm_exit != NULL)
-		(virtualMachineInfo.vm_exit)();
-	else
-		SetDispatchStatus(FAILBREAK);
+	// Only execute this if a VM is loaded
+	if (virtualMachineInfo.vmIndex >= 0)
+	{
+		// Execute our entry (or should that be exit) point function,
+		// this will clean up anything that requires it, in the VM
+		if (virtualMachineInfo.vm_exit != NULL)
+			(virtualMachineInfo.vm_exit)();
+		else
+			SetDispatchStatus(FAILBREAK);
 
-	// Reinitialise everything to 0
-	dynloadInit();
+		// Reinitialise everything to 0
+		dynloadInit();
 
-	// Close the .so
-	dlclose(virtualMachineInfo.soHandle);
+		// Close the .so
+		dlclose(virtualMachineInfo.soHandle);
+	}
 }
 
 
