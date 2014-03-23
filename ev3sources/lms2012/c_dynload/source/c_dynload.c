@@ -144,6 +144,9 @@ void dynloadVMLoad()
 #endif
 			res = FAIL;
 			*(DATA8*)PrimParPointer() =  res;
+
+			// Reset the struct and return
+			dynloadInit();
 			return;
 	}
 
@@ -160,6 +163,9 @@ void dynloadVMLoad()
 #endif
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
+
+		// Reset the struct and return
+		dynloadInit();
 		return;
 	}
 
@@ -191,6 +197,9 @@ void dynloadVMLoad()
 		dlclose(virtualMachineInfo.soHandle);
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
+
+		// Reset the struct and return
+		dynloadInit();
 		return;
 	}
 

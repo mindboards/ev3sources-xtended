@@ -35,7 +35,7 @@ struct tVirtualMachineInfo
 	void *soHandle;
   char fileName[DYNLOAD_MAX_VM_FILENAME];
   int entryPoints;
-  char entryPointName[10][DYNLOAD_MAX_ENTRYPOINT_NAME];
+  char entryPointName[DYNLOAD_MAX_ENTRYPOINTS][DYNLOAD_MAX_ENTRYPOINT_NAME];
   tEntryPointFunc entryPointFunc[DYNLOAD_MAX_ENTRYPOINTS];
   tEntryPointFunc vm_exit;
 };
