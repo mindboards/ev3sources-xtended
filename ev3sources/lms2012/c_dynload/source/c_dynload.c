@@ -242,7 +242,7 @@ void dynloadEntry_0()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[0] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[0] != NULL))
 		(virtualMachineInfo.entryPointFunc[0])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -270,7 +270,7 @@ void dynloadEntry_1()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[1] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[1] != NULL))
 		(virtualMachineInfo.entryPointFunc[1])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -298,7 +298,7 @@ void dynloadEntry_2()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[2] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[2] != NULL))
 		(virtualMachineInfo.entryPointFunc[2])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -326,7 +326,7 @@ void dynloadEntry_3()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[3] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[3] != NULL))
 		(virtualMachineInfo.entryPointFunc[3])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -354,7 +354,7 @@ void dynloadEntry_4()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[4] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[4] != NULL))
 		(virtualMachineInfo.entryPointFunc[4])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -382,7 +382,7 @@ void dynloadEntry_5()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[5] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[5] != NULL))
 		(virtualMachineInfo.entryPointFunc[5])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -410,7 +410,7 @@ void dynloadEntry_6()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[6] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[6] != NULL))
 		(virtualMachineInfo.entryPointFunc[6])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -438,7 +438,7 @@ void dynloadEntry_7()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[7] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[7] != NULL))
 		(virtualMachineInfo.entryPointFunc[7])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -466,7 +466,7 @@ void dynloadEntry_8()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[8] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[8] != NULL))
 		(virtualMachineInfo.entryPointFunc[8])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -494,7 +494,7 @@ void dynloadEntry_9()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[9] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[9] != NULL))
 		(virtualMachineInfo.entryPointFunc[9])();
 	else
 		SetDispatchStatus(FAILBREAK);
