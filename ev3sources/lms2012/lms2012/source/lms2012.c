@@ -2609,6 +2609,9 @@ RESULT    mSchedExit(void)
   }
 #endif
 
+  // Do any kind of cleanup that needs to be done.
+  dynloadVMExit();
+
   Result    |=  cValidateExit();
   Result    |=  cSoundExit();
   Result    |=  cComExit();
