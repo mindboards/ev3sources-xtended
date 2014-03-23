@@ -31,6 +31,9 @@ void dynloadInit()
 	// Initialise all of the pointers to functions
 	virtualMachineInfo.vm_exit = NULL;
 
+	// Set the handle to NULL
+	virtualMachineInfo.soHandle = NULL;
+
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
 		virtualMachineInfo.entryPointFunc[index] = NULL;
@@ -61,11 +64,11 @@ void dynloadVMExit()
 		else
 			SetDispatchStatus(FAILBREAK);
 
-		// Reinitialise everything to 0
-		dynloadInit();
-
 		// Close the .so
 		dlclose(virtualMachineInfo.soHandle);
+
+		// Reinitialise everything to 0
+		dynloadInit();
 	}
 }
 
