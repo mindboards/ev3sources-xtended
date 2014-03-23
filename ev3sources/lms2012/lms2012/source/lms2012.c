@@ -577,6 +577,7 @@ DSPSTAT   ExecuteByteCode(IP pByteCode,GP pGlobals,LP pLocals)
 
       cComUpdate();
       cSoundUpdate();
+      dynloadUpdateVM();
     }
 
     Time  =  VMInstance.NewTime - VMInstance.OldTime2;
@@ -2466,6 +2467,7 @@ RESULT    mSchedCtrl(UBYTE *pRestart)
 #endif
     cComUpdate();
     cSoundUpdate();
+    dynloadUpdateVM();
   }
 
 

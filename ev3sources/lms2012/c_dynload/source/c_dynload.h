@@ -29,6 +29,10 @@
 
 typedef void (*tEntryPointFunc)(void);
 
+#ifdef DEBUG_DYNLOAD
+unsigned long updateCounter;
+#endif
+
 struct tVirtualMachineInfo
 {
 	int vmIndex;
@@ -38,6 +42,7 @@ struct tVirtualMachineInfo
   char entryPointName[DYNLOAD_MAX_ENTRYPOINTS][DYNLOAD_MAX_ENTRYPOINT_NAME];
   tEntryPointFunc entryPointFunc[DYNLOAD_MAX_ENTRYPOINTS];
   tEntryPointFunc vm_exit;
+  tEntryPointFunc vm_update;
 };
 
 typedef void (*vmInitPointFunc)(struct tVirtualMachineInfo*);
@@ -47,6 +52,7 @@ void dynloadVMExit();
 void dynloadVMLoad();
 void dynLoadGetVM();
 
+void dynloadUpdateVM();
 void dynloadEntry_0();
 void dynloadEntry_1();
 void dynloadEntry_2();

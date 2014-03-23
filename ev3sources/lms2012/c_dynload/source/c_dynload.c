@@ -5,8 +5,8 @@
  *      Author: Xander Soldaat <xander@robotc.net>
  */
 
-#include  "c_dynload.h"
 #include "lms2012.h"
+#include  "c_dynload.h"
 #include <stdio.h>
 
 struct tVirtualMachineInfo virtualMachineInfo;
@@ -24,15 +24,22 @@ struct tVirtualMachineInfo virtualMachineInfo;
  */
 void dynloadInit()
 {
+
+#ifdef DEBUG_DYNLOAD
+	updateCounter = 0;
+#endif
+
 	int index = 0;
 	// VM type set to no type at all
 	virtualMachineInfo.vmIndex = -1;
 
-	// Initialise all of the pointers to functions
-	virtualMachineInfo.vm_exit = NULL;
 
 	// Set the handle to NULL
 	virtualMachineInfo.soHandle = NULL;
+
+	// Initialise all of the pointers to functions
+	virtualMachineInfo.vm_exit = NULL;
+	virtualMachineInfo.vm_update = NULL;
 
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
@@ -230,6 +237,46 @@ void dynloadVMLoad()
 void dynLoadGetVM()
 {
 	*(char *)PrimParPointer() = (char)virtualMachineInfo.vmIndex;
+}
+
+
+/*! \page cDynload
+ *  <hr size="1"/>
+ *  <b>     dynloadUpdateVM </b>
+ *
+ * - This function get called every 2ms by the scheduler
+ *
+ */
+/*! \brief  dynloadUpdateVM()
+ *
+ */
+void dynloadUpdateVM()
+{
+#ifdef DEBUG_DYNLOAD
+	updateCounter++;
+#endif
+
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.vm_update != NULL))
+	{
+#ifdef DEBUG_DYNLOAD
+		// Print this every 1000 ticks
+		if ((updateCounter % 1000) == 0)
+		{
+			fprintf(stderr, "DYNLOAD: dynloadUpdateVM called: %lu: assigned\r\n", updateCounter);
+		}
+#endif
+		virtualMachineInfo.vm_update();
+	}
+#ifdef DEBUG_DYNLOAD
+	else
+	{
+		// Print this every 1000 ticks
+		if ((updateCounter % 1000) == 0)
+		{
+			fprintf(stderr, "DYNLOAD: dynloadUpdateVM called: %lu: NULL\r\n", updateCounter);
+		}
+	}
+#endif
 }
 
 
