@@ -2669,6 +2669,8 @@ int       main(int argc,char *argv[])
     }
     else
     {
+    	// mSchedExit() is not always called when the VM is shut down
+    	dynloadVMExit();
 //TCP      system("reboot");
     }
   }
