@@ -3133,6 +3133,8 @@ void      ObjectStart(void)
  */
 void      ObjectTrig(void)
 {
+  OBJID   OwnerId;
+  OBJID   CallerId;
   OBJID   TmpId;
 
   TmpId  =  *(OBJID*)PrimParPointer();
@@ -3144,12 +3146,24 @@ void      ObjectTrig(void)
     if ((*VMInstance.pObjList[TmpId]).u.TriggerCount == 0)
     {
 #ifndef DISABLE_BLOCK_ALIAS_LOCALS
-      if (VMInstance.ObjectId != VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId)
-      { // if calling id != mother id -> alias
+
+      CallerId  =  VMInstance.ObjectId;
+      OwnerId   =  VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId;
+
 #ifdef DEBUG
-        printf("\r\n  %d  %2d %2d",VMInstance.ProgramId,VMInstance.ObjectId,VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId);
+      printf("Program %-2d  Address %-8lu  Caller %-2d  Owner %-2d  Block %-2d\r\n",VMInstance.ProgramId,(unsigned long)(VMInstance.ObjectIp - VMInstance.Program[VMInstance.ProgramId].pImage),CallerId,OwnerId,TmpId);
 #endif
-        (*VMInstance.Program[VMInstance.ProgramId].pObjList[TmpId]).pLocal  =  (*VMInstance.Program[VMInstance.ProgramId].pObjList[VMInstance.ObjectId]).Local;
+
+      if ((VMInstance.Program[VMInstance.ProgramId].pObjHead[OwnerId].OwnerObjectId == 0) && (VMInstance.Program[VMInstance.ProgramId].pObjHead[OwnerId].TriggerCount == 1))
+      { // Block owner ID is a sub call
+
+        if (CallerId != OwnerId)
+        {
+#ifdef DEBUG
+          printf("Block owner is a sub call alias so change locals\r\n");
+#endif
+          (*VMInstance.Program[VMInstance.ProgramId].pObjList[TmpId]).pLocal  =  (*VMInstance.Program[VMInstance.ProgramId].pObjList[CallerId]).Local;
+        }
       }
 #endif
       ObjectReset(TmpId);

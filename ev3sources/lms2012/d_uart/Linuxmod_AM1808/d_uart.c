@@ -52,10 +52,6 @@
 #define   MIDLE_BITRATE                57600  //  Highest bit rate allowed when adjusting clock             [b/S]
 #define   HIGHEST_BITRATE             460800  //  Highest possible bit rate                                 [b/S]
 
-#define   MIDLE_BITRATE_DEVIATION         40  //  Largest deviation able to adjust clock to                 [%]
-#define   MIDLE_BITRATE_INCREAMENT         1  //  Amount to adjust per loop                                 [%]
-#define   MIDLE_BITRATE_FIX                5  //  Last adjustment to get in the middle of the bit           [%]
-
 /*
   SEQUENCE WHEN UART DEVICE IS DETECTED
   =====================================
@@ -72,14 +68,6 @@
       - Setup hardware buffers                                                                                                               |
                                                                                                                                              |
                                                                                                                                              |
-    - Sync clocks                                                                       - Sync clocks (only used on no XTAL devices)         |
-      - Wait for receive of byte               <-.                   <-- SYNC             - Send sync pulse     <------------.               |
-      - If CMD is received skip to send INFO     |                                                                           |               |
-      - Check byte against SYNC                  |                                                                           |               |
-      - If not SYNC increase UART clock        --'                                        - Timeout 5mS (UART byte time)   --'               |
-      - Send sync feedback                                  SYNC -->                      - Receive sync pulse                               |
-                                                                                                                                             |
-                                                                                                                                             |
     - Exchange informations                                                             - Exchange informations                              |
       - Receive command data                                         <-- CMD              - Send command data (type,modes,speed, etc)        |
       - Send command data (type,modes,speed, etc)           CMD  -->                      - Receive command data                             |
@@ -93,12 +81,8 @@
 
     - Communication running                                                              - Communication running
       - Receive data                                                 <-- DATA             - Send data
-      - If out of sync, send not acknowledge                NACK -->                      - If not acknowledge, repeat send data
+      - Every 100mS, send watchdog service                  NACK -->                      - If more than one of six messages is correct send NACK
       - Receive data                                                 <-- DATA             - Send data
-      - Receive data                                                 <-- DATA             - Send data
-      - Receive data                                                 <-- DATA             - Send data
-         --
-      - Send data                                           DATA -->                      - Receive data
       - Receive data                                                 <-- DATA             - Send data
       - Receive data                                                 <-- DATA             - Send data
          --
@@ -106,16 +90,20 @@
       - Receive data                                                 <-- DATA             - Send data
       - Receive data                                                 <-- DATA             - Send data
          --
-      - Send data                                           DATA -->                      - Receive data
-      - If not acknowledge, repeat send data                         <-- NACK             - If out of sync, send not acknowledge
-      - Send data                                           DATA -->                      - Receive data
+      - Receive data                                                 <-- DATA             - Send data
+      - Every 100mS, send watchdog service                  NACK -->                      - If more than one of six messages is correct send NACK
+      - Receive data                                                 <-- DATA             - Send data
+      - Receive data                                                 <-- DATA             - Send data
+      - Receive data                                                 <-- DATA             - Send data
          --
 
 
-  DEVICES WITH XTAL
-  =================
+  DEVICES
+  =======
 
-  Devices with a bit rate accuracy better that +-2% must start on LOWEST_BITRATE and skip the synchronisation sequence and just begin to send INFO.
+  Devices should only send data when data changes at a maximum rate of 1mS and if the time elapsed since last change exceeds 100mS.
+  Data should also be send after a watchdog service message has been received.
+  If watchdog service (NACK) is not received within 1000 mS the device should reset.
 
   When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
   that connection 6 is low
@@ -124,52 +112,15 @@
   \verbatim
 
 
-  DEVICES WITHOUT XTAL
-  ====================
-
-  It is possible to use the power of the host to adjust to LOWEST_BITRATE if the device is not capable of meeting accuracy
-  of the bit rate. The adjustment factor is then used when switching to higher speeds up to MIDLE_BITRATE.
-
-  These devices must start with a bit rate at LOWEST_BITRATE + worst case deviation from LOWEST_BITRATE
-
-  When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
-  that connection 6 is low
-
-
-
-  DEVICES NOT ABLE TO RECEIVE
-  ===========================
-
-  Devices that is not able to receive should send SYNC several times (MIDLE_BITRATE_DEVIATION / MIDLE_BITRATE_INCREAMENT + 1)
-
-  When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
-  that connection 6 is low
-
-
-
   HOST
   ====
 
-  The host should check every data message format against the info once sent from the device and send NACK if not valid
-
-  UART devices is connected when system powers up!: the power to input/output ports is powered up when DCM driver is ready to evaluate the devices on
-  the ports (ensures that power up sync is executed when system is powered up)
-
+  The host sends a watchdog service message (NACK) every 100 mS if no error occours.
+  The host should check every data message format against the info once sent from the device and leave out the watchdog service when the data
+  is not valid within 6 messages.
 
 
-  BIT RATE ADJUSTMENT
-  ===================
 
-    I.    Host starts with a bit rate at LOWEST_BITRATE
-
-    II.   Device must start with a bit rate at LOWEST_BITRATE + worst case deviation from LOWEST_BITRATE
-
-    III.  When the SYNC is received host will check it against the correct SYNC byte and if it is wrong the bit rate is raised MIDLE_BITRATE_INCREAMENT
-
-    IV.   If SYNC is received correctly the bit rate is raised additionally MIDLE_BITRATE_FIX and SYNC is sent to the device
-
-    V.    If info says that a higher bit rate is possible it is raised after transmitting ACK on the host and after receiving (or a time) ACK on the device
-          (if host has adjusted the bit rate the same factor will be used when raising)
 
 
 \endverbatim
@@ -433,10 +384,7 @@
 
   After ACK
 
-  IF CHECK XOR FAILS - HOST WILL NACK
-  IF FORMAT FAILS    - HOST WILL TRY SELECT 5 TIMES
-
-  IF ABOVE FAIL      - ERROR IS SHOWN TO USER
+  IF MORE THAN 5 ERRORS - HOST WILL NOT SERVICE WATCHDOG
 
 
 
@@ -2994,7 +2942,7 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
                                           TypeData[Port][Mode].Decimals    =  UartPort[Port].InBuffer[3];
 
 //!<  \todo IR seeker hack
-                                          if (TypeData[Port][Mode].Type == 33)
+                                          if (TypeData[Port][Mode].Type == TYPE_IR)
                                           {
                                             TypeData[Port][Mode].InvalidTime  =  1100;
                                           }
@@ -3113,6 +3061,12 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
             if (UartPort[Port].InLength)
             {
+//!<  \todo Color sensor hack (wrong checksum in mode 4 data)
+              if ((UartPort[Port].Type == TYPE_COLOR) && (GET_MODE(UartPort[Port].Cmd) == 4))
+              {
+                CrcError  =  0;
+              }
+
               if (!CrcError)
               {
                 if (UartPort[Port].Initialised == 0)
