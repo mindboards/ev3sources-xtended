@@ -1,7 +1,11 @@
-Building vireobridge requires some header files that are not distributed with
-this module.
+Building libvireobridge.so requires some files that are not distributed with
+this module:
 
-In order to build vireobridge, you need to obtain the header files from Vireo
-and specify their location by setting the INCLUDEVIREO variable in the
-Makefile.
+    1. Vireo header files.  libvireobridge.so source files require Vireo
+       headers to compile, so you need to have those files and specify their
+       location in the Makefile by setting the INCLUDEVIREO variable.
+
+    2. A libvireo.so library.  libvireobridge.so links against libvireo.so, so
+       you must have libvireo.so (built for the appropriate target) in the
+       Linuxlib_AM1808/ directory.
 
