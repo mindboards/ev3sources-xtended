@@ -5,8 +5,8 @@
  *      Author: Xander Soldaat <xander@robotc.net>
  */
 
-#include  "c_dynload.h"
 #include "lms2012.h"
+#include  "c_dynload.h"
 #include <stdio.h>
 
 struct tVirtualMachineInfo virtualMachineInfo;
@@ -24,12 +24,22 @@ struct tVirtualMachineInfo virtualMachineInfo;
  */
 void dynloadInit()
 {
+
+#ifdef DEBUG_DYNLOAD
+	updateCounter = 0;
+#endif
+
 	int index = 0;
 	// VM type set to no type at all
 	virtualMachineInfo.vmIndex = -1;
 
+
+	// Set the handle to NULL
+	virtualMachineInfo.soHandle = NULL;
+
 	// Initialise all of the pointers to functions
 	virtualMachineInfo.vm_exit = NULL;
+	virtualMachineInfo.vm_update = NULL;
 
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
@@ -51,18 +61,22 @@ void dynloadInit()
  */
 void dynloadVMExit()
 {
-	// Execute our entry (or should that be exit) point function,
-  // this will clean up anything that requires it, in the VM
-	if (virtualMachineInfo.vm_exit != NULL)
-		(virtualMachineInfo.vm_exit)();
-	else
-		SetDispatchStatus(FAILBREAK);
+	// Only execute this if a VM is loaded
+	if (virtualMachineInfo.vmIndex >= 0)
+	{
+		// Execute our entry (or should that be exit) point function,
+		// this will clean up anything that requires it, in the VM
+		if (virtualMachineInfo.vm_exit != NULL)
+			(virtualMachineInfo.vm_exit)();
+		else
+			SetDispatchStatus(FAILBREAK);
 
-	// Reinitialise everything to 0
-	dynloadInit();
+		// Close the .so
+		dlclose(virtualMachineInfo.soHandle);
 
-	// Close the .so
-	dlclose(virtualMachineInfo.soHandle);
+		// Reinitialise everything to 0
+		dynloadInit();
+	}
 }
 
 
@@ -100,7 +114,23 @@ void dynloadVMLoad()
   // A VM has already been loaded.
   if (virtualMachineInfo.vmIndex >= 0)
   {
-  	res = virtualMachineInfo.vmIndex == vmIndex ? OK : FAIL;
+  	// If the loaded VM is the one we were interested in
+  	// do nothing and report OK
+  	// Otherwise report failure
+  	if (virtualMachineInfo.vmIndex == vmIndex)
+  	{
+#ifdef DEBUG_DYNLOAD
+  		fprintf(stderr, "DYNLOAD: VM %d already loaded, doing nothing\r\n", vmIndex);
+#endif
+  		res = OK;
+  	}
+  	else
+  	{
+#ifdef DEBUG_DYNLOAD
+  		fprintf(stderr, "DYNLOAD: VM attempting to load %d, VM %d already loaded\r\n", vmIndex, virtualMachineInfo.vmIndex);
+#endif
+  		res = FAIL;
+  	}
 		*(DATA8*)PrimParPointer() =  res;
   	return;
   }
@@ -121,11 +151,14 @@ void dynloadVMLoad()
 #endif
 			res = FAIL;
 			*(DATA8*)PrimParPointer() =  res;
+
+			// Reset the struct and return
+			dynloadInit();
 			return;
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "DYNLOAD: Loading %s: ", fullVMPath);
+	fprintf(stderr, "DYNLOAD: Loading %s: \r\n", fullVMPath);
 #endif
 
 	// You can change this to another type of binding.
@@ -137,11 +170,14 @@ void dynloadVMLoad()
 #endif
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
+
+		// Reset the struct and return
+		dynloadInit();
 		return;
 	}
 
 #ifdef DEBUG_DYNLOAD
-	fprintf(stderr, "done\r\n");
+	fprintf(stderr, "DYNLOAD: Loading completed successfully\r\n");
 #endif
 
 	dlerror();    /* Clear any existing error */
@@ -168,6 +204,9 @@ void dynloadVMLoad()
 		dlclose(virtualMachineInfo.soHandle);
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
+
+		// Reset the struct and return
+		dynloadInit();
 		return;
 	}
 
@@ -203,6 +242,46 @@ void dynLoadGetVM()
 
 /*! \page cDynload
  *  <hr size="1"/>
+ *  <b>     dynloadUpdateVM </b>
+ *
+ * - This function get called every 2ms by the scheduler
+ *
+ */
+/*! \brief  dynloadUpdateVM()
+ *
+ */
+void dynloadUpdateVM()
+{
+#ifdef DEBUG_DYNLOAD
+	updateCounter++;
+#endif
+
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.vm_update != NULL))
+	{
+#ifdef DEBUG_DYNLOAD
+		// Print this every 1000 ticks
+		if ((updateCounter % 1000) == 0)
+		{
+			fprintf(stderr, "DYNLOAD: dynloadUpdateVM called: %lu: assigned\r\n", updateCounter);
+		}
+#endif
+		virtualMachineInfo.vm_update();
+	}
+#ifdef DEBUG_DYNLOAD
+	else
+	{
+		// Print this every 1000 ticks
+		if ((updateCounter % 1000) == 0)
+		{
+			fprintf(stderr, "DYNLOAD: dynloadUpdateVM called: %lu: NULL\r\n", updateCounter);
+		}
+	}
+#endif
+}
+
+
+/*! \page cDynload
+ *  <hr size="1"/>
  *  <b>     opDYNLOAD_ENTRY_0(CMD, DATALEN)  </b>
  *
  *- Execute Entry Point function 0 in Third Party VM                                 \n
@@ -222,7 +301,7 @@ void dynloadEntry_0()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[0] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[0] != NULL))
 		(virtualMachineInfo.entryPointFunc[0])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -250,7 +329,7 @@ void dynloadEntry_1()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[1] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[1] != NULL))
 		(virtualMachineInfo.entryPointFunc[1])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -278,7 +357,7 @@ void dynloadEntry_2()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[2] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[2] != NULL))
 		(virtualMachineInfo.entryPointFunc[2])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -306,7 +385,7 @@ void dynloadEntry_3()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[3] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[3] != NULL))
 		(virtualMachineInfo.entryPointFunc[3])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -334,7 +413,7 @@ void dynloadEntry_4()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[4] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[4] != NULL))
 		(virtualMachineInfo.entryPointFunc[4])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -362,7 +441,7 @@ void dynloadEntry_5()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[5] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[5] != NULL))
 		(virtualMachineInfo.entryPointFunc[5])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -390,7 +469,7 @@ void dynloadEntry_6()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[6] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[6] != NULL))
 		(virtualMachineInfo.entryPointFunc[6])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -418,7 +497,7 @@ void dynloadEntry_7()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[7] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[7] != NULL))
 		(virtualMachineInfo.entryPointFunc[7])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -446,7 +525,7 @@ void dynloadEntry_8()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[8] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[8] != NULL))
 		(virtualMachineInfo.entryPointFunc[8])();
 	else
 		SetDispatchStatus(FAILBREAK);
@@ -474,7 +553,7 @@ void dynloadEntry_9()
 	fprintf(stderr, "DYNLOAD: Entry point %s called\r\n", __func__);
 #endif
 
-	if (virtualMachineInfo.entryPointFunc[9] != NULL)
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.entryPointFunc[9] != NULL))
 		(virtualMachineInfo.entryPointFunc[9])();
 	else
 		SetDispatchStatus(FAILBREAK);

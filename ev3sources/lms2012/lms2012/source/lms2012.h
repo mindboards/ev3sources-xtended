@@ -184,7 +184,7 @@ char      *HwId = "03";
 //#define   DISABLE_FILENAME_CHECK        //!< Disable "c_memory" filename check
 //#define   DISABLE_AD_WORD_PROTECT       //!< Disable A/D word result protection
 //#define   DISABLE_UPDATE_DISASSEMBLY    //!< Disable disassemble of running update commands
-#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
+//#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
 
 #define   TESTDEVICE    3
 
@@ -253,8 +253,8 @@ char      *HwId = "03";
  */
 
 #define   PROJECT                       "LMS2012"
-#define   VERS                          1.04
-#define   SPECIALVERS                   'w'           //!< Minor version (not shown if less than ASCII zero)
+#define   VERS                          1.05
+#define   SPECIALVERS                   'X'           //!< Minor version (not shown if less than ASCII zero)
 
 
 #define   MAX_PROGRAMS          SLOTS                 //!< Max number of programs (including UI and direct commands) running at a time
@@ -273,7 +273,7 @@ char      *HwId = "03";
 #define   MAX_FRAMES_PER_SEC    10                    //!< Max frames per second update in display
 
 #define   CACHE_DEEPT           10                    //!< Max number of programs cached (in RECENT FILES MENU)
-#define   MAX_HANDLES           250                   //!< Max number of handles to memory pools and arrays in one program
+#define   MAX_HANDLES           500                   //!< Max number of handles to memory pools and arrays in one program
 
 #define   MAX_ARRAY_SIZE        1000000000            //!< Max array size
 #define   MIN_ARRAY_ELEMENTS    0                     //!< Min elements in a DATA8 array

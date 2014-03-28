@@ -10,6 +10,7 @@
 
 void vm_init(struct tVirtualMachineInfo *);
 void vm_exit();
+void vm_update();
 
 void robotc_entry_0();
 void robotc_entry_1();

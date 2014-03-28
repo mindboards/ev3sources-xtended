@@ -28,6 +28,7 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
 	virtualMachineInfo->entryPointFunc[3] = &robotc_entry_3;
 
 	(virtualMachineInfo->vm_exit) = &vm_exit;
+	(virtualMachineInfo->vm_update) = &vm_update;
 
 #ifdef DEBUG_DYNLOAD
 	fprintf(stderr, "done.\n");
@@ -45,6 +46,15 @@ void vm_exit()
 
 }
 
+
+void vm_update()
+{
+#ifdef DEBUG_DYNLOAD
+	static unsigned long updateCounter = 0;
+	if ((updateCounter++ % 1000) == 0)
+	fprintf(stderr, "ROBOTC: vm_update called: %lu!\r\n", updateCounter);
+#endif
+}
 
 void robotc_entry_0()
 {
