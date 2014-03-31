@@ -1,0 +1,232 @@
+diff -ur lms2012.104w/d_uart/Linuxmod_AM1808/d_uart.c lms2012.105H/d_uart/Linuxmod_AM1808/d_uart.c
+--- lms2012.104w/d_uart/Linuxmod_AM1808/d_uart.c	2013-04-11 11:23:16.000000000 +0200
++++ lms2012.105H/d_uart/Linuxmod_AM1808/d_uart.c	2014-02-11 09:48:42.000000000 +0100
+@@ -52,10 +52,6 @@
+ #define   MIDLE_BITRATE                57600  //  Highest bit rate allowed when adjusting clock             [b/S]
+ #define   HIGHEST_BITRATE             460800  //  Highest possible bit rate                                 [b/S]
+ 
+-#define   MIDLE_BITRATE_DEVIATION         40  //  Largest deviation able to adjust clock to                 [%]
+-#define   MIDLE_BITRATE_INCREAMENT         1  //  Amount to adjust per loop                                 [%]
+-#define   MIDLE_BITRATE_FIX                5  //  Last adjustment to get in the middle of the bit           [%]
+-
+ /*
+   SEQUENCE WHEN UART DEVICE IS DETECTED
+   =====================================
+@@ -72,14 +68,6 @@
+       - Setup hardware buffers                                                                                                               |
+                                                                                                                                              |
+                                                                                                                                              |
+-    - Sync clocks                                                                       - Sync clocks (only used on no XTAL devices)         |
+-      - Wait for receive of byte               <-.                   <-- SYNC             - Send sync pulse     <------------.               |
+-      - If CMD is received skip to send INFO     |                                                                           |               |
+-      - Check byte against SYNC                  |                                                                           |               |
+-      - If not SYNC increase UART clock        --'                                        - Timeout 5mS (UART byte time)   --'               |
+-      - Send sync feedback                                  SYNC -->                      - Receive sync pulse                               |
+-                                                                                                                                             |
+-                                                                                                                                             |
+     - Exchange informations                                                             - Exchange informations                              |
+       - Receive command data                                         <-- CMD              - Send command data (type,modes,speed, etc)        |
+       - Send command data (type,modes,speed, etc)           CMD  -->                      - Receive command data                             |
+@@ -93,29 +81,29 @@
+ 
+     - Communication running                                                              - Communication running
+       - Receive data                                                 <-- DATA             - Send data
+-      - If out of sync, send not acknowledge                NACK -->                      - If not acknowledge, repeat send data
++      - Every 100mS, send watchdog service                  NACK -->                      - If more than one of six messages is correct send NACK
+       - Receive data                                                 <-- DATA             - Send data
+       - Receive data                                                 <-- DATA             - Send data
+       - Receive data                                                 <-- DATA             - Send data
+          --
+-      - Send data                                           DATA -->                      - Receive data
++      - Send command                                        CMD  -->                      - Receive command
+       - Receive data                                                 <-- DATA             - Send data
+       - Receive data                                                 <-- DATA             - Send data
+          --
+-      - Send command                                        CMD  -->                      - Receive command
++      - Receive data                                                 <-- DATA             - Send data
++      - Every 100mS, send watchdog service                  NACK -->                      - If more than one of six messages is correct send NACK
++      - Receive data                                                 <-- DATA             - Send data
+       - Receive data                                                 <-- DATA             - Send data
+       - Receive data                                                 <-- DATA             - Send data
+-         --
+-      - Send data                                           DATA -->                      - Receive data
+-      - If not acknowledge, repeat send data                         <-- NACK             - If out of sync, send not acknowledge
+-      - Send data                                           DATA -->                      - Receive data
+          --
+ 
+ 
+-  DEVICES WITH XTAL
+-  =================
++  DEVICES
++  =======
+ 
+-  Devices with a bit rate accuracy better that +-2% must start on LOWEST_BITRATE and skip the synchronisation sequence and just begin to send INFO.
++  Devices should only send data when data changes at a maximum rate of 1mS and if the time elapsed since last change exceeds 100mS.
++  Data should also be send after a watchdog service message has been received.
++  If watchdog service (NACK) is not received within 1000 mS the device should reset.
+ 
+   When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
+   that connection 6 is low
+@@ -124,52 +112,15 @@
+   \verbatim
+ 
+ 
+-  DEVICES WITHOUT XTAL
+-  ====================
+-
+-  It is possible to use the power of the host to adjust to LOWEST_BITRATE if the device is not capable of meeting accuracy
+-  of the bit rate. The adjustment factor is then used when switching to higher speeds up to MIDLE_BITRATE.
+-
+-  These devices must start with a bit rate at LOWEST_BITRATE + worst case deviation from LOWEST_BITRATE
+-
+-  When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
+-  that connection 6 is low
+-
+-
+-
+-  DEVICES NOT ABLE TO RECEIVE
+-  ===========================
+-
+-  Devices that is not able to receive should send SYNC several times (MIDLE_BITRATE_DEVIATION / MIDLE_BITRATE_INCREAMENT + 1)
+-
+-  When placed wrong on an output port device TX should continue to transmit SYNC, INFO or DATA to ensure that the host detects
+-  that connection 6 is low
+-
+-
+-
+   HOST
+   ====
+ 
+-  The host should check every data message format against the info once sent from the device and send NACK if not valid
+-
+-  UART devices is connected when system powers up!: the power to input/output ports is powered up when DCM driver is ready to evaluate the devices on
+-  the ports (ensures that power up sync is executed when system is powered up)
+-
++  The host sends a watchdog service message (NACK) every 100 mS if no error occours.
++  The host should check every data message format against the info once sent from the device and leave out the watchdog service when the data
++  is not valid within 6 messages.
+ 
+ 
+-  BIT RATE ADJUSTMENT
+-  ===================
+ 
+-    I.    Host starts with a bit rate at LOWEST_BITRATE
+-
+-    II.   Device must start with a bit rate at LOWEST_BITRATE + worst case deviation from LOWEST_BITRATE
+-
+-    III.  When the SYNC is received host will check it against the correct SYNC byte and if it is wrong the bit rate is raised MIDLE_BITRATE_INCREAMENT
+-
+-    IV.   If SYNC is received correctly the bit rate is raised additionally MIDLE_BITRATE_FIX and SYNC is sent to the device
+-
+-    V.    If info says that a higher bit rate is possible it is raised after transmitting ACK on the host and after receiving (or a time) ACK on the device
+-          (if host has adjusted the bit rate the same factor will be used when raising)
+ 
+ 
+ \endverbatim
+@@ -433,10 +384,7 @@
+ 
+   After ACK
+ 
+-  IF CHECK XOR FAILS - HOST WILL NACK
+-  IF FORMAT FAILS    - HOST WILL TRY SELECT 5 TIMES
+-
+-  IF ABOVE FAIL      - ERROR IS SHOWN TO USER
++  IF MORE THAN 5 ERRORS - HOST WILL NOT SERVICE WATCHDOG
+ 
+ 
+ 
+@@ -2994,7 +2942,7 @@
+                                           TypeData[Port][Mode].Decimals    =  UartPort[Port].InBuffer[3];
+ 
+ //!<  \todo IR seeker hack
+-                                          if (TypeData[Port][Mode].Type == 33)
++                                          if (TypeData[Port][Mode].Type == TYPE_IR)
+                                           {
+                                             TypeData[Port][Mode].InvalidTime  =  1100;
+                                           }
+@@ -3113,6 +3061,12 @@
+ 
+             if (UartPort[Port].InLength)
+             {
++//!<  \todo Color sensor hack (wrong checksum in mode 4 data)
++              if ((UartPort[Port].Type == TYPE_COLOR) && (GET_MODE(UartPort[Port].Cmd) == 4))
++              {
++                CrcError  =  0;
++              }
++
+               if (!CrcError)
+               {
+                 if (UartPort[Port].Initialised == 0)
+diff -ur lms2012.104w/lms2012/source/lms2012.c lms2012.105H/lms2012/source/lms2012.c
+--- lms2012.104w/lms2012/source/lms2012.c	2013-12-13 13:07:34.000000000 +0100
++++ lms2012.105H/lms2012/source/lms2012.c	2014-01-16 09:47:53.000000000 +0100
+@@ -3096,6 +3096,8 @@
+  */
+ void      ObjectTrig(void)
+ {
++  OBJID   OwnerId;
++  OBJID   CallerId;
+   OBJID   TmpId;
+ 
+   TmpId  =  *(OBJID*)PrimParPointer();
+@@ -3107,12 +3109,24 @@
+     if ((*VMInstance.pObjList[TmpId]).u.TriggerCount == 0)
+     {
+ #ifndef DISABLE_BLOCK_ALIAS_LOCALS
+-      if (VMInstance.ObjectId != VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId)
+-      { // if calling id != mother id -> alias
++
++      CallerId  =  VMInstance.ObjectId;
++      OwnerId   =  VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId;
++
++#ifdef DEBUG
++      printf("Program %-2d  Address %-8lu  Caller %-2d  Owner %-2d  Block %-2d\r\n",VMInstance.ProgramId,(unsigned long)(VMInstance.ObjectIp - VMInstance.Program[VMInstance.ProgramId].pImage),CallerId,OwnerId,TmpId);
++#endif
++
++      if ((VMInstance.Program[VMInstance.ProgramId].pObjHead[OwnerId].OwnerObjectId == 0) && (VMInstance.Program[VMInstance.ProgramId].pObjHead[OwnerId].TriggerCount == 1))
++      { // Block owner ID is a sub call
++
++        if (CallerId != OwnerId)
++        {
+ #ifdef DEBUG
+-        printf("\r\n  %d  %2d %2d",VMInstance.ProgramId,VMInstance.ObjectId,VMInstance.Program[VMInstance.ProgramId].pObjHead[TmpId].OwnerObjectId);
++          printf("Block owner is a sub call alias so change locals\r\n");
+ #endif
+-        (*VMInstance.Program[VMInstance.ProgramId].pObjList[TmpId]).pLocal  =  (*VMInstance.Program[VMInstance.ProgramId].pObjList[VMInstance.ObjectId]).Local;
++          (*VMInstance.Program[VMInstance.ProgramId].pObjList[TmpId]).pLocal  =  (*VMInstance.Program[VMInstance.ProgramId].pObjList[CallerId]).Local;
++        }
+       }
+ #endif
+       ObjectReset(TmpId);
+diff -ur lms2012.104w/lms2012/source/lms2012.h lms2012.105H/lms2012/source/lms2012.h
+--- lms2012.104w/lms2012/source/lms2012.h	2014-01-10 11:30:17.000000000 +0100
++++ lms2012.105H/lms2012/source/lms2012.h	2014-02-11 09:58:16.000000000 +0100
+@@ -183,7 +183,7 @@
+ //#define   DISABLE_FILENAME_CHECK        //!< Disable "c_memory" filename check
+ //#define   DISABLE_AD_WORD_PROTECT       //!< Disable A/D word result protection
+ //#define   DISABLE_UPDATE_DISASSEMBLY    //!< Disable disassemble of running update commands
+-#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
++//#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
+ 
+ #define   TESTDEVICE    3
+ 
+@@ -252,8 +252,8 @@
+  */
+ 
+ #define   PROJECT                       "LMS2012"
+-#define   VERS                          1.04
+-#define   SPECIALVERS                   'w'           //!< Minor version (not shown if less than ASCII zero)
++#define   VERS                          1.05
++#define   SPECIALVERS                   'H'           //!< Minor version (not shown if less than ASCII zero)
+ 
+ 
+ #define   MAX_PROGRAMS          SLOTS                 //!< Max number of programs (including UI and direct commands) running at a time
+@@ -272,7 +272,7 @@
+ #define   MAX_FRAMES_PER_SEC    10                    //!< Max frames per second update in display
+ 
+ #define   CACHE_DEEPT           10                    //!< Max number of programs cached (in RECENT FILES MENU)
+-#define   MAX_HANDLES           250                   //!< Max number of handles to memory pools and arrays in one program
++#define   MAX_HANDLES           500                   //!< Max number of handles to memory pools and arrays in one program
+ 
+ #define   MAX_ARRAY_SIZE        1000000000            //!< Max array size
+ #define   MIN_ARRAY_ELEMENTS    0                     //!< Min elements in a DATA8 array

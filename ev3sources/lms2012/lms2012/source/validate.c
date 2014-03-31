@@ -1737,7 +1737,7 @@ RESULT    cValidateProgram(PRGID PrgId,IP pI,LABEL *pLabel,DATA8 Disassemble)
         Result  =  OK;
       }
     }
-    if (ImageIndex != TotalSize)
+    if (ImageIndex > TotalSize)
     {
 #ifdef    DEBUG
       printf("%d %d\r\n",ImageIndex,TotalSize);

@@ -1,6 +1,6 @@
 SOURCES = robotc.c
 
-TARGET = robotc.so
+TARGET = librobotc.so
 
 CONF = Linuxlib
 ARCH = AM1808

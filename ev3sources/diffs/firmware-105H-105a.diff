@@ -1,0 +1,131 @@
+diff -ur lms2012_105H/d_iic/Linuxmod_AM1808/d_iic.c lms2012_105a/d_iic/Linuxmod_AM1808/d_iic.c
+--- lms2012_105H/d_iic/Linuxmod_AM1808/d_iic.c	2014-01-10 07:43:26.000000000 +0100
++++ lms2012_105a/d_iic/Linuxmod_AM1808/d_iic.c	2014-03-27 09:42:18.000000000 +0100
+@@ -986,7 +986,7 @@
+               IicPort[Port].InLength    =  IicStrings[Port].ReadLng;
+               IicPort[Port].Reverse     =  0;
+             }
+-            IicPort[Port].Repeat        =  0;
++            IicPort[Port].Repeat        =  0xFF;
+             IicPort[Port].Time          =  IicStrings[Port].Time;
+             IicPort[Port].Timer         =  0;
+             IicPort[Port].State         =  IIC_WRITING;
+@@ -1008,10 +1008,11 @@
+       {
+         if (++(IicPort[Port].Timer) >= ((MIN_IIC_REPEAT_TIME * 10) / IIC_TIMER_RESOLUTION))
+         {
+-          if (IicPort[Port].Result == BUSY)
++          if (IicPort[Port].Result == START)
+           {
+             if (IicPortBusy(Port) == 0)
+             {
++              IicPort[Port].Result      =  BUSY;
+               IicPort[Port].Timer       =  0;
+               IicPort[Port].State       =  IIC_WRITING;
+             }
+@@ -1108,7 +1109,7 @@
+         }
+         if (IicPort[Port].State == IIC_WAITING)
+         {
+-          if (IicPort[Port].Repeat != 0)
++          if (IicPort[Port].Repeat != 0xFF)
+           {
+             IicPort[Port].Repeat--;
+             if (IicPort[Port].Repeat != 0)
+@@ -1261,7 +1262,11 @@
+ 
+       Port                        =  (*pIicDat).Port;
+ 
+-      if (IicPort[Port].Result != BUSY)
++      if (IicPort[Port].Repeat == 0xFF)
++      {
++        IicPort[Port].Result  =  STOP;
++      }
++      if ((IicPort[Port].Result != BUSY) && (IicPort[Port].Result != START))
+       {
+         if (IicPort[Port].Result == STOP)
+         { // Ready for transfer
+@@ -1292,7 +1297,7 @@
+         memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
+         memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
+ 
+-          IicPort[Port].Result        =  BUSY;
++        	IicPort[Port].Result        =  START;
+ 
+         }
+         else
+diff -ur lms2012_105H/d_uart/Linuxmod_AM1808/d_uart.c lms2012_105a/d_uart/Linuxmod_AM1808/d_uart.c
+--- lms2012_105H/d_uart/Linuxmod_AM1808/d_uart.c	2014-02-11 09:48:42.000000000 +0100
++++ lms2012_105a/d_uart/Linuxmod_AM1808/d_uart.c	2014-03-27 09:59:14.000000000 +0100
+@@ -1795,6 +1795,7 @@
+   UART_FLUSH,
+   UART_SYNC,
+   UART_MESSAGE_START,
++  UART_ESCAPE,
+   UART_CMD,
+   UART_INFO,
+   UART_DATA,
+@@ -1820,6 +1821,7 @@
+   "FLUSH",
+   "SYNC",
+   "MESSAGE_START",
++  "ESCAPE",
+   "CMD",
+   "INFO",
+   "DATA",
+@@ -2448,6 +2450,8 @@
+ 
+                         default :
+                         {
++                          UartPort[Port].InLength   =  GET_MESSAGE_LENGTH(Byte);
++                          UartPort[Port].State      =  UART_ESCAPE;
+                         }
+                         break;
+ 
+@@ -2459,6 +2463,22 @@
+                   }
+                 }
+                 break;
++
++                case UART_ESCAPE :
++                {
++                  if (UartPort[Port].InPointer < UartPort[Port].InLength)
++                  {
++                    UartPort[Port].InBuffer[UartPort[Port].InPointer]  =  Byte;
++                    UartPort[Port].InPointer++;
++                  }
++                  else
++                  { // Message complete
++
++                    UartPort[Port].InBuffer[UartPort[Port].InPointer]  =  0;
++                    UartPort[Port].State  =  UART_MESSAGE_START;
++                  }
++                }
++                break;
+ 
+   //** CMD **********************************************************************
+ 
+diff -ur lms2012_105H/lms2012/source/bytecodes.h lms2012_105a/lms2012/source/bytecodes.h
+--- lms2012_105H/lms2012/source/bytecodes.h	2014-02-11 09:58:16.000000000 +0100
++++ lms2012_105a/lms2012/source/bytecodes.h	2014-03-27 09:37:08.000000000 +0100
+@@ -1421,7 +1421,8 @@
+   OK            = 0,                    //!< No errors to report
+   BUSY          = 1,                    //!< Busy - try again
+   FAIL          = 2,                    //!< Something failed
+-  STOP          = 4                     //!< Stopped
++  STOP          = 4,                    //!< Stopped
++  START         = 8                     //!< Start
+ }
+ RESULT;
+ 
+--- lms2012_105H/lms2012/source/lms2012.h	2014-02-11 09:58:16.000000000 +0100
++++ lms2012_105a/lms2012/source/lms2012.h	2014-03-27 12:09:52.000000000 +0100
+@@ -253,7 +253,7 @@
+ 
+ #define   PROJECT                       "LMS2012"
+ #define   VERS                          1.05
+-#define   SPECIALVERS                   'H'           //!< Minor version (not shown if less than ASCII zero)
++#define   SPECIALVERS                   'b'           //!< Minor version (not shown if less than ASCII zero)
+ 
+ 
+ #define   MAX_PROGRAMS          SLOTS                 //!< Max number of programs (including UI and direct commands) running at a time

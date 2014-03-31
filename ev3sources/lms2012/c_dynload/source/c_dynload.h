@@ -23,7 +23,7 @@
 
 #define DYNLOAD_VM_SO_PATH						"/home/root/lms2012/3rdparty-vm"
 
-#define DYNLOAD_VM_ROBOTC_SO_NAME			"robotc.so"
+#define DYNLOAD_VM_ROBOTC_SO_NAME			"librobotc.so"
 #define DYNLOAD_VM_LABVIEW_SO_NAME		"libvireobridge.so"
 
 
