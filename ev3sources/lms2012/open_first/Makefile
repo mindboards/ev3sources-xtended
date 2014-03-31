@@ -17,6 +17,8 @@ include rules.mk
 
 LIBS = c_com c_input c_memory c_output c_sound c_ui c_dynload 
 
+almostall: lms2012 programs kernel modules
+
 robotcvm: 
 	$(MAKE) -C $(BASE)/c_robotcvm/Linuxlib_$(ARCH)
 	mkdir -p $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
