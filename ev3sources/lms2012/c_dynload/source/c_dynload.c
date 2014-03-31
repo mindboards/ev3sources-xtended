@@ -258,7 +258,7 @@ void dynloadUpdateVM()
 
 	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.vm_update != NULL))
 	{
-#ifdef DEBUG_DYNLOAD
+#ifdef DEBUG_DYNLOAD_UPDATE
 		// Print this every 1000 ticks
 		if ((updateCounter % 1000) == 0)
 		{
@@ -267,7 +267,7 @@ void dynloadUpdateVM()
 #endif
 		virtualMachineInfo.vm_update();
 	}
-#ifdef DEBUG_DYNLOAD
+#ifdef DEBUG_DYNLOAD_UPDATE
 	else
 	{
 		// Print this every 1000 ticks
