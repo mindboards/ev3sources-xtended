@@ -29,7 +29,7 @@ vireobridge:
 	mkdir -p $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
 	mv $(BASE)/lms2012/Linux_$(ARCH)/sys/lib/libvireo.so $(BASE)/lms2012/Linux_$(ARCH)/sys/lib/libvireobridge.so $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
 
-lms2012: robotcvm vireobridge
+lms2012:
 	$(MAKE) -C $(BASE)/lms2012/Linux_$(ARCH)
 
 lms2012.clean: $(LIBS:%=%.clean)
