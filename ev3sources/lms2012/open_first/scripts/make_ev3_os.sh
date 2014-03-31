@@ -34,7 +34,8 @@ mkdir /mnt/tmpdrv_fs/media/usb
 mv $PATH4/apps /mnt/tmpdrv_ud/
 mv $PATH4/prjs /mnt/tmpdrv_ud/
 mv $PATH4/sys/settings /mnt/tmpdrv_ud/
-mv $PATH4/3rdparty-vm /mnt/tmpdrv_ud/
+rm -r $PATH4/3rdparty-vm
+mkdir /mnt/tmpdrv_ud/3rdparty-vm
 mkdir /mnt/tmpdrv_ud/bluetooth
 
 find '/mnt/tmpdrv_fs/' -type d -name CVS -exec rm -rf {} +
