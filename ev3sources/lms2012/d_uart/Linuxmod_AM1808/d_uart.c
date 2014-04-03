@@ -1795,6 +1795,7 @@ enum      UART_STATE
   UART_FLUSH,
   UART_SYNC,
   UART_MESSAGE_START,
+  UART_ESCAPE,
   UART_CMD,
   UART_INFO,
   UART_DATA,
@@ -1820,6 +1821,7 @@ char      UartStateText[UART_STATES][50] =
   "FLUSH",
   "SYNC",
   "MESSAGE_START",
+  "ESCAPE",
   "CMD",
   "INFO",
   "DATA",
@@ -2448,6 +2450,8 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
 
                         default :
                         {
+                          UartPort[Port].InLength   =  GET_MESSAGE_LENGTH(Byte);
+                          UartPort[Port].State      =  UART_ESCAPE;
                         }
                         break;
 
@@ -2456,6 +2460,22 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
                     }
                     break;
 
+                  }
+                }
+                break;
+
+                case UART_ESCAPE :
+                {
+                  if (UartPort[Port].InPointer < UartPort[Port].InLength)
+                  {
+                    UartPort[Port].InBuffer[UartPort[Port].InPointer]  =  Byte;
+                    UartPort[Port].InPointer++;
+                  }
+                  else
+                  { // Message complete
+
+                    UartPort[Port].InBuffer[UartPort[Port].InPointer]  =  0;
+                    UartPort[Port].State  =  UART_MESSAGE_START;
                   }
                 }
                 break;

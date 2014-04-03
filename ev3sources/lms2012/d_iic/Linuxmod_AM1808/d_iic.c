@@ -992,7 +992,7 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
               IicPort[Port].InLength    =  IicStrings[Port].ReadLng;
               IicPort[Port].Reverse     =  0;
             }
-            IicPort[Port].Repeat        =  0;
+            IicPort[Port].Repeat        =  0xFF;
             IicPort[Port].Time          =  IicStrings[Port].Time;
             IicPort[Port].Timer         =  0;
             IicPort[Port].State         =  IIC_WRITING;
@@ -1014,10 +1014,11 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
       {
         if (++(IicPort[Port].Timer) >= ((MIN_IIC_REPEAT_TIME * 10) / IIC_TIMER_RESOLUTION))
         {
-          if (IicPort[Port].Result == BUSY)
+          if (IicPort[Port].Result == START)
           {
             if (IicPortBusy(Port) == 0)
             {
+              IicPort[Port].Result      =  BUSY;
               IicPort[Port].Timer       =  0;
               IicPort[Port].State       =  IIC_WRITING;
             }
@@ -1126,7 +1127,7 @@ static enum hrtimer_restart Device1TimerInterrupt1(struct hrtimer *pTimer)
         }
         if (IicPort[Port].State == IIC_WAITING)
         {
-          if (IicPort[Port].Repeat != 0)
+          if (IicPort[Port].Repeat != 0xFF)
           {
             IicPort[Port].Repeat--;
             if (IicPort[Port].Repeat != 0)
@@ -1279,7 +1280,11 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 
       Port                        =  (*pIicDat).Port;
 
-      if (IicPort[Port].Result != BUSY)
+      if (IicPort[Port].Repeat == 0xFF)
+      {
+        IicPort[Port].Result  =  STOP;
+      }
+      if ((IicPort[Port].Result != BUSY) && (IicPort[Port].Result != START))
       {
         if (IicPort[Port].Result == STOP)
         { // Ready for transfer
@@ -1310,7 +1315,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 					memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
 					memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
 
-          IicPort[Port].Result        =  BUSY;
+        	IicPort[Port].Result        =  START;
 
         }
         else
@@ -1383,8 +1388,12 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 
 			Port                        =  (*pIicDat).Port;
 
-			if (IicPort[Port].Result != BUSY)
-			{
+      if (IicPort[Port].Repeat == 0xFF)
+      {
+        IicPort[Port].Result  =  STOP;
+      }
+      if ((IicPort[Port].Result != BUSY) && (IicPort[Port].Result != START))
+      {
 				IicPort[Port].Repeat      =  1;
 				IicPort[Port].Time        =  0;
 				IicPort[Port].OutLength   =  (*pIicDat).WrLng;
@@ -1403,7 +1412,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
 				memcpy((void*)&IicPort[Port].OutBuffer[0],(void*)&(*pIicDat).WrData[0],IicPort[Port].OutLength);
 				memset((void*)&IicPort[Port].InBuffer[0],0,IIC_DATA_LENGTH);
 
-				IicPort[Port].Result        =  BUSY;
+				IicPort[Port].Result        =  START;
 			}
     }
     break;
