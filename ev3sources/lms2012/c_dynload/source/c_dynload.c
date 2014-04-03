@@ -171,9 +171,7 @@ void dynloadVMLoad()
 	// This one only resolves the required symbols.
 	virtualMachineInfo.soHandle = dlopen(fullVMPath, RTLD_LAZY);
 	if (!virtualMachineInfo.soHandle) {
-#ifdef DEBUG_DYNLOAD_VMLOAD
 		fprintf(stderr, "DYNLOAD: %s\r\n", dlerror());
-#endif
 		res = FAIL;
 		*(DATA8*)PrimParPointer() =  res;
 
