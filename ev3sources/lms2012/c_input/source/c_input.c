@@ -5404,7 +5404,7 @@ void      cInputSetConn(void)
 
 /*! \page cInput
  *  <hr size="1"/>
- *  <b>     opINPUT_IIC_READ (LAYER, NO, RDLNG, RDDATA)  </b>
+ *  <b>     opINPUT_IIC_READ (LAYER, NO, RDLNG, RDDATA, RESULT)  </b>
  *
  *- Read I2C data from specified port\n
  *
