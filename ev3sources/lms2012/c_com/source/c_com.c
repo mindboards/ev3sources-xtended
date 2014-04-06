@@ -164,11 +164,15 @@ RESULT    cComInit(void)
 
   for(Cnt = 0; Cnt < NO_OF_MAILBOXES; Cnt++)
   {
-    ComInstance.MailBox[Cnt].Status   =  FAIL;
+    ComInstance.MailBox[Cnt].Status   =  OK;
     ComInstance.MailBox[Cnt].DataSize =  0;
     ComInstance.MailBox[Cnt].ReadCnt  =  0;
     ComInstance.MailBox[Cnt].WriteCnt =  0;
     ComInstance.MailBox[Cnt].Name[0]  =  0;
+
+    snprintf((char*)(&(ComInstance.MailBox[Cnt].Name[0])), 50, "%d", Cnt);
+    memset(ComInstance.MailBox[Cnt].Content, 0, MAILBOX_CONTENT_SIZE);
+    ComInstance.MailBox[Cnt].Type      =  DATA_A;
   }
 
   ComInstance.ComResult = OK;
@@ -922,7 +926,7 @@ void      cComGetNameFromScandirList(struct  dirent *NameList, char *pBuffer, UL
       strcat(FileName,NameList->d_name);
 
       /* Get the MD5sum and put in the buffer */
-      md5_file(FileName, 0, (unsigned char *)Md5Sum);
+      // md5_file(FileName, 0, (unsigned char *)Md5Sum);
       *pNameLen  = sprintf(pBuffer, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X ",
                           ((UBYTE*)Md5Sum)[0] , ((UBYTE*)Md5Sum)[1] , ((UBYTE*)Md5Sum)[2] , ((UBYTE*)Md5Sum)[3] ,
                           ((UBYTE*)Md5Sum)[4] , ((UBYTE*)Md5Sum)[5] , ((UBYTE*)Md5Sum)[6] , ((UBYTE*)Md5Sum)[7] ,

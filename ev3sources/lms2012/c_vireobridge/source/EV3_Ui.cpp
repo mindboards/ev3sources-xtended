@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2013 National Instruments Corp.
+ * Copyright (c) 2013-2014 National Instruments Corp.
  *
- * This file is part of the Vireo runtime module for the EV3.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
  *
- * The Vireo runtime module for the EV3 is free software; you can
- * redistribute it and/or modify it under the terms of the GNU General
- * Public License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * The Vireo runtime module for the EV3 is distributed in the hope that
- * it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -32,7 +30,7 @@ extern "C" {
 
 using namespace Vireo;
 
-VIVM_FUNCTION_SIGNATURE1(UiSetLED, Int8)
+VIREO_FUNCTION_SIGNATURE1(UiSetLED, Int8)
 {
     Int8 state = _Param(0);
 
@@ -46,7 +44,7 @@ VIVM_FUNCTION_SIGNATURE1(UiSetLED, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE0(UiClear)
+VIREO_FUNCTION_SIGNATURE0(UiClear)
 {
     UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
@@ -59,9 +57,8 @@ VIVM_FUNCTION_SIGNATURE0(UiClear)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE0(UiUpdate)
+VIREO_FUNCTION_SIGNATURE0(UiUpdate)
 {
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
         cUiUpdateLcd();
@@ -71,15 +68,15 @@ VIVM_FUNCTION_SIGNATURE0(UiUpdate)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE0(UiRestore)
+VIREO_FUNCTION_SIGNATURE0(UiRestore)
 {
     UiInstance.RunScreenEnabled = 3;
-    SetDispatchStatus(NOBREAK);
+    cUiRunScreen();
 
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
+VIREO_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
 {
     UInt8     color  = _Param(0);
     UInt16    x      = _Param(1);
@@ -96,7 +93,7 @@ VIVM_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
+VIREO_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
 {
     UInt8     color    = _Param(0);
     UInt16    x        = _Param(1);
@@ -125,7 +122,7 @@ VIVM_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(UiPoint, UInt8, UInt16, UInt16)
+VIREO_FUNCTION_SIGNATURE3(UiPoint, UInt8, UInt16, UInt16)
 {
     UInt8  color = _Param(0);
     UInt16 x     = _Param(1);
@@ -141,7 +138,7 @@ VIVM_FUNCTION_SIGNATURE3(UiPoint, UInt8, UInt16, UInt16)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE5(UiLine, UInt8, UInt16, UInt16, UInt16, UInt16)
+VIREO_FUNCTION_SIGNATURE5(UiLine, UInt8, UInt16, UInt16, UInt16, UInt16)
 {
     UInt8  color  = _Param(0);
     UInt16 x0     = _Param(1);
@@ -159,7 +156,7 @@ VIVM_FUNCTION_SIGNATURE5(UiLine, UInt8, UInt16, UInt16, UInt16, UInt16)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE6(UiRectangle, UInt8, UInt16, UInt16, UInt16, UInt16, UInt8)
+VIREO_FUNCTION_SIGNATURE6(UiRectangle, UInt8, UInt16, UInt16, UInt16, UInt16, UInt8)
 {
     UInt8  color  = _Param(0);
     UInt16 x0     = _Param(1);
@@ -181,7 +178,7 @@ VIVM_FUNCTION_SIGNATURE6(UiRectangle, UInt8, UInt16, UInt16, UInt16, UInt16, UIn
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
+VIREO_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
 {
     UInt8  color = _Param(0);
     UInt16 x     = _Param(1);
@@ -202,7 +199,7 @@ VIVM_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(UiButtonPressed, Int8, Int8)
+VIREO_FUNCTION_SIGNATURE2(UiButtonPressed, Int8, Int8)
 {
     Int8 button = _Param(0);
     Int8 *state = _ParamPointer(1); // reference
@@ -218,7 +215,7 @@ VIVM_FUNCTION_SIGNATURE2(UiButtonPressed, Int8, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(UiGetVBattery, Single)
+VIREO_FUNCTION_SIGNATURE1(UiGetVBattery, Single)
 {
     Single *voltage = _ParamPointer(0); // reference
 
@@ -229,18 +226,18 @@ VIVM_FUNCTION_SIGNATURE1(UiGetVBattery, Single)
 }
 
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(UiSetLED,"p(i(.Int8))");
-    VIREO_DEFINE_FUNCTION(UiClear,"p()");
-    VIREO_DEFINE_FUNCTION(UiUpdate,"p()");
-    VIREO_DEFINE_FUNCTION(UiRestore,"p()");
-    VIREO_DEFINE_FUNCTION(UiText,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
-    VIREO_DEFINE_FUNCTION(UiBmpFile,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
-    VIREO_DEFINE_FUNCTION(UiPoint,"p(i(.UInt8),i(.UInt16),i(.UInt16))");
-    VIREO_DEFINE_FUNCTION(UiLine,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16))");
-    VIREO_DEFINE_FUNCTION(UiRectangle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(UiCircle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
-    VIREO_DEFINE_FUNCTION(UiButtonPressed,"p(i(.Int8) o(.Int8))");
-    VIREO_DEFINE_FUNCTION(UiGetVBattery,"p(o(.Single))");
-VIREO_DEFINE_END()
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(UiSetLED,"p(i(.Int8))");
+    DEFINE_VIREO_FUNCTION(UiClear,"p()");
+    DEFINE_VIREO_FUNCTION(UiUpdate,"p()");
+    DEFINE_VIREO_FUNCTION(UiRestore,"p()");
+    DEFINE_VIREO_FUNCTION(UiText,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
+    DEFINE_VIREO_FUNCTION(UiBmpFile,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.String))");
+    DEFINE_VIREO_FUNCTION(UiPoint,"p(i(.UInt8),i(.UInt16),i(.UInt16))");
+    DEFINE_VIREO_FUNCTION(UiLine,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16))");
+    DEFINE_VIREO_FUNCTION(UiRectangle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(UiCircle,"p(i(.UInt8),i(.UInt16),i(.UInt16),i(.UInt16),i(.UInt8))");
+    DEFINE_VIREO_FUNCTION(UiButtonPressed,"p(i(.Int8) o(.Int8))");
+    DEFINE_VIREO_FUNCTION(UiGetVBattery,"p(o(.Single))");
+DEFINE_VIREO_END()
 

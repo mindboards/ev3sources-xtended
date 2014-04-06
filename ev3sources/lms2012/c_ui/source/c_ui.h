@@ -37,6 +37,7 @@
 DATA8     cUiGetPress(DATA8 Button);
 void      cUiUpdateLcd(void);
 void      cUiSetLed(DATA8 State);
+void      cUiRunScreen(void);
 
 RESULT    cUiInit(void);
 

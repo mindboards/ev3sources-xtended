@@ -59,8 +59,6 @@
  */
 
 #include  "c_dynload.h"
-//#include  "c_extend.h"
-#include  "EV3_Entry.h"
 
 #include  "lms2012.h"
 #include  "c_math.h"
@@ -1637,7 +1635,8 @@ void      ProgramEnd(PRGID PrgId)
       if (VMInstance.RefCount == 0)
       {
         cSoundClose();
-        cComClose();
+        // Do not close all the mailboxes when a program ends
+        // cComClose();
         cInputClose();
         cOutputClose();
         cUiClose();

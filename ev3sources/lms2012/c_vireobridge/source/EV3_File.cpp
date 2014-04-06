@@ -1,25 +1,22 @@
 /*
- * Copyright (c) 2013 National Instruments Corp.
+ * Copyright (c) 2013-2014 National Instruments Corp.
  *
- * This file is part of the Vireo runtime module for the EV3.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
  *
- * The Vireo runtime module for the EV3 is free software; you can
- * redistribute it and/or modify it under the terms of the GNU General
- * Public License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * The Vireo runtime module for the EV3 is distributed in the hope that
- * it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-// #include <fcntl.h>
-// #include <unistd.h>
+#include <sys/stat.h>
 
 extern "C" {
 #include "c_memory.h"
@@ -30,7 +27,7 @@ extern "C" {
 
 using namespace Vireo;
 
-VIVM_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
+VIREO_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
 {
     TempStackCStringFromString fileName(_Param(0));
     Int16 handle;
@@ -54,7 +51,7 @@ VIVM_FUNCTION_SIGNATURE3(FileOpenRead, StringRef, Int16, Int32)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
+VIREO_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
 {
     TempStackCStringFromString fileName(_Param(0));
     Int16 handle;
@@ -76,7 +73,7 @@ VIVM_FUNCTION_SIGNATURE2(FileOpenWrite, StringRef, Int16)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
+VIREO_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
 {
     TempStackCStringFromString fileName(_Param(0));
     Int16 handle;
@@ -98,7 +95,7 @@ VIVM_FUNCTION_SIGNATURE2(FileOpenAppend, StringRef, Int16)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(FileClose, Int16)
+VIREO_FUNCTION_SIGNATURE1(FileClose, Int16)
 {
     Int16 handle = _Param(0);
 
@@ -108,7 +105,7 @@ VIVM_FUNCTION_SIGNATURE1(FileClose, Int16)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArrayCoreRef)
 {
     Int16 handle = _Param(0);
     Int32 length = _Param(1);
@@ -141,7 +138,7 @@ VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArrayCoreRef)
         {
             // If the array is not big enough, resize it
             if (data->Length() < length)
-                data->Resize(length);
+                data->Resize1D(length);
             // Copy into the output data array
             for (Int32 i = 0; i < length; i++)
                 *data->BeginAt(i) = pTmp->pArray[i];
@@ -155,10 +152,10 @@ VIVM_FUNCTION_SIGNATURE3(FileRead, Int16, Int32, TypedArrayCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArrayCoreRef)
 {
     Int16 handle = _Param(0);
-    TypedArrayCoreRef data = _Param(1); // uInt8
+    TypedArrayCoreRef data = _Param(1);
     Int32 length = data->Length();
 
     PRGID PrgId = CurrentProgramId();
@@ -192,7 +189,7 @@ VIVM_FUNCTION_SIGNATURE2(FileWrite, Int16, TypedArrayCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(FileRemove, StringRef)
+VIREO_FUNCTION_SIGNATURE1(FileRemove, StringRef)
 {
     TempStackCStringFromString fileName(_Param(0));
 
@@ -212,7 +209,7 @@ VIVM_FUNCTION_SIGNATURE1(FileRemove, StringRef)
 // If the file is not open, handle is -1 and write is 0.
 // Otherwise, handle is the file's handle number and write is 0 if the file is
 // open for read or 1 if the file is open for write/append.
-VIVM_FUNCTION_SIGNATURE3(FileResolveHandle, StringRef, Int16, Int8)
+VIREO_FUNCTION_SIGNATURE3(FileResolveHandle, StringRef, Int16, Int8)
 {
     TempStackCStringFromString fileName(_Param(0));
     Int16 handle;
@@ -235,15 +232,34 @@ VIVM_FUNCTION_SIGNATURE3(FileResolveHandle, StringRef, Int16, Int8)
     return _NextInstruction();
 }
 
+VIREO_FUNCTION_SIGNATURE2(FileNameExist, StringRef, Int8)
+{
+    TempStackCStringFromString fileName(_Param(0));
+    Int8 *flag = _ParamPointer(1);
+
+    if (flag)
+    {
+        PRGID PrgId = CurrentProgramId();
+        char Filename[MAX_FILENAME_SIZE];
+        struct stat FileStatus;
+
+        cMemoryFilename(PrgId, fileName.BeginCStr(), "", MAX_FILENAME_SIZE, Filename);
+        *flag = (stat(Filename, &FileStatus) == 0);
+    }
+
+    return _NextInstruction();
+}
+
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(FileOpenRead, "p(i(.String),o(.Int16),o(.Int32))");
-    VIREO_DEFINE_FUNCTION(FileOpenWrite, "p(i(.String),o(.Int16))");
-    VIREO_DEFINE_FUNCTION(FileOpenAppend, "p(i(.String),o(.Int16))");
-    VIREO_DEFINE_FUNCTION(FileClose, "p(i(.Int16))");
-    VIREO_DEFINE_FUNCTION(FileRead, "p(i(.Int16),i(.Int32),o(.Array))");
-    VIREO_DEFINE_FUNCTION(FileWrite, "p(i(.Int16),i(.Array))");
-    VIREO_DEFINE_FUNCTION(FileRemove, "p(i(.String))");
-    VIREO_DEFINE_FUNCTION(FileResolveHandle, "p(i(.String),i(.Int16),i(.Int8))");
-VIREO_DEFINE_END()
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(FileOpenRead, "p(i(.String),o(.Int16),o(.Int32))");
+    DEFINE_VIREO_FUNCTION(FileOpenWrite, "p(i(.String),o(.Int16))");
+    DEFINE_VIREO_FUNCTION(FileOpenAppend, "p(i(.String),o(.Int16))");
+    DEFINE_VIREO_FUNCTION(FileClose, "p(i(.Int16))");
+    DEFINE_VIREO_FUNCTION(FileRead, "p(i(.Int16),i(.Int32),o(.Array))");
+    DEFINE_VIREO_FUNCTION(FileWrite, "p(i(.Int16),i(.Array))");
+    DEFINE_VIREO_FUNCTION(FileRemove, "p(i(.String))");
+    DEFINE_VIREO_FUNCTION(FileResolveHandle, "p(i(.String),i(.Int16),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(FileNameExist, "p(i(.String),o(.Int8))");
+DEFINE_VIREO_END()
 

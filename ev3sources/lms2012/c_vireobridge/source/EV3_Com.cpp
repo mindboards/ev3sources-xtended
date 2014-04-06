@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2013 National Instruments Corp.
+ * Copyright (c) 2013-2014 National Instruments Corp.
  *
- * This file is part of the Vireo runtime module for the EV3.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
  *
- * The Vireo runtime module for the EV3 is free software; you can
- * redistribute it and/or modify it under the terms of the GNU General
- * Public License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * The Vireo runtime module for the EV3 is distributed in the hope that
- * it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -45,7 +43,7 @@ enum
 
 using namespace Vireo;
 
-VIVM_FUNCTION_SIGNATURE3(MailBoxOpen, Int8, StringRef, Int8)
+VIREO_FUNCTION_SIGNATURE3(MailBoxOpen, Int8, StringRef, Int8)
 {
     Int8 boxNo        = _Param(0);
     TempStackCStringFromString boxName(_Param(1));
@@ -68,7 +66,7 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxOpen, Int8, StringRef, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE1(MailBoxClose, Int8)
+VIREO_FUNCTION_SIGNATURE1(MailBoxClose, Int8)
 {
     Int8 boxNo          = _Param(0);
 
@@ -80,7 +78,7 @@ VIVM_FUNCTION_SIGNATURE1(MailBoxClose, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
 {
     Int8 boxNo   = _Param(0);
     Int8 length  = _Param(1);
@@ -97,7 +95,7 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
             case DATA_8:
             {
                 length = Min(length, MAILBOX_CONTENT_SIZE / sizeof(DATA8));
-                data->Resize(length * sizeof(DATA8));
+                data->Resize1D(length * sizeof(DATA8));
                 for (UBYTE i = 0; i < length; i++)
                     *(DATA8*)data->BeginAt(i*sizeof(DATA8)) = ((DATA8*)(ComInstance.MailBox[boxNo].Content))[i];
                 break;
@@ -105,7 +103,7 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
             case DATA_16:
             {
                 length = Min(length, MAILBOX_CONTENT_SIZE / sizeof(DATA16));
-                data->Resize(length * sizeof(DATA16));
+                data->Resize1D(length * sizeof(DATA16));
                 for (UBYTE i = 0; i < length; i++)
                     *(DATA16*)data->BeginAt(i*sizeof(DATA16)) = ((DATA16*)(ComInstance.MailBox[boxNo].Content))[i];
                 break;
@@ -113,7 +111,7 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
             case DATA_32:
             {
                 length = Min(length, MAILBOX_CONTENT_SIZE / sizeof(DATA32));
-                data->Resize(length * sizeof(DATA32));
+                data->Resize1D(length * sizeof(DATA32));
                 for (UBYTE i = 0; i < length; i++)
                     *(DATA32*)data->BeginAt(i*sizeof(DATA32)) = ((DATA32*)(ComInstance.MailBox[boxNo].Content))[i];
                 break;
@@ -121,22 +119,23 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
             case DATA_F:
             {
                 length = Min(length, MAILBOX_CONTENT_SIZE / sizeof(DATAF));
-                data->Resize(length * sizeof(DATAF));
+                data->Resize1D(length * sizeof(DATAF));
                 for (UBYTE i = 0; i < length; i++)
                     *(DATAF*)data->BeginAt(i*sizeof(DATAF)) = ((DATAF*)(ComInstance.MailBox[boxNo].Content))[i];
                 break;
             }
             case DATA_S:
             {
-                data->Resize(MAILBOX_CONTENT_SIZE);
+                data->Resize1D(MAILBOX_CONTENT_SIZE);
                 IntIndex stringLength = snprintf((char*)data->BeginAt(0), MAILBOX_CONTENT_SIZE, "%s", (char*)ComInstance.MailBox[boxNo].Content);
-                data->Resize(stringLength);
+                data->Resize1D(stringLength);
                 break;
             }
             case DATA_A:
             {
-                data->Resize(ComInstance.MailBox[boxNo].DataSize);
+                data->Resize1D(ComInstance.MailBox[boxNo].DataSize);
                 memcpy(data->BeginAt(0), (char*)&((DATA8*)(ComInstance.MailBox[boxNo].Content))[0], data->Length());
+                ComInstance.MailBox[boxNo].DataSize = 0;
                 break;
             }
         }
@@ -150,11 +149,11 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxRead, Int8, Int8, TypedArrayCoreRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(MailBoxWrite, StringRef, StringRef, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE3(MailBoxWrite, StringRef, StringRef, TypedArrayCoreRef)
 {
     TempStackCStringFromString brickName(_Param(0));
     TempStackCStringFromString boxName(_Param(1));
-    TypedArrayCoreRef data = _Param(2); // uInt8
+    TypedArrayCoreRef data = _Param(2);
 
     UBYTE ChNos;
     UBYTE ComChNo;
@@ -202,7 +201,7 @@ VIVM_FUNCTION_SIGNATURE3(MailBoxWrite, StringRef, StringRef, TypedArrayCoreRef)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE2(ComSetOnOff, Int8, Int8)
+VIREO_FUNCTION_SIGNATURE2(ComSetOnOff, Int8, Int8)
 {
     Int8 hardware = _Param(0);
     Int8 onoff    = _Param(1);
@@ -227,7 +226,7 @@ VIVM_FUNCTION_SIGNATURE2(ComSetOnOff, Int8, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE3(ComSetConnection, Int8, StringRef, Int8)
+VIREO_FUNCTION_SIGNATURE3(ComSetConnection, Int8, StringRef, Int8)
 {
     Int8 hardware = _Param(0);
     TempStackCStringFromString name(_Param(1));
@@ -259,7 +258,7 @@ VIVM_FUNCTION_SIGNATURE3(ComSetConnection, Int8, StringRef, Int8)
     return _NextInstruction();
 }
 
-VIVM_FUNCTION_SIGNATURE7(ComGetFavourItem, Int8, Int8, Int8, StringRef, Int8, Int8, Int8)
+VIREO_FUNCTION_SIGNATURE7(ComGetFavourItem, Int8, Int8, Int8, StringRef, Int8, Int8, Int8)
 {
     Int8 hardware   = _Param(0);
     Int8 item       = _Param(1);
@@ -276,7 +275,7 @@ VIVM_FUNCTION_SIGNATURE7(ComGetFavourItem, Int8, Int8, Int8, StringRef, Int8, In
     if (_ParamPointer(3))
     {
         name = _Param(3);
-        name->Resize(length == -1 ? vmBRICKNAMESIZE : length);
+        name->Resize1D(length == -1 ? vmBRICKNAMESIZE : length);
         length = name->Length();
         nameBegin = name->Begin();
     }
@@ -322,13 +321,13 @@ VIVM_FUNCTION_SIGNATURE7(ComGetFavourItem, Int8, Int8, Int8, StringRef, Int8, In
 }
 
 #include "TypeDefiner.h"
-VIREO_DEFINE_BEGIN(EV3_IO)
-    VIREO_DEFINE_FUNCTION(MailBoxOpen, "p(i(.Int8),i(.String),i(.Int8))");
-    VIREO_DEFINE_FUNCTION(MailBoxClose, "p(i(.Int8))");
-    VIREO_DEFINE_FUNCTION(MailBoxRead, "p(i(.Int8),i(.Int8),o(.Array))");
-    VIREO_DEFINE_FUNCTION(MailBoxWrite, "p(i(.String),i(.String),o(.Array))");
-    VIREO_DEFINE_FUNCTION(ComSetOnOff, "p(i(.Int8),i(.Int8))");
-    VIREO_DEFINE_FUNCTION(ComSetConnection, "p(i(.Int8),i(.String),i(.Int8))");
-    VIREO_DEFINE_FUNCTION(ComGetFavourItem, "p(i(.Int8),i(.Int8),i(.Int8),o(.String),o(.Int8),o(.Int8),o(.Int8))");
-VIREO_DEFINE_END()
+DEFINE_VIREO_BEGIN(EV3_IO)
+    DEFINE_VIREO_FUNCTION(MailBoxOpen, "p(i(.Int8),i(.String),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(MailBoxClose, "p(i(.Int8))");
+    DEFINE_VIREO_FUNCTION(MailBoxRead, "p(i(.Int8),i(.Int8),o(.Array))");
+    DEFINE_VIREO_FUNCTION(MailBoxWrite, "p(i(.String),i(.String),o(.Array))");
+    DEFINE_VIREO_FUNCTION(ComSetOnOff, "p(i(.Int8),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(ComSetConnection, "p(i(.Int8),i(.String),i(.Int8))");
+    DEFINE_VIREO_FUNCTION(ComGetFavourItem, "p(i(.Int8),i(.Int8),i(.Int8),o(.String),o(.Int8),o(.Int8),o(.Int8))");
+DEFINE_VIREO_END()
 

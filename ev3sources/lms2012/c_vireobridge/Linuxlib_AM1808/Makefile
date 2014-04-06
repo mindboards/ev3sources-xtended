@@ -2,6 +2,8 @@ SOURCES = EV3_Input.cpp EV3_Sound.cpp EV3_Output.cpp EV3_Ui.cpp EV3_Entry.cpp EV
 
 TARGET = libvireobridge.so
 
+INCLUDEVIREO = ../includeVireo
+
 CONF = Linuxlib
 ARCH = AM1808
 
@@ -39,8 +41,8 @@ INCLUDES = -I$(BASE)/lms2012/source \
            -I$(BASE)/c_sound/source \
            -I$(BASE)/c_ui/source \
            -I$(BASE)/c_vireobridge/source \
-           -I$(BASE)/c_vireobridge/includeVireo \
-           -I$(BASE)/c_dynload/source
+           -I$(BASE)/c_dynload/source \
+           -I$(INCLUDEVIREO)
 
 ifeq ($(ARCH),X86)
 DBUS_CFLAGS := $(shell pkg-config dbus-1 --cflags)

@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2013 National Instruments Corp.
+ * Copyright (c) 2013-2014 National Instruments Corp.
  *
- * This file is part of the Vireo runtime module for the EV3.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
  *
- * The Vireo runtime module for the EV3 is free software; you can
- * redistribute it and/or modify it under the terms of the GNU General
- * Public License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * The Vireo runtime module for the EV3 is distributed in the hope that
- * it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -47,6 +45,7 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
     virtualMachineInfo->entryPointFunc[0] = &VireoInit;
     virtualMachineInfo->entryPointFunc[1] = &VireoStep;
     virtualMachineInfo->entryPointFunc[2] = &VireoMemAccess;
+    virtualMachineInfo->entryPointFunc[3] = &VireoVersion;
 
     (virtualMachineInfo->vm_exit) = &vm_exit;
 
@@ -94,7 +93,6 @@ void VireoInit(void)
         }
         pRootShell = EggShell::Create(null);
         pShell = EggShell::Create(pRootShell);
-        pShell->TheExecutionContext()->SetDelayedLoad(true);
 
         SubString  input;
         pShell->ReadFile(fileName, &input);
@@ -111,7 +109,7 @@ void VireoStep()
 
         // Store the execution state as a return value and pop off unused parameters.
         PrimParPointer();
-        *(DATA8*)PrimParPointer() = (DATA8) state;
+        *(DATA8*)PrimParPointer() = (DATA8) (state != kExecutionState_None);
         PrimParPointer();
     } catch (...) {
         SetDispatchStatus(FAILBREAK);
@@ -158,5 +156,12 @@ void VireoMemAccess()
     } catch (...) {
         SetDispatchStatus(FAILBREAK);
     }
+}
+
+void VireoVersion()
+{
+    *(Int32 *) PrimParPointer() = 0x00010006;      // vireobridge version
+    *(Int32 *) PrimParPointer() = Vireo_Version(); // vireo version
+    PrimParPointer();
 }
 
