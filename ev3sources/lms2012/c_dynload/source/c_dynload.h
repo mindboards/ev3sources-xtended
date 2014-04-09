@@ -43,6 +43,7 @@ struct tVirtualMachineInfo
   tEntryPointFunc entryPointFunc[DYNLOAD_MAX_ENTRYPOINTS];
   tEntryPointFunc vm_exit;
   tEntryPointFunc vm_update;
+  tEntryPointFunc vm_close;
 };
 
 typedef void (*vmInitPointFunc)(struct tVirtualMachineInfo*);
@@ -51,6 +52,7 @@ void dynloadInit();
 void dynloadVMExit();
 void dynloadVMLoad();
 void dynLoadGetVM();
+void dynLoadVMClose();
 
 void dynloadUpdateVM();
 void dynloadEntry_0();

@@ -11,6 +11,7 @@
 
 #ifdef  DEBUG_DYNLOAD
 #define DEBUG_DYNLOAD_VMLOAD
+#define DEBUG_DYNLOAD_VMCLOSE
 //#define DEBUG_DYNLOAD_VMUPDATE
 //#define DEBUG_DYNLOAD_ENTRY
 #endif
@@ -283,6 +284,37 @@ void dynloadUpdateVM()
 #endif
 }
 
+
+/*! \page cDynload
+ *  <hr size="1"/>
+ *  <b>     dynloadUpdateVM </b>
+ *
+ * - This function get called by ProgramEnd() when a program ends
+ *
+ */
+/*! \brief  dynLoadVMClose()
+ *
+ */
+void dynLoadVMClose()
+{
+#ifdef DEBUG_DYNLOAD_VMUPDATE
+	updateCounter++;
+#endif
+
+	if ((virtualMachineInfo.vmIndex >= 0) && (virtualMachineInfo.vm_close != NULL))
+	{
+#ifdef DEBUG_DYNLOAD_VMCLOSE
+		fprintf(stderr, "DYNLOAD: dynLoadVMClose assigned\r\n");
+#endif
+		virtualMachineInfo.vm_close();
+	}
+#ifdef DEBUG_DYNLOAD_VMCLOSE
+	else
+	{
+		fprintf(stderr, "DYNLOAD: dynLoadVMClose called NULL\r\n");
+	}
+#endif
+}
 
 /*! \page cDynload
  *  <hr size="1"/>
