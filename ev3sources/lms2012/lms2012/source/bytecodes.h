@@ -1543,12 +1543,12 @@ HWTYPE;
 
 typedef   enum
 {
-  ENCRYPT_NONE                  = 0,
-  ENCRYPT_WPA2                  = 1,
+  LMS_ENCRYPT_NONE                  = 0,
+  LMS_ENCRYPT_WPA2                  = 1,
 
-  ENCRYPTS
+  LMS_ENCRYPTS
 }
-ENCRYPT;
+LMS_ENCRYPT;
 
 /*  \endverbatim */
 

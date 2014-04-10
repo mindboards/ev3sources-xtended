@@ -1640,6 +1640,7 @@ void      ProgramEnd(PRGID PrgId)
         cInputClose();
         cOutputClose();
         cUiClose();
+        dynLoadVMClose();
       }
     }
 

@@ -427,7 +427,7 @@ NextEntry:                                                            //        
   // Draw star                                                        //
   JR_FALSE(Parred,NotParred)                                          //            if (Parred)
                                                                       //            {
-  JR_EQ8(Type,ENCRYPT_NONE,NotEncrypted1)                             //              if (Type)
+  JR_EQ8(Type,LMS_ENCRYPT_NONE,NotEncrypted1)                             //              if (Type)
                                                                       //              {
   // Show parred and encrypted icon                                   //
   UI_DRAW(ICON,FG_COLOR,SEARCH_STAR_STARTX,Yipos,MENU_ICON,ICON_LOCKSTAR) //            UI_DRAW(ICON,FG_COLOR,SEARCH_STAR_STARTX,Yipos,MENU_ICON,ICON_LOCKSTAR)
@@ -444,7 +444,7 @@ EndEncrypted1:                                                        //        
   JR(EndParred)                                                       //            }
                                                                       //            else
 NotParred:                                                            //            {
-  JR_EQ8(Type,ENCRYPT_NONE,NotEncrypted2)                             //              if (Type)
+  JR_EQ8(Type,LMS_ENCRYPT_NONE,NotEncrypted2)                             //              if (Type)
                                                                       //              {
   // Show encrypted icon                                              //
   UI_DRAW(ICON,FG_COLOR,SEARCH_STAR_STARTX,Yipos,MENU_ICON,ICON_LOCK) //                UI_DRAW(ICON,FG_COLOR,SEARCH_STAR_STARTX,Yipos,MENU_ICON,ICON_LOCK)
@@ -686,7 +686,7 @@ subcall   HiddenScreen                                                //  void H
   CALL(EncrypScreen,Name,Result,Encryption)                           //    EncrypScreen(Name,Result,Encryption)
   JR_FALSE(Result,Break)                                              //    if (Result)
                                                                       //    {
-  JR_EQ8(Encryption,ENCRYPT_NONE,NotEncrypted)                        //      if (!ENCRYPT_NONE)
+  JR_EQ8(Encryption,LMS_ENCRYPT_NONE,NotEncrypted)                        //      if (!LMS_ENCRYPT_NONE)
                                                                       //      {
                                                                       //
   MOVE8_8(CHARSET_WIFIPASSKEY,State)                                  //        State  =  CHARSET_WIFIPASSKEY
@@ -766,7 +766,7 @@ subcall   EncrypScreen                                                //  void E
   MOVE8_8(1,Run)                                                      //    Run         =  1
   MOVE16_16(0,Pointer)                                                //    Pointer     =  0
   MOVE16_16(ENCRYP_LINES,Entries)                                     //    Entries     =  ENCRYP_LINES
-  MOVE8_8(ENCRYPT_NONE,Encryption)                                    //    Encryption  =  ENCRYPT_NONE
+  MOVE8_8(LMS_ENCRYPT_NONE,Encryption)                                    //    Encryption  =  LMS_ENCRYPT_NONE
                                                                       //
                                                                       //    do
 Loop:                                                                 //    {
@@ -827,7 +827,7 @@ TooHigh:                                                              //      }
   JR_NEQ16(Pointer,0,Not0)                                            //        if (Pointer == 0)
                                                                       //        {
   // WPA2                                                             //
-  MOVE8_8(ENCRYPT_WPA2,Encryption)                                    //          Encryption  =  ENCRYPT_WPA2
+  MOVE8_8(LMS_ENCRYPT_WPA2,Encryption)                                    //          Encryption  =  LMS_ENCRYPT_WPA2
                                                                       //  
   CALL(ShowBlock)                                                     //          ShowBlock()
   COM_SET(SET_ENCRYPT,HARDWARE,Name,Encryption)                       //          COM_SET(SET_ENCRYPT,HARDWARE,Name,Encryption)
@@ -838,7 +838,7 @@ Not0:                                                                 //        
   JR_NEQ16(Pointer,1,Not1)                                            //        if (Pointer == 1)
                                                                       //        {
   // None                                                             //
-  MOVE8_8(ENCRYPT_NONE,Encryption)                                    //          Encryption  =  ENCRYPT_NONE
+  MOVE8_8(LMS_ENCRYPT_NONE,Encryption)                                    //          Encryption  =  LMS_ENCRYPT_NONE
                                                                       //
   CALL(ShowBlock)                                                     //          ShowBlock()
   COM_SET(SET_ENCRYPT,HARDWARE,Name,Encryption)                       //          COM_SET(SET_ENCRYPT,HARDWARE,Name,Encryption)
