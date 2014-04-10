@@ -598,7 +598,6 @@ void      cSoundEntry(void)
                         SoundInstance.hSoundFile  = -1;   // Signal it
                       }
 
-                      (*SoundInstance.pSound).Status = BUSY;
                       SoundInstance.SoundOwner = CallingObjectId();
 
                       Temp1 = *(DATA8*)PrimParPointer();  // Volume level
@@ -660,8 +659,6 @@ void      cSoundEntry(void)
                       else
                         SoundData[1] = 0;
 
-    	  	  	  	  	BytesToWrite = 2;
-
     	  	  	  	  	// Get filename
     	  	  	  	  	pFileName    = (DATA8*)PrimParPointer();
 
@@ -712,6 +709,9 @@ void      cSoundEntry(void)
 
                           if(SoundInstance.SoundFileFormat == FILEFORMAT_ADPCM_SOUND)
                             cSoundInitAdPcm();
+
+                          (*SoundInstance.pSound).Status = BUSY;
+                          BytesToWrite = 2;
                         }
 
 
