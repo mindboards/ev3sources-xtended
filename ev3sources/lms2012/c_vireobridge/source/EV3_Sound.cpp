@@ -127,7 +127,7 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
     if (fileName.BeginCStr())
     {
         pathName[0] = 0;
-        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.' && *((Utf8Char *) fileName.BeginCStr()) != '/')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
             sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName.BeginCStr());
@@ -209,7 +209,7 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
     if (fileName.BeginCStr())
     {
         pathName[0] = 0;
-        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.' && *((Utf8Char *) fileName.BeginCStr()) != '/')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
             sprintf(SoundInstance.PathBuffer, "%s%s.rsf", pathName, fileName.BeginCStr());

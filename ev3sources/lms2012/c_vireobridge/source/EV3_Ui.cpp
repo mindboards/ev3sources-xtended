@@ -115,7 +115,7 @@ VIREO_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
         char pathName[MAX_FILENAME_SIZE];
         UBYTE pBmp[LCD_BUFFER_SIZE];
 
-        if (*((Utf8Char *) fileName.BeginCStr()) != '.')
+        if (*((Utf8Char *) fileName.BeginCStr()) != '.' && *((Utf8Char *) fileName.BeginCStr()) != '/')
         {
             GetResourcePath(pathName, MAX_FILENAME_SIZE);
         }
