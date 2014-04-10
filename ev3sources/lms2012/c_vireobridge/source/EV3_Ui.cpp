@@ -46,9 +46,9 @@ VIREO_FUNCTION_SIGNATURE1(UiSetLED, Int8)
 
 VIREO_FUNCTION_SIGNATURE0(UiClear)
 {
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        UiInstance.RunScreenEnabled = 0;
         UiInstance.Font = NORMAL_FONT;
         memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
         UiInstance.ScreenBusy = 1;
@@ -83,9 +83,13 @@ VIREO_FUNCTION_SIGNATURE4(UiText, UInt8, UInt16, UInt16, StringRef)
     UInt16    y      = _Param(2);
     TempStackCStringFromString string(_Param(3));
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
         dLcdDrawText((*UiInstance.pLcd).Lcd, color, x, y, UiInstance.Font, (DATA8 *) string.BeginCStr());
         UiInstance.ScreenBusy = 1;
     }
@@ -100,9 +104,14 @@ VIREO_FUNCTION_SIGNATURE4(UiBmpFile, UInt8, UInt16, UInt16, StringRef)
     UInt16    y        = _Param(2);
     TempStackCStringFromString fileName(_Param(3));
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
+
         char pathName[MAX_FILENAME_SIZE];
         UBYTE pBmp[LCD_BUFFER_SIZE];
 
@@ -128,9 +137,13 @@ VIREO_FUNCTION_SIGNATURE3(UiPoint, UInt8, UInt16, UInt16)
     UInt16 x     = _Param(1);
     UInt16 y     = _Param(2);
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
         dLcdDrawPixel((*UiInstance.pLcd).Lcd, color, x, y);
         UiInstance.ScreenBusy = 1;
     }
@@ -146,9 +159,13 @@ VIREO_FUNCTION_SIGNATURE5(UiLine, UInt8, UInt16, UInt16, UInt16, UInt16)
     UInt16 x1     = _Param(3);
     UInt16 y1     = _Param(4);
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
         dLcdDrawLine((*UiInstance.pLcd).Lcd, color, x0, y0, x1, y1);
         UiInstance.ScreenBusy = 1;
     }
@@ -165,9 +182,13 @@ VIREO_FUNCTION_SIGNATURE6(UiRectangle, UInt8, UInt16, UInt16, UInt16, UInt16, UI
     UInt16 height = _Param(4);
     UInt8  fill   = _Param(5);
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
         if (fill == 0)
             dLcdRect((*UiInstance.pLcd).Lcd, color, x0, y0, width, height);
         if (fill == 1)
@@ -186,9 +207,13 @@ VIREO_FUNCTION_SIGNATURE5(UiCircle, UInt8, UInt16, UInt16, UInt16, UInt8)
     UInt16 r     = _Param(3);
     UInt8  fill  = _Param(4);
 
-    UiInstance.RunScreenEnabled = 0;
     if ((UiInstance.ScreenBlocked == 0) || ((CurrentProgramId() == UiInstance.ScreenPrgId) && (CallingObjectId() == UiInstance.ScreenObjId)))
     {
+        if (UiInstance.RunScreenEnabled)
+        {
+            UiInstance.RunScreenEnabled = 0;
+            memset(&((*UiInstance.pLcd).Lcd[0]), BG_COLOR, LCD_BUFFER_SIZE);
+        }
         if (fill == 0)
             dLcdDrawCircle((*UiInstance.pLcd).Lcd, color, x, y, r);
         if (fill == 1)
