@@ -110,7 +110,6 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
         close(SoundInstance.hSoundFile);
         SoundInstance.hSoundFile = -1;
     }
-    (*SoundInstance.pSound).Status = BUSY;
     SoundInstance.SoundOwner = CallingObjectId();
 
     // Assemble SoundData
@@ -161,19 +160,18 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlay, UInt8, StringRef)
 
             if (SoundInstance.SoundFileFormat == FILEFORMAT_ADPCM_SOUND)
                 cSoundInitAdPcm();
+
+            SoundInstance.SoundDriverDescriptor = open(SOUND_DEVICE_NAME, O_WRONLY);
+            if (SoundInstance.SoundDriverDescriptor >= 0)
+            {
+                write(SoundInstance.SoundDriverDescriptor, SoundData, BytesToWrite);
+                close(SoundInstance.SoundDriverDescriptor);
+                SoundInstance.SoundDriverDescriptor = -1;
+                SoundInstance.cSoundState = SOUND_FILE_PLAYING;
+                (*SoundInstance.pSound).Status = BUSY;
+            }
         }
     }
-
-    SoundInstance.SoundDriverDescriptor = open(SOUND_DEVICE_NAME, O_WRONLY);
-    if (SoundInstance.SoundDriverDescriptor >= 0)
-    {
-        write(SoundInstance.SoundDriverDescriptor, SoundData, BytesToWrite);
-        close(SoundInstance.SoundDriverDescriptor);
-        SoundInstance.SoundDriverDescriptor = -1;
-        SoundInstance.cSoundState = SOUND_FILE_PLAYING;
-    }
-    else
-        SoundInstance.cSoundState = SOUND_STOPPED;
 
     return _NextInstruction();
 }
@@ -192,7 +190,6 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
         close(SoundInstance.hSoundFile);
         SoundInstance.hSoundFile = -1;
     }
-    (*SoundInstance.pSound).Status = BUSY;
     SoundInstance.SoundOwner = CallingObjectId();
 
     // Assemble SoundData
@@ -243,19 +240,18 @@ VIREO_FUNCTION_SIGNATURE2(SoundPlayLoop, UInt8, StringRef)
 
             if (SoundInstance.SoundFileFormat == FILEFORMAT_ADPCM_SOUND)
                 cSoundInitAdPcm();
+
+            SoundInstance.SoundDriverDescriptor = open(SOUND_DEVICE_NAME, O_WRONLY);
+            if (SoundInstance.SoundDriverDescriptor >= 0)
+            {
+                write(SoundInstance.SoundDriverDescriptor, SoundData, BytesToWrite);
+                close(SoundInstance.SoundDriverDescriptor);
+                SoundInstance.SoundDriverDescriptor = -1;
+                SoundInstance.cSoundState = SOUND_FILE_LOOPING;
+                (*SoundInstance.pSound).Status = BUSY;
+            }
         }
     }
-
-    SoundInstance.SoundDriverDescriptor = open(SOUND_DEVICE_NAME, O_WRONLY);
-    if (SoundInstance.SoundDriverDescriptor >= 0)
-    {
-        write(SoundInstance.SoundDriverDescriptor, SoundData, BytesToWrite);
-        close(SoundInstance.SoundDriverDescriptor);
-        SoundInstance.SoundDriverDescriptor = -1;
-        SoundInstance.cSoundState = SOUND_FILE_LOOPING;
-    }
-    else
-        SoundInstance.cSoundState = SOUND_STOPPED;
 
     return _NextInstruction();
 }
