@@ -47,6 +47,7 @@ void dynloadInit()
 	// Initialise all of the pointers to functions
 	virtualMachineInfo.vm_exit = NULL;
 	virtualMachineInfo.vm_update = NULL;
+	virtualMachineInfo.vm_close = NULL;
 
 	for (index = 0; index < DYNLOAD_MAX_ENTRYPOINTS; index++)
 	{
