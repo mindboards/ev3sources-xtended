@@ -21,6 +21,7 @@ extern "C" {
 #endif
 void vm_init(struct tVirtualMachineInfo *);
 void vm_exit(void);
+void vm_close(void);
 
 void VireoInit(void);
 void VireoStep(void);

@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "ExecutionContext.h"
 #include "EggShell.h"
 #include "CEntryPoints.h"
@@ -24,6 +27,7 @@
 extern "C" {
 #include "lms2012.h"
 #include "c_dynload.h"
+#include "c_input.h"
 }
 
 #define MEMACCESS_MAX_INPUTS_SIZE 1024
@@ -48,12 +52,13 @@ void vm_init(struct tVirtualMachineInfo *virtualMachineInfo)
     virtualMachineInfo->entryPointFunc[3] = &VireoVersion;
 
     (virtualMachineInfo->vm_exit) = &vm_exit;
+    (virtualMachineInfo->vm_update) = NULL;
+    (virtualMachineInfo->vm_close) = &vm_close;
 
 #ifdef DEBUG_DYNLOAD
     fprintf(stderr, "done.\r\n");
 #endif
 }
-
 
 void vm_exit()
 {
@@ -71,6 +76,18 @@ void vm_exit()
         pRootShell->Delete();
         pRootShell = null;
     }
+}
+
+void vm_close()
+{
+#ifdef DEBUG_DYNLOAD
+    fprintf(stderr, "LABVIEW: %s called\r\n", __func__);
+#endif
+    // Enable auto-id for all input ports
+    const char *Buf = "e1111";
+
+    // Write the string to the kernel module (/dev/lms_analog)
+    write(InputInstance.AdcFile, Buf, 6);
 }
 
 void VireoInit(void)
