@@ -177,7 +177,7 @@ void VireoMemAccess()
 
 void VireoVersion()
 {
-    *(Int32 *) PrimParPointer() = 0x00010006;      // vireobridge version
+    *(Int32 *) PrimParPointer() = 0x00010007;      // vireobridge version
     *(Int32 *) PrimParPointer() = Vireo_Version(); // vireo version
     PrimParPointer();
 }

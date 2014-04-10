@@ -224,13 +224,14 @@ VIREO_FUNCTION_SIGNATURE4(InputWrite, UInt8, UInt8, UInt8, TypedArrayCoreRef)
     return DspStat == BUSYBREAK ? _this : _NextInstruction();
 }
 
-VIREO_FUNCTION_SIGNATURE5(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, UInt8, TypedArrayCoreRef)
+VIREO_FUNCTION_SIGNATURE6(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, UInt8, TypedArrayCoreRef, UInt8)
 {
     UInt8  layer  = _Param(0);
     UInt8  no     = _Param(1);
     TypedArrayCoreRef command  = _Param(2);
     DATA8 responseLength = _Param(3);
     DATA8 *responseBegin;
+    RESULT result = BUSY;
 
     if (_ParamPointer(4))
     {
@@ -247,12 +248,15 @@ VIREO_FUNCTION_SIGNATURE5(InputIicSetup, UInt8, UInt8, TypedArrayCoreRef, UInt8,
     DATA8 device = no + (layer * INPUT_PORTS);
     UInt8  repeat = 1;
     UInt16 time   = 0;
-    RESULT result = BUSY;
 
-    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), responseLength, responseBegin, &result) == BUSY)
+    if (cInputSetupDevice(device, repeat, time, command->Length(), (DATA8 *) command->BeginAt(0), responseLength, responseBegin, &result) == BUSY) {
         return _this;
-    else
+    } else {
+        if (_ParamPointer(5))
+            _Param(5) = result;
+
         return _NextInstruction();
+    }
 }
 
 VIREO_FUNCTION_SIGNATURE2(InputClearChanges, UInt8, UInt8)
@@ -472,7 +476,7 @@ DEFINE_VIREO_BEGIN(EV3_IO)
     DEFINE_VIREO_FUNCTION(InputReadRaw, "p(i(.UInt8),i(.UInt8),i(.UInt8),o(.Array))");
     DEFINE_VIREO_FUNCTION(InputReady, "p(i(.UInt8),i(.UInt8))");
     DEFINE_VIREO_FUNCTION(InputWrite, "p(i(.UInt8),i(.UInt8),i(.UInt8),i(.Array))");
-    DEFINE_VIREO_FUNCTION(InputIicSetup, "p(i(.UInt8),i(.UInt8),i(.Array),i(.UInt8),o(.Array))");
+    DEFINE_VIREO_FUNCTION(InputIicSetup, "p(i(.UInt8),i(.UInt8),i(.Array),i(.UInt8),o(.Array),o(.UInt8))");
     DEFINE_VIREO_FUNCTION(InputClearChanges, "p(i(.UInt8),i(.UInt8))");
     DEFINE_VIREO_FUNCTION(InputSetAutoID, "p(i(.UInt8),i(.UInt8),i(.UInt8))");
     DEFINE_VIREO_FUNCTION(InputSetConn, "p(i(.UInt8),i(.UInt8),i(.UInt8))");
