@@ -11,7 +11,7 @@ GRAPHICS = 144x82_POP4 dl_PrtDetault dl_Rec dl_Set dl_RecH dl_SetH dl_Prt1 \
 	   tdef t010 t020 t030 t040 t050 t060 t061 t070 t071 t080 t081 t160 \
 	   t290 t291 t292 t300 t320 t321 t330 t331 t332 PE_input PE_output
 SOUNDS = GeneralAlarm
-ARCHIVE = y
+ARCHIVE = n
 
 tdef_SOURCE = other
 t010_SOURCE = NXT_device
