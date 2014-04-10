@@ -3644,13 +3644,11 @@ RESULT    cInputOpen(void)
 
 RESULT    cInputClose(void)
 {
-  // Enable auto-id for all input ports
-  char *Buf = "e1111";
+  RESULT  Result = FAIL;
 
-	// Write the string to the kernel module (/dev/lms_analog)
-	write(InputInstance.AdcFile, Buf, 6);
+  Result  =  OK;
 
-  return (OK);
+  return (Result);
 }
 
 
