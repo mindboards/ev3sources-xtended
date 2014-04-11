@@ -98,6 +98,14 @@ void VireoInit(void)
         PrimParPointer();
         PrimParPointer();
 
+        int fileNameLen = strlen(fileName);
+        if (fileNameLen >= 3)
+        {
+            fileName[fileNameLen-3] = 'v';
+            fileName[fileNameLen-2] = 'i';
+            fileName[fileNameLen-1] = 'a';
+        }
+
         if (pShell)
         {
             pShell->Delete();
