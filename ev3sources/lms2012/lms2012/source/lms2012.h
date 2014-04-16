@@ -100,7 +100,7 @@ Development with debug messages:    DEBUG defined, TERMINAL_ENABLED = 1, DEBUG_U
 #define   DEBUG_RECHARGEABLE
 #define   ALLOW_DEBUG_PULSE
 
-#define DEBUG_DYNLOAD
+//#define DEBUG_DYNLOAD
 
 
 #ifndef   LMS2012_H_
