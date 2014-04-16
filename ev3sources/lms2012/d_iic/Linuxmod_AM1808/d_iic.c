@@ -1371,7 +1371,6 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
       { // Data ok
 
         memcpy((void*)&(*pIicDat).RdData[0],(void*)&IicPort[Port].InBuffer[0],IicPort[Port].InLength);
-        (*pIicDat).RdLng 				  = IicPort[Port].InLength;
         (*pIicDat).Result         =  OK;
       }
       else
