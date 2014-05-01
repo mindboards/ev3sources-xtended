@@ -19,16 +19,6 @@ LIBS = c_com c_input c_memory c_output c_sound c_ui c_dynload
 
 almostall: lms2012 programs kernel modules
 
-robotcvm: 
-	$(MAKE) -C $(BASE)/c_robotcvm/Linuxlib_$(ARCH)
-	mkdir -p $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
-	mv $(BASE)/lms2012/Linux_$(ARCH)/sys/lib/robotc.so $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
-
-vireobridge: 
-	$(MAKE) -C $(BASE)/c_vireobridge/Linuxlib_$(ARCH)
-	mkdir -p $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
-	mv $(BASE)/lms2012/Linux_$(ARCH)/sys/lib/libvireo.so $(BASE)/lms2012/Linux_$(ARCH)/sys/lib/libvireobridge.so $(BASE)/lms2012/Linux_$(ARCH)/3rdparty-vm
-
 lms2012:
 	$(MAKE) -C $(BASE)/lms2012/Linux_$(ARCH)
 
@@ -142,8 +132,6 @@ help:
 	@echo ' kernel: to build Linux kernel'
 	@echo ' u-boot: to build u-Boot'
 	@echo ' doc: to build documentation'
-	@echo ' robotcvm: to build a dummy robotc vm shared object'
-	@echo ' vireobridge: to build the vireobridge shared object'
 	@echo
 	@echo 'Execute "make doc.view" to view the documentation in a web'
 	@echo 'browser'
