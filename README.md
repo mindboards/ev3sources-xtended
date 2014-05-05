@@ -17,8 +17,8 @@ Please note that this does NOT include the sources for the ROBOTC and LabVIEW VM
 See [the release announcement on BotBench][1] for more information.
 
 ## Credits
-Xander Soldaat, botbench.com/Robomatter
-James Levitt, National Instruments
+* Xander Soldaat, botbench.com/Robomatter
+* James Levitt, National Instruments
 
 ## Things you will need
 
@@ -50,7 +50,7 @@ To make changes to the source code, click on the **Fork** button at the top of t
 
 If you want to make a change to this shared repo, submit a **Pull Request**, which people can discuss and decide whether to apply your changes or not. [See this page for more information about Pull Requests.][3].
 
-  [1]: http://botbench.com/blog/2013/07/31/lego-mindstorms-ev3-source-code-available/
+  [1]: http://botbench.com/blog/2014/05/05/ev3-extended-firmware-vm-now-on-github/
   [2]: https://help.github.com/articles/fork-a-repo
   [3]: https://help.github.com/articles/using-pull-requests
   [4]: http://go.mentor.com/2ig4q
