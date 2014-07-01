@@ -253,7 +253,7 @@ char      *HwId = "03";
  */
 
 #define   PROJECT                       "LMS2012"
-#define   VERS                          1.05
+#define   VERS                          1.06
 #define   SPECIALVERS                   'X'           //!< Minor version (not shown if less than ASCII zero)
 
 
