@@ -85,6 +85,8 @@ cd /mnt/tmpdrv_ud/
 tar zcf $PATH5/def_sett.tgz ./
 echo "New DefSettFile Created\t: [ DONE ]"
 
+tar jxf $PATH1/$PATH2/resources.tar.bz2 -C $PATH4
+
 mkfs.cramfs /mnt/tmpdrv_fs/ $PATH1/$PATH2/EV3.cramfs.bin
 echo "CRAMFS File Created\t: [ DONE ]"
 
