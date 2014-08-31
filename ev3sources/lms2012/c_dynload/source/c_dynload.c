@@ -26,8 +26,9 @@
 #include <stdio.h>
 
 #ifdef  DEBUG_DYNLOAD
-#define DEBUG_DYNLOAD_VMLOAD
-#define DEBUG_DYNLOAD_VMCLOSE
+//#define DEBUG_DYNLOAD_VMLOAD
+//#define DEBUG_DYNLOAD_VMCLOSE
+#define DEBUG_DYNLOAD_DLERRORS
 //#define DEBUG_DYNLOAD_VMUPDATE
 //#define DEBUG_DYNLOAD_ENTRY
 #endif
@@ -187,9 +188,9 @@ void dynloadVMLoad()
 
 	// You can change this to another type of binding.
 	// This one only resolves the required symbols.
-	virtualMachineInfo.soHandle = dlopen(fullVMPath, RTLD_LAZY);
+	virtualMachineInfo.soHandle = dlopen(fullVMPath, RTLD_NOW);
 	if (!virtualMachineInfo.soHandle) {
-#ifdef DEBUG_DYNLOAD_VMLOAD
+#ifdef DEBUG_DYNLOAD_DLERRORS
 		fprintf(stderr, "DYNLOAD: %s\r\n", dlerror());
 #endif
 		res = FAIL;
