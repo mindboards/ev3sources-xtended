@@ -1290,7 +1290,7 @@ static int Device1Ioctl(struct inode *pNode, struct file *File, unsigned int Req
       }
       if ((IicPort[Port].Result != BUSY) && (IicPort[Port].Result != START))
       {
-        if (IicPort[Port].Result == STOP)
+        if ((IicPort[Port].Result == STOP) && ((*pIicDat).Repeat != 0))
         { // Ready for transfer
 
 					IicPort[Port].Repeat      =  (*pIicDat).Repeat;
