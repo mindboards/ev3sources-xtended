@@ -1730,12 +1730,12 @@ DEVCMD;
 
 #define   LV0(i)                        (UBYTE)((i & PRIMPAR_INDEX) | PRIMPAR_SHORT | PRIMPAR_VARIABEL | PRIMPAR_LOCAL)
 #define   LV1(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_1_BYTE),(UBYTE)(i & 0xFF)
-#define   LV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_2_BYTES),(UBYTE)(i & 0xFF),((i >> 8) & 0xFF)
+#define   LV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_2_BYTES),(UBYTE)(i & 0xFF),(UBYTE)((i >> 8) & 0xFF)
 #define   LV4(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_LOCAL | PRIMPAR_4_BYTES),(UBYTE)(i & 0xFF),(UBYTE)((i >> 8) & 0xFF),(UBYTE)((i >> 16) & 0xFF),(UBYTE)((i >> 24) & 0xFF)
 
 #define   GV0(i)                        (UBYTE)((i & PRIMPAR_INDEX) | PRIMPAR_SHORT | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL)
 #define   GV1(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_1_BYTE),(UBYTE)(i & 0xFF)
-#define   GV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_2_BYTES),(UBYTE)(i & 0xFF),((i >> 8) & 0xFF)
+#define   GV2(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_2_BYTES),(UBYTE)(i & 0xFF),(UBYTE)((i >> 8) & 0xFF)
 #define   GV4(i)                        (PRIMPAR_LONG  | PRIMPAR_VARIABEL | PRIMPAR_GLOBAL | PRIMPAR_4_BYTES),(UBYTE)(i & 0xFF),(UBYTE)((i >> 8) & 0xFF),(UBYTE)((i >> 16) & 0xFF),(UBYTE)((i >> 24) & 0xFF)
 
 //        MACROS FOR SUB CALLS
