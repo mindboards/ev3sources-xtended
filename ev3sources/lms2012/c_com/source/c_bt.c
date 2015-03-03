@@ -224,8 +224,6 @@
 #endif
 
 
-#define   LEGO_BUNDLE_SEED_ID                     "9RNK8ZF528"
-#define   LEGO_BUNDLE_ID                          "com.lego.lms"
 
 enum
 {

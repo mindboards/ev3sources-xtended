@@ -3133,8 +3133,10 @@ void      ObjectStart(void)
  */
 void      ObjectTrig(void)
 {
+#ifndef DISABLE_BLOCK_ALIAS_LOCALS
   OBJID   OwnerId;
   OBJID   CallerId;
+#endif
   OBJID   TmpId;
 
   TmpId  =  *(OBJID*)PrimParPointer();

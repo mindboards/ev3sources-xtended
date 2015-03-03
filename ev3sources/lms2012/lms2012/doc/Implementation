@@ -6,6 +6,41 @@
  *  This section describes the relative changes from previous version
  *
  *
+ *\version lms2012_v107
+ *
+ *-# As v1066 but version changed to 1.07                                                     \n
+ *
+ *
+ *\version lms2012_v1066
+ *
+ *-# ISSUE 4330 - sub call aliases block local issue UN-fixed                                 \n
+ *
+ *
+ *\version lms2012_v1065
+ *
+ *-# Bluetooth bundle changed to "BA9Q76VTQG" "com.lego.education.ev3"                        \n
+ *
+ *
+ *\version lms2012_v1064
+ *
+ *-# Bluetooth bundle changed to "BA9Q76VTQG" "com.lego.edu.ev3"                              \n
+ *
+ *
+ *\version lms2012_v1063
+ *
+ *-# Bluetooth bundle changed                                                                 \n
+ *
+ *
+ *\version lms2012_v1062
+ *
+ *-# Bluetooth bundle changed for test                                                        \n
+ *
+ *
+ *\version lms2012_v1061
+ *
+ *-# "Brick Name" app implemented                                                             \n
+ *
+ *
  *  \version lms2012_v104w_140110
  *
  *-# Test app "Sensors" changed to use "Modes" instead of "Views" in mode change limit        \n

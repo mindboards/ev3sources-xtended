@@ -38,7 +38,7 @@
 #define   MAX_NAME_SIZE                 32
 #define   MAX_BT_NAME_SIZE              248
 
-#define   MAX_BUNDLE_ID_SIZE            24
+#define   MAX_BUNDLE_ID_SIZE            35
 #define   MAX_BUNDLE_SEED_ID_SIZE       11
 
 

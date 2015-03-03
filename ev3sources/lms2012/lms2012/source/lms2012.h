@@ -184,7 +184,7 @@ char      *HwId = "03";
 //#define   DISABLE_FILENAME_CHECK        //!< Disable "c_memory" filename check
 //#define   DISABLE_AD_WORD_PROTECT       //!< Disable A/D word result protection
 //#define   DISABLE_UPDATE_DISASSEMBLY    //!< Disable disassemble of running update commands
-//#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
+#define   DISABLE_BLOCK_ALIAS_LOCALS    //!< Disable change of block locals if sub call alias (parallelism)
 
 #define   TESTDEVICE    3
 
@@ -253,8 +253,45 @@ char      *HwId = "03";
  */
 
 #define   PROJECT                       "LMS2012"
-#define   VERS                          1.06
-#define   SPECIALVERS                   'X'           //!< Minor version (not shown if less than ASCII zero)
+#define   VERS                          1.07
+
+//#define   RETAILVERS                                  //!< Retail version
+#define   EDUCATIONVERS                               //!< Education version
+//#define   TESTVERS                      '6'           //!< Minor version (not shown if less than ASCII zero)
+
+
+#ifdef RETAILVERS
+
+#define   SPECIALVERS                   'H'
+#define   LEGO_BUNDLE_SEED_ID           "9RNK8ZF528"
+#define   LEGO_BUNDLE_ID                "com.lego.lms"
+
+#endif
+
+#ifdef EDUCATIONVERS
+
+#define   SPECIALVERS                   'X'
+#define   LEGO_BUNDLE_SEED_ID           "9YZJD9MXPZ"
+#define   LEGO_BUNDLE_ID                "com.lego.education.ev3"
+
+#endif
+
+#ifdef TESTVERS
+
+#define   SPECIALVERS                   TESTVERS
+#define   LEGO_BUNDLE_SEED_ID           "BA9Q76VTQG"
+#define   LEGO_BUNDLE_ID                "com.lego.education.ev3"
+/*
+#define   SPECIALVERS                   TESTVERS
+#define   LEGO_BUNDLE_SEED_ID           "BA9Q76VTQG"
+#define   LEGO_BUNDLE_ID                "com.lego.edu.ev3"
+
+#define   SPECIALVERS                   TESTVERS
+#define   LEGO_BUNDLE_SEED_ID           "BA9Q76VTQG"
+#define   LEGO_BUNDLE_ID                "com.lego.education.ev3programming"
+*/
+#endif
+
 
 
 #define   MAX_PROGRAMS          SLOTS                 //!< Max number of programs (including UI and direct commands) running at a time

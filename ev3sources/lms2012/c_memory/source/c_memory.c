@@ -1602,7 +1602,7 @@ char      *pFavourites[SORT_TYPES][8] =
   { },
   { "",           "BrkProg_SAVE",   "BrkDL_SAVE",     "SD_Card",        "USB_Stick",          "TEST"   },
   { "Port View",  "Motor Control",  "IR Control",     "Brick Program",  "Brick Datalog" },
-  { "Volume",     "Sleep",          "Bluetooth",      "WiFi",           "Brick Info",         "Test",       "Performance",        "Debug" }
+  { "Volume",     "Sleep",          "Bluetooth",      "WiFi",           "Brick Name",         "Brick Info",         "Test",       "Debug" }
 };
 
 
