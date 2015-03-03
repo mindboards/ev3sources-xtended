@@ -1,0 +1,21 @@
+//! \page types Known Device Types
+//!
+//! <hr size="1"/>
+//! Following devices are supported (except devices starting with //)\n
+//! Devices marked with * means that the data is supplied by the device itself\n
+//! Devices marked with # is not supported in View and Datalog apps
+//!
+//! \verbatim
+
+//  Type  Mode  Name      DataSets  Format  Figures  Decimals  Views  Conn. Pins  RawMin   RawMax   PctMin  PctMax  SiMin    SiMax    Time  IdValue  Symbol     Setup
+//  ----  ----  --------  --------  ------  -------  --------  -----  ----- ----  -------  -------  ------  ------  -------  -------  ----  -------  --------   --------------------------
+
+   100    2     IIC-BYTE-9V   1       1     3        0         2      120   0x31      0.0    255.0       0     100      0.0    255.0   100        0  _          UNKNOWN Unknown 3 0x01410200 2 0x01420000 1
+
+//!  \endverbatim
+//!  See connection types \ref connectiontypes "Conn."
+//!
+//! <hr size="1"/>
+//!  
+//! THIRD PARTY DEVICES:
+//!  \n
