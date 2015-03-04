@@ -929,13 +929,18 @@ enum
 typedef   UWORD     CMDSIZE;
 typedef   UWORD     MSGCNT;
 
+#ifdef SETALIGNMENT
+#pragma pack(push, 1)
+#endif
 
 typedef   struct                        //!< Common command struct
 {
   CMDSIZE CmdSize;
   MSGCNT  MsgCnt;
   UBYTE   Cmd;
+#ifndef NOPAYLOADS
   UBYTE   PayLoad[];                    //!< Pay load is DIRCMD or SYSCMD
+#endif
 }
 COMCMD;
 
@@ -945,7 +950,9 @@ typedef   struct                        //!< Common reply struct
   CMDSIZE CmdSize;
   MSGCNT  MsgCnt;
   UBYTE   Cmd;
+#ifndef NOPAYLOADS
   UBYTE   PayLoad[];
+#endif
 }
 COMRPL;
 
@@ -954,7 +961,9 @@ typedef   struct                        //!< Direct command struct
 {
   UBYTE   Globals;
   UBYTE   Locals;
+#ifndef NOPAYLOADS
   UBYTE   Code[];
+#endif
 }
 DIRCMD;
 
@@ -1378,6 +1387,9 @@ typedef   struct
 }RPLY_BUNDLE_SEED_ID;
 #define   SIZEOF_RPLYBUNDLESEEDID       7
 
+#ifdef SETALIGNMENT
+#pragma pack(pop)
+#endif
 
 // Constants related to State
 enum
